@@ -1,6 +1,6 @@
 # EnaV ⚡
 
-EnaV is an AI-powered EV mobility platform designed to predict range, energy consumption, and charging wait times, providing battery-aware route and charger recommendations.
+EnaV is an AI-powered EV mobility platform designed to predict range, energy consumption, and charging wait times to provide battery-aware route and charger recommendations. It also supports real-time emergency charging, EV fleet/delivery optimization, and carpooling.
 
 ## 🚀 Features
 * **Battery-Aware Routing:** Intelligent path recommendations tailored to your electric vehicle's real-time battery status.
