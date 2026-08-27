@@ -1,0 +1,186 @@
+{
+  "meta": {
+    "instanceId": "simulated-instance-id"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "path": "112-incident-webhook",
+        "options": {}
+      },
+      "id": "112-webhook-node-id",
+      "name": "112 Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "webhookId": "112-incident-webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.incident_id }}",
+              "operation": "isNotEmpty"
+            },
+            {
+              "value1": "={{ $json.body.location.lat }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "validate-incident-node-id",
+      "name": "Validate Incident",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8000/dispatch/112",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"incident_id\": \"{{ $json.body.incident_id }}\",\n  \"incident_type\": \"{{ $json.body.incident_type }}\",\n  \"severity\": \"{{ $json.body.severity }}\",\n  \"location\": {\n    \"lat\": {{ $json.body.location.lat }},\n    \"lng\": {{ $json.body.location.lng }}\n  },\n  \"required_vehicle_type\": \"{{ $json.body.required_vehicle_type }}\",\n  \"reported_at\": \"{{ $json.body.reported_at }}\"\n}",
+        "options": {}
+      },
+      "id": "http-request-node-id",
+      "name": "HTTP Request to FastAPI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        650,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.dispatch_status }}",
+              "value2": "recommended"
+            }
+          ]
+        }
+      },
+      "id": "check-dispatch-status-id",
+      "name": "If Dispatch Successful",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        850,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "message": "=Dispatch Successful! Recommended Vehicle: {{ $json.selected_vehicle.vehicle_id }} ({{ $json.selected_vehicle.vehicle_type }}). ETA: {{ $json.route.eta_minutes }} mins. District: {{ $json.district.district_name }}.",
+        "options": {}
+      },
+      "id": "log-success-id",
+      "name": "Notify Dispatch Success",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "message": "=Dispatch Failed! Reason: {{ $json.reason }}",
+        "options": {}
+      },
+      "id": "log-failure-id",
+      "name": "Notify Dispatch Failure",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "message": "Invalid 112 webhook payload format. Dropping incident.",
+        "options": {}
+      },
+      "id": "invalid-webhook-payload-id",
+      "name": "Log Bad Format",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        650,
+        450
+      ]
+    }
+  ],
+  "connections": {
+    "112 Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Incident",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Incident": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request to FastAPI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Bad Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request to FastAPI": {
+      "main": [
+        [
+          {
+            "node": "If Dispatch Successful",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Dispatch Successful": {
+      "main": [
+        [
+          {
+            "node": "Notify Dispatch Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notify Dispatch Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
