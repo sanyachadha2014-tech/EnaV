@@ -1,0 +1,11 @@
+{
+    "station_id": "ST004",
+    "time_period": "15:00",
+    "predicted_wait_time_minutes": 9.44,
+    "queue_level": "Low",
+    "congestion_level": "Moderate",
+    "model_error": {
+        "mae_minutes": 1.37,
+        "rmse_minutes": 1.74
+    }
+}
