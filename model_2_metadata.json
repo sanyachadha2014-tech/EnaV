@@ -1,0 +1,47 @@
+{
+    "model_name": "EV Charging Wait-Time Prediction",
+    "model_version": "1.0",
+    "model_type": "XGBoost Regressor",
+    "model_file": "waiting_time_model.pkl",
+    "target": "waiting_time",
+    "target_unit": "minutes",
+    "input_features": [
+        "station_id",
+        "location_type",
+        "vehicle_type",
+        "battery_capacity_kWh",
+        "initial_soc",
+        "charging_power_kW",
+        "queue_length",
+        "station_load",
+        "electricity_price",
+        "renewable_energy_ratio",
+        "traffic_density",
+        "weather_condition",
+        "day_of_week",
+        "time_slot",
+        "charging_demand",
+        "charging_priority",
+        "arrival_hour"
+    ],
+    "outputs": [
+        "station_id",
+        "time_period",
+        "predicted_wait_time_minutes",
+        "queue_level",
+        "congestion_level",
+        "model_error"
+    ],
+    "evaluation_metrics": {
+        "MAE_minutes": 1.37,
+        "RMSE_minutes": 1.74,
+        "R2": 0.936,
+        "MAPE_percent": 9.599
+    },
+    "reliability": {
+        "MAE_minutes": 1.37,
+        "RMSE_minutes": 1.74,
+        "note": "MAE and RMSE represent prediction error on the held-out test set. They are not a confidence percentage."
+    },
+    "data_note": "The waiting_time target was synthetically constructed from the EV charging dataset. Therefore, evaluation metrics describe performance on the synthetic target and should not be interpreted as measured real-world waiting-time accuracy."
+}

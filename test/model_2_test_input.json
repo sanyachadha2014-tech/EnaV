@@ -1,0 +1,19 @@
+{
+    "station_id": "ST004",
+    "location_type": "Urban",
+    "vehicle_type": "Car",
+    "battery_capacity_kWh": 60,
+    "initial_soc": 22.81084661,
+    "charging_power_kW": 50,
+    "queue_length": 1,
+    "station_load": 37.05688168,
+    "electricity_price": 9.08,
+    "renewable_energy_ratio": 0.563524565,
+    "traffic_density": "Medium",
+    "weather_condition": "Clear",
+    "day_of_week": "Monday",
+    "time_slot": "Off-Peak",
+    "charging_demand": 35.23246308,
+    "charging_priority": "Low",
+    "arrival_hour": 15
+}
