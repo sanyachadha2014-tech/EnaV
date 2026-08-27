@@ -1,0 +1,43 @@
+{
+  "model_name": "EV Charging Demand Prediction",
+  "model_version": "1.0.0",
+  "model_type": "RandomForestRegressor",
+  "target": "charging_demand",
+  "features": [
+    "station_id",
+    "location_type",
+    "vehicle_type",
+    "battery_capacity_kWh",
+    "initial_soc",
+    "charging_power_kW",
+    "queue_length",
+    "electricity_price",
+    "renewable_energy_ratio",
+    "traffic_density",
+    "weather_condition",
+    "day_of_week",
+    "time_slot",
+    "hour",
+    "month",
+    "weekday_num",
+    "is_weekend",
+    "is_peak_hour"
+  ],
+  "preprocessing": {
+    "method": "OneHotEncoder",
+    "handle_unknown": "ignore"
+  },
+  "hyperparameters": {
+    "n_estimators": 300,
+    "max_depth": 12,
+    "min_samples_leaf": 3,
+    "random_state": 42
+  },
+  "performance": {
+    "MAE": 7.698,
+    "RMSE": 9.29,
+    "R2": 0.887,
+    "MAPE_percent": 18.6
+  },
+  "sample_prediction": 84.21325351640088
+}
