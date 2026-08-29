@@ -1,3 +1,23 @@
 {
-  "predicted_charging_demand": 84.21325351640088
+    "model": "EV Charging Demand Prediction",
+    "model_version": "1.0",
+    "station_id": "ST005",
+    "location_type": "Urban",
+    "time_period": "Peak",
+    "predicted_demand": 84.21,
+    "station_load": 52.92,
+    "demand_trend": "Stable",
+    "reliability": {
+        "model": "Random Forest",
+        "MAE": 7.698,
+        "RMSE": 9.29,
+        "R2": 0.887,
+        "MAPE_percent": 18.6,
+        "note": "MAE, RMSE, R2 and MAPE describe performance on held-out test data. They are not an individual prediction confidence percentage."
+    },
+    "notes": {
+        "geographic_scope": "The current dataset provides station_id and location_type, but does not contain actual ward/zone IDs.",
+        "station_load": "station_load is the load/utilization measure provided by the dataset; it is not a separately predicted target.",
+        "demand_trend": "Trend is calculated from recent predicted demand values for the same station and time period."
+    }
 }
