@@ -1,673 +1,1727 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import EVDispatchAnimation from "@/components/EVDispatchAnimation";
-import Link from "next/link";
+import React, {
+  useRef,
+  useState,
+} from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import {
-  Zap,
-  ShieldAlert,
-  MapPin,
-  Star,
+  ArrowRight,
+  BatteryCharging,
+  Check,
   ChevronLeft,
   ChevronRight,
-  ArrowRight,
-  Send,
+  CircleUserRound,
+  Layers,
+  MapPin,
+  Menu,
   Navigation,
-  Activity,
+  Route,
+  ShieldCheck,
   Sparkles,
-  Phone,
-  Mail,
-  TrendingUp,
+  Star,
+  X,
+  Zap,
 } from "lucide-react";
 
-// Dynamically import the Leaflet map to prevent SSR window issues
-const ChargingStationsMap = dynamic(() => import("@/components/ChargingStationsMap"), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-full min-h-[380px] bg-[#070B14] flex items-center justify-center text-slate-500 font-mono text-xs">
-      LOADING INTERACTIVE MAP...
-    </div>
-  ),
-});
+/* =========================================================
+   CHARGING MAP
+========================================================= */
 
-export default function WelcomePage() {
-  const [heroVisible, setHeroVisible] = useState(false);
+const ChargingStationsMap = dynamic(
+  () => import("@/components/ChargingStationsMap"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full min-h-[350px] items-center justify-center bg-[#050A13]">
+        <div className="text-center">
+          <MapPin className="mx-auto h-5 w-5 text-emerald-400" />
 
-  useEffect(() => {
-    setHeroVisible(true);
-  }, []);
+          <p className="mt-3 text-[8px] font-bold uppercase tracking-[0.2em] text-slate-600">
+            Loading charging map
+          </p>
+        </div>
+      </div>
+    ),
+  },
+);
 
-  // 1. App Feature Showcase Demo Slider State
-  const [activeFeatureIndex, setActiveFeatureIndex] = useState(0);
+/* =========================================================
+   FEATURE SLIDES
+========================================================= */
 
-  const features = [
-    {
-      title: "112 Emergency EV Dispatch Engine",
-      tagline: "Instant SOS response & mobile charging support during breakdown emergencies.",
-      ctaText: "Explore Emergency Dispatch",
-      ctaLink: "/gov/dispatch",
-      badge: "Gov Command",
-    },
-    {
-      title: "Smart Route & Range Planner",
-      tagline: "Calculate route battery draw, topographic elevation, and optimal charger stops.",
-      ctaText: "Plan Your Route",
-      ctaLink: "/drivers/chargers",
-      badge: "Driver Intelligence",
-    },
-    {
-      title: "Nearest Charging Station",
-      tagline: "Locate real-time charging stations, predicted waiting times, and public emergency chargers.",
-      ctaText: "Locate Chargers",
-      ctaLink: "/drivers/chargers",
-      badge: "Real-time Grid",
-    },
-  ];
+const features = [
+  {
+    badge: "DRIVER JOURNEY",
+    title: "Plan the journey before you drive.",
+    description:
+      "Choose your current location or enter a starting point manually, select a destination and compare route choices before starting the journey.",
+    points: [
+      "GPS or manual starting location",
+      "Three route choices",
+      "Active journey and completion summary",
+    ],
+    href: "/drivers/route-optimizer",
+    accent: "emerald",
+  },
+  {
+    badge: "CHARGING DISCOVERY",
+    title: "Find charging when you need it.",
+    description:
+      "Search charging stations and review the information available for each location before deciding where to stop.",
+    points: [
+      "Station search",
+      "Charger type",
+      "Connector availability",
+    ],
+    href: "/drivers/chargers",
+    accent: "blue",
+  },
+  {
+    badge: "DRIVER PROFILE",
+    title: "Keep your vehicle and driver information organised.",
+    description:
+      "Manage personal details, driver or employee information, vehicle details and your own journey and charging history.",
+    points: [
+      "Personal information",
+      "Vehicle and EV details",
+      "Journey and charging history",
+    ],
+    href: "/drivers/profile",
+    accent: "emerald",
+  },
+  {
+    badge: "GOVERNMENT",
+    title: "A separate workspace for mobility operations.",
+    description:
+      "Government users have their own environment for mobility and infrastructure workflows rather than sharing the driver's interface.",
+    points: [
+      "Government workspace",
+      "Mobility operations",
+      "Infrastructure workflows",
+    ],
+    href: "/gov",
+    accent: "purple",
+  },
+];
 
-  // 2. Government Subsidies Slider State
-  const [activeSubsidyIndex, setActiveSubsidyIndex] = useState(0);
+/* =========================================================
+   EV SCHEMES / POLICIES
+========================================================= */
 
-  const subsidies = [
-    {
-      title: "PM E-DRIVE Scheme 2026",
-      desc: "Up to ₹10,000 upfront purchase incentive for electric two-wheelers and ₹50,000 for three-wheelers across India as per MoHD guidelines.",
-      tag: "Central Policy",
-      amount: "₹10,000 - ₹50,000",
-    },
-    {
-      title: "Delhi EV Policy 2.0 Waiver",
-      desc: "100% exemption on Road Tax and Registration Fees for all battery-electric vehicles registered in Delhi NCR.",
-      tag: "State Framework",
-      amount: "100% Tax Exemption",
-    },
-    {
-      title: "FAME Charger Capital Subsidy",
-      desc: "Up to 70% capital grant for installation of public commercial fast-charging infrastructure.",
-      tag: "Infra Allocation",
-      amount: "70% Installation Rebate",
-    },
-  ];
+const schemes = [
+  {
+    tag: "CENTRAL SCHEME",
+    title: "PM E-DRIVE",
+    description:
+      "The PM Electric Drive Revolution in Innovative Vehicle Enhancement scheme supports eligible electric mobility categories and includes support related to public EV charging infrastructure.",
+    source:
+      "Ministry of Heavy Industries · Government of India",
+    href: "https://pmedrive.heavyindustries.gov.in/",
+  },
+  {
+    tag: "DELHI POLICY",
+    title: "Delhi EV Policy 2026",
+    description:
+      "Delhi's current EV policy framework covers electric mobility adoption and charging infrastructure within the National Capital Territory.",
+    source:
+      "Transport Department · Government of NCT of Delhi",
+    href: "https://transport.delhi.gov.in/",
+  },
+  {
+    tag: "NATIONAL GUIDELINES",
+    title: "EV Charging Infrastructure 2024",
+    description:
+      "The Ministry of Power's guidelines provide a framework for the installation and operation of EV charging infrastructure in public, semi-public and other applicable settings.",
+    source:
+      "Ministry of Power · Government of India",
+    href: "https://powermin.gov.in/",
+  },
+  {
+    tag: "PM E-DRIVE",
+    title: "Public Charging Infrastructure",
+    description:
+      "PM E-DRIVE includes guidelines for deployment of public EV charging stations and related infrastructure support.",
+    source:
+      "Ministry of Heavy Industries · Government of India",
+    href: "https://pmedrive.heavyindustries.gov.in/policy_procedure",
+  },
+];
 
-  // 3. User Feedback State
-  const [feedback, setFeedback] = useState("");
-  const [userRating, setUserRating] = useState(5);
-  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+/* =========================================================
+   ILLUSTRATIVE FEEDBACK
+========================================================= */
 
-  const handleFeedbackSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (feedback.trim()) {
-      setFeedbackSubmitted(true);
-      setTimeout(() => {
-        setFeedback("");
-        setFeedbackSubmitted(false);
-      }, 4000);
+const driverFeedback = [
+  {
+    quote:
+      "The journey flow keeps the important steps together without putting unrelated information in front of the driver.",
+  },
+  {
+    quote:
+      "Separating charging discovery from the driving workflow makes it easier to find the information I actually need.",
+  },
+  {
+    quote:
+      "Comparing route options before starting the journey makes the decision much clearer.",
+  },
+];
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+export default function HomePage() {
+  const [mobileMenuOpen, setMobileMenuOpen] =
+    useState(false);
+
+  const [featureIndex, setFeatureIndex] =
+    useState(0);
+
+  const [schemeIndex, setSchemeIndex] =
+    useState(0);
+
+  const [touchStartX, setTouchStartX] =
+    useState<number | null>(null);
+
+  const [touchEndX, setTouchEndX] =
+    useState<number | null>(null);
+
+  const minSwipeDistance = 50;
+
+  const currentFeature =
+    features[featureIndex];
+
+  const currentScheme =
+    schemes[schemeIndex];
+
+  /* =======================================================
+     FEATURE CAROUSEL
+  ======================================================= */
+
+  function previousFeature() {
+    setFeatureIndex((current) =>
+      current === 0
+        ? features.length - 1
+        : current - 1,
+    );
+  }
+
+  function nextFeature() {
+    setFeatureIndex((current) =>
+      current === features.length - 1
+        ? 0
+        : current + 1,
+    );
+  }
+
+  function handleTouchStart(
+    event: React.TouchEvent<HTMLDivElement>,
+  ) {
+    setTouchStartX(event.targetTouches[0].clientX);
+    setTouchEndX(null);
+  }
+
+  function handleTouchMove(
+    event: React.TouchEvent<HTMLDivElement>,
+  ) {
+    setTouchEndX(event.targetTouches[0].clientX);
+  }
+
+  function handleTouchEnd() {
+    if (
+      touchStartX === null ||
+      touchEndX === null
+    ) {
+      return;
     }
-  };
 
-  const reviews = [
-    {
-      name: "Rohan Sharma",
-      location: "New Delhi",
-      vehicle: "Tata Nexon EV",
-      duration: "Driving 8 months",
-      review:
-        "Switching to an EV cut my monthly commute cost from ₹14,000 to under ₹1,800. EnaV made finding emergency fast-charging points effortless!",
-      rating: 5,
-    },
-    {
-      name: "Priya Nair",
-      location: "Bengaluru",
-      vehicle: "MG Windsor EV",
-      duration: "Driving 5 months",
-      review:
-        "Silent ride, instant torque, zero emissions. The range predictor on EnaV prevented range anxiety on my long expressway drives.",
-      rating: 5,
-    },
-    {
-      name: "Anish Verma",
-      location: "Mumbai",
-      vehicle: "Mahindra BE 6",
-      duration: "Driving 1 year",
-      review:
-        "The live station booking and government subsidy tracker helped me calculate my precise ROI before purchasing my electric vehicle.",
-      rating: 5,
-    },
-  ];
+    const distance =
+      touchStartX - touchEndX;
+
+    if (Math.abs(distance) < minSwipeDistance) {
+      return;
+    }
+
+    if (distance > 0) {
+      nextFeature();
+    } else {
+      previousFeature();
+    }
+
+    setTouchStartX(null);
+    setTouchEndX(null);
+  }
+
+  /* =======================================================
+     SCHEME CAROUSEL
+  ======================================================= */
+
+  function previousScheme() {
+    setSchemeIndex((current) =>
+      current === 0
+        ? schemes.length - 1
+        : current - 1,
+    );
+  }
+
+  function nextScheme() {
+    setSchemeIndex((current) =>
+      current === schemes.length - 1
+        ? 0
+        : current + 1,
+    );
+  }
 
   return (
-    <main className="min-h-screen bg-[#070B14] text-slate-100 font-sans selection:bg-[#10B981] selection:text-slate-950">
-      {/* ----------------- 1. FLOATING NAV BAR ----------------- */}
-      <div className="sticky top-4 z-50 max-w-7xl mx-auto px-4">
-        <nav className="bg-[#0B132B]/90 backdrop-blur-md border border-[#10B981]/30 rounded-full px-6 py-3 flex items-center justify-between shadow-[0_0_20px_rgba(7,11,20,0.8)]">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-full bg-[#10B981] flex items-center justify-center text-slate-950 font-black shadow-[0_0_15px_#10B981]">
-              <Zap className="w-5 h-5 fill-slate-950" />
-            </div>
-            <span className="text-xl font-black text-white tracking-wider">
-              Ena<span className="text-[#10B981]">V</span>
-            </span>
-          </Link>
+    <main className="min-h-screen overflow-x-hidden bg-[#070B14] text-slate-100 selection:bg-emerald-400 selection:text-slate-950">
 
-          <div className="hidden md:flex items-center gap-6 font-medium text-xs text-slate-300">
-            <Link href="/" className="hover:text-[#10B981] transition text-[#10B981] font-bold">
-              Home
-            </Link>
-            <Link href="#features" className="hover:text-[#10B981] transition">
-              Features
-            </Link>
-            <Link href="/drivers/chargers" className="hover:text-[#10B981] transition flex items-center gap-1 text-[#10B981]/90">
-              <Navigation className="w-3.5 h-3.5" /> Route Optimization
-            </Link>
-            <Link href="#subsidies" className="hover:text-[#10B981] transition">
-              Subsidies
-            </Link>
-            <Link href="#chargers" className="hover:text-[#10B981] transition">
-              Charging Map
-            </Link>
-            <Link href="#about" className="hover:text-[#10B981] transition">
-              About
-            </Link>
-            <Link href="#contact" className="hover:text-[#10B981] transition">
-              Contact
-            </Link>
-          </div>
+      {/* =====================================================
+          NAVBAR
+      ===================================================== */}
 
-          <div className="flex items-center gap-3">
-            <span className="hidden lg:flex items-center gap-1.5 text-[11px] font-mono bg-[#070B14] border border-slate-800 px-3 py-1.5 rounded-full text-slate-300">
-              <MapPin className="w-3.5 h-3.5 text-[#10B981]" /> Delhi NCR
-            </span>
+      <div className="sticky top-3 z-50 mx-auto max-w-7xl px-4">
+
+        <nav className="rounded-full border border-emerald-400/20 bg-[#0B132B]/90 px-4 py-2.5 shadow-2xl shadow-black/50 backdrop-blur-xl sm:px-6">
+
+          <div className="flex h-10 items-center justify-between">
+
+            {/* BRAND */}
+
             <Link
-              href="/auth/signin"
-              className="bg-[#10B981] hover:bg-[#34D399] text-slate-950 px-5 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition shadow-[0_0_15px_rgba(16,185,129,0.4)]"
+              href="/"
+              className="group flex items-center gap-2.5"
             >
-              Sign In
-            </Link>
-          </div>
-        </nav>
-      </div>
 
-      {/* ----------------- 2. HERO HEADER ----------------- */}
-      <section className="bg-gradient-to-b from-[#070B14] via-[#0B132B] to-[#070B14] text-white pt-24 pb-16 border-b border-[#10B981]/15">
-        <div
-          className={`max-w-4xl mx-auto text-center px-4 transition-all duration-1000 transform ${
-            heroVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-          }`}
-        >
-          <div className="inline-flex items-center gap-2 bg-[#10B981]/10 border border-[#10B981]/30 px-4 py-1.5 rounded-full text-[#10B981] text-xs font-mono font-bold tracking-wider uppercase mb-6 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-            <Sparkles className="w-3.5 h-3.5" /> Empowering EV Drivers & Government Authorities
-          </div>
-
-          <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-tight text-white mb-6">
-            Ready When Every Second Matters.
-          </h1>
-
-          <p className="text-slate-300 text-sm md:text-base max-w-2xl mx-auto leading-relaxed mb-8 font-medium">
-            Bridging real-time roadside assistance for EV drivers with centralized command analytics for municipal and emergency authorities.
-          </p>
-
-          <Link
-            href="/gov/dashboard"
-            className="inline-flex items-center gap-2 bg-[#10B981] hover:bg-[#34D399] text-slate-950 font-bold px-8 py-3.5 rounded-full text-xs uppercase tracking-wider transition shadow-[0_0_25px_rgba(16,185,129,0.4)] transform hover:scale-105"
-          >
-            Launch Dashboard <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </section>
-
-      {/* ----------------- 3. FEATURE SHOWCASE SLIDER ----------------- */}
-      <section id="features" className="max-w-7xl mx-auto px-4 py-12">
-        <div className="bg-[#0B132B] border border-[#10B981]/30 rounded-3xl p-6 md:p-10 overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-            
-            {/* Left Column */}
-            <div className="lg:col-span-5 flex flex-col justify-between space-y-6">
-              <div className="space-y-4">
-                <span className="inline-block text-xs font-mono bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/30 px-3 py-1 rounded-full font-bold tracking-widest uppercase">
-                  {features[activeFeatureIndex].badge}
-                </span>
-                <h2 className="text-3xl md:text-4xl font-black leading-tight text-white">
-                  {features[activeFeatureIndex].title}
-                </h2>
-                <p className="text-slate-300 text-sm leading-relaxed">
-                  {features[activeFeatureIndex].tagline}
-                </p>
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400 text-slate-950 shadow-[0_0_18px_rgba(16,185,129,.35)] transition group-hover:scale-105">
+                <Zap className="h-4 w-4 fill-current" />
               </div>
 
-              <div className="space-y-6">
-                <Link
-                  href={features[activeFeatureIndex].ctaLink}
-                  className="inline-flex items-center gap-2 bg-[#10B981] hover:bg-[#34D399] text-slate-950 font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-wider transition shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+              <div>
+
+                <div className="text-lg font-black tracking-tight">
+                  Ena<span className="text-emerald-400">
+                    V
+                  </span>
+                </div>
+
+                <div className="hidden text-[6px] font-bold uppercase tracking-[0.23em] text-slate-600 sm:block">
+                  Intelligent Mobility Platform
+                </div>
+
+              </div>
+
+            </Link>
+
+            {/* DESKTOP NAV */}
+
+            <div className="hidden items-center gap-6 md:flex">
+
+              <a
+                href="#platform"
+                className="text-[8px] font-bold uppercase tracking-widest text-slate-400 transition hover:text-emerald-400"
+              >
+                Platform
+              </a>
+
+              <a
+                href="#charging"
+                className="text-[8px] font-bold uppercase tracking-widest text-slate-400 transition hover:text-emerald-400"
+              >
+                Charging
+              </a>
+
+              <a
+                href="#schemes"
+                className="text-[8px] font-bold uppercase tracking-widest text-slate-400 transition hover:text-emerald-400"
+              >
+                Schemes
+              </a>
+
+              <a
+                href="#government"
+                className="text-[8px] font-bold uppercase tracking-widest text-slate-400 transition hover:text-emerald-400"
+              >
+                Government
+              </a>
+
+              <a
+                href="#drivers"
+                className="text-[8px] font-bold uppercase tracking-widest text-slate-400 transition hover:text-emerald-400"
+              >
+                Drivers
+              </a>
+
+            </div>
+
+            {/* ONLY CTA */}
+
+            <Link
+              href="/auth/signup"
+              className="hidden items-center gap-1.5 rounded-full bg-emerald-400 px-4 py-2 text-[8px] font-black uppercase tracking-wider text-slate-950 shadow-[0_0_16px_rgba(16,185,129,.25)] transition hover:bg-emerald-300 sm:flex"
+            >
+              Get started
+              <ArrowRight className="h-2.5 w-2.5" />
+            </Link>
+
+            {/* MOBILE */}
+
+            <button
+              type="button"
+              onClick={() =>
+                setMobileMenuOpen(
+                  (current) => !current,
+                )
+              }
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-800 text-slate-400 sm:hidden"
+              aria-label={
+                mobileMenuOpen
+                  ? "Close menu"
+                  : "Open menu"
+              }
+            >
+              {mobileMenuOpen ? (
+                <X className="h-3.5 w-3.5" />
+              ) : (
+                <Menu className="h-3.5 w-3.5" />
+              )}
+            </button>
+
+          </div>
+
+          {mobileMenuOpen && (
+            <div className="border-t border-slate-800 py-3 md:hidden">
+
+              {[
+                ["Platform", "#platform"],
+                ["Charging", "#charging"],
+                ["Schemes", "#schemes"],
+                ["Government", "#government"],
+                ["Drivers", "#drivers"],
+              ].map(([label, href]) => (
+                <a
+                  key={label}
+                  href={href}
+                  onClick={() =>
+                    setMobileMenuOpen(false)
+                  }
+                  className="block rounded-lg px-3 py-2.5 text-[8px] font-bold uppercase tracking-wider text-slate-400 transition hover:bg-slate-900 hover:text-white"
                 >
-                  {features[activeFeatureIndex].ctaText} <ArrowRight className="w-4 h-4" />
+                  {label}
+                </a>
+              ))}
+
+              <div className="mt-3 border-t border-slate-800 pt-3">
+
+                <Link
+                  href="/auth/signup"
+                  className="flex h-9 w-full items-center justify-center gap-2 rounded-full bg-emerald-400 text-[8px] font-black uppercase tracking-wider text-slate-950"
+                >
+                  Get started
+                  <ArrowRight className="h-3 w-3" />
                 </Link>
 
-                <div className="flex items-center gap-3 pt-2">
-                  <button
-                    onClick={() =>
-                      setActiveFeatureIndex((prev) => (prev === 0 ? features.length - 1 : prev - 1))
-                    }
-                    className="w-9 h-9 rounded-full border border-slate-700 hover:border-[#10B981] flex items-center justify-center text-slate-300 hover:text-[#10B981] transition bg-[#070B14]"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <div className="flex gap-2">
-                    {features.map((_, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => setActiveFeatureIndex(idx)}
-                        className={`h-2 rounded-full transition-all ${
-                          activeFeatureIndex === idx ? "w-8 bg-[#10B981]" : "w-2 bg-slate-700"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <button
-                    onClick={() =>
-                      setActiveFeatureIndex((prev) => (prev === features.length - 1 ? 0 : prev + 1))
-                    }
-                    className="w-9 h-9 rounded-full border border-slate-700 hover:border-[#10B981] flex items-center justify-center text-slate-300 hover:text-[#10B981] transition bg-[#070B14]"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
               </div>
+
+            </div>
+          )}
+
+        </nav>
+
+      </div>
+
+      {/* =====================================================
+          HERO
+      ===================================================== */}
+
+      <section className="relative overflow-hidden">
+
+        <div
+          className="absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(100,116,139,.18) 1px, transparent 1px), linear-gradient(90deg, rgba(100,116,139,.18) 1px, transparent 1px)",
+            backgroundSize: "42px 42px",
+          }}
+        />
+
+        <div className="pointer-events-none absolute left-[5%] top-[25%] h-80 w-80 rounded-full bg-blue-500/10 blur-[120px]" />
+
+        <div className="pointer-events-none absolute right-[5%] top-[22%] h-80 w-80 rounded-full bg-emerald-400/10 blur-[120px]" />
+
+        <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-20 sm:px-6 lg:pb-20">
+
+          {/* HERO */}
+
+          <div className="mx-auto max-w-4xl text-center">
+
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-1.5 text-[7px] font-bold uppercase tracking-[0.2em] text-emerald-400">
+              <Sparkles className="h-3 w-3" />
+              Intelligent mobility platform
             </div>
 
-            {/* Right Column: Clean Telemetry Dashboard Card */}
-            <div className="lg:col-span-7">
-              <div className="w-full bg-[#070B14] border border-slate-800 rounded-2xl p-6 shadow-2xl font-mono flex flex-col gap-4">
-                
-                {/* Top Header */}
-                <div className="flex flex-wrap items-center justify-between pb-3 border-b border-slate-800 gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] animate-ping" />
-                    <span className="text-xs text-[#10B981] font-bold tracking-wider uppercase">GRID SYNC: ACTIVE</span>
-                  </div>
-                  <div className="text-[10px] text-slate-400 bg-slate-900 border border-slate-800 px-3 py-1 rounded">
-                    LATENCY: <strong className="text-slate-200">12ms</strong>
-                  </div>
-                </div>
+            {/* SMALLER ENAV */}
 
-                {/* Simulator Title Bar */}
-                <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0B132B]/60 p-3 rounded-xl border border-slate-800/60">
-                  <div>
-                    <div className="text-xs font-bold text-white tracking-wide flex items-center gap-1.5">
-                      <Navigation className="w-3.5 h-3.5 text-[#10B981]" /> SMART ROUTE OPTIMIZATION SIMULATOR
-                    </div>
-                    <div className="text-[11px] text-slate-400 mt-0.5">
-                      Dispatch Vector: <span className="text-slate-200">Central ICCC → Dwarka Sec-14</span>
-                    </div>
-                  </div>
-                  <button className="bg-[#10B981] hover:bg-[#34D399] text-slate-950 font-bold px-4 py-2 rounded-lg text-xs tracking-wider flex items-center gap-1.5 transition shadow-[0_0_15px_rgba(16,185,129,0.3)] whitespace-nowrap">
-                    <Zap className="w-3.5 h-3.5 fill-slate-950" /> Trigger Dispatch
-                  </button>
-                </div>
+            <div className="mt-6">
 
-                {/* Dedicated Canvas Viewport with Auto-Scaling */}
-                <div className="w-full h-[300px] bg-[#050810] border border-slate-800/80 rounded-xl p-4 overflow-hidden relative flex items-center justify-center">
-                  <EVDispatchAnimation />
-                </div>
-
-                {/* Bottom Telemetry Metrics */}
-                <div className="grid grid-cols-3 gap-3 text-center pt-1">
-                  <div className="bg-[#0B132B] border border-slate-800 p-3 rounded-xl">
-                    <div className="text-[9px] text-slate-400 uppercase tracking-wider">AVAILABLE HUBS</div>
-                    <div className="text-sm font-bold text-[#10B981] mt-0.5">844 Active</div>
-                  </div>
-                  <div className="bg-[#0B132B] border border-slate-800 p-3 rounded-xl">
-                    <div className="text-[9px] text-slate-400 uppercase tracking-wider">RESPONSE TIME</div>
-                    <div className="text-sm font-bold text-blue-400 mt-0.5">&lt; 4.2 Mins</div>
-                  </div>
-                  <div className="bg-[#0B132B] border border-slate-800 p-3 rounded-xl">
-                    <div className="text-[9px] text-slate-400 uppercase tracking-wider">SYSTEM STATUS</div>
-                    <div className="text-sm font-bold text-emerald-400 mt-0.5">100% Online</div>
-                  </div>
-                </div>
-
+              <div className="text-5xl font-black leading-none tracking-[-0.07em] text-white sm:text-6xl md:text-7xl">
+                Ena<span className="text-emerald-400">
+                  V
+                </span>
               </div>
+
+              <div className="mt-2 text-[7px] font-bold uppercase tracking-[0.4em] text-slate-600">
+                Intelligent Mobility
+              </div>
+
             </div>
 
-          </div>
-        </div>
-      </section>
+            <h1 className="mt-7 text-4xl font-black leading-[1.04] tracking-tight sm:text-5xl md:text-6xl">
 
-      {/* ----------------- 4. CATCHY CTA SECTION ----------------- */}
-      <section className="max-w-7xl mx-auto px-4 py-4">
-        <div className="bg-gradient-to-r from-[#0B132B] to-[#111C3A] border border-[#10B981]/30 rounded-2xl p-8 flex flex-col md:flex-row justify-between items-center gap-6 shadow-xl">
-          <div className="space-y-2 text-center md:text-left">
-            <h2 className="text-2xl md:text-3xl font-black uppercase tracking-wide text-white">
-              Start Your EV Journey With Us
-            </h2>
-            <p className="text-slate-300 text-xs md:text-sm">
-              Calculate your route range, check government subsidy eligibility, and locate fast-charging hubs in seconds.
-            </p>
-          </div>
-          <Link
-            href="/drivers/chargers"
-            className="bg-[#10B981] hover:bg-[#34D399] text-slate-950 font-bold px-8 py-3.5 rounded-full text-xs uppercase tracking-wider flex items-center gap-2 transition whitespace-nowrap shadow-[0_0_20px_rgba(16,185,129,0.4)]"
-          >
-            Start Journey Now <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </section>
+              Smarter journeys.
+              <br />
 
-      {/* ----------------- 5. GOV SUBSIDIES SLIDER SECTION ----------------- */}
-      <section id="subsidies" className="max-w-7xl mx-auto px-4 py-12">
-        <div className="flex justify-between items-end mb-8">
-          <div>
-            <span className="text-xs font-mono text-[#10B981] uppercase font-bold tracking-widest">
-              Financial Incentives
-            </span>
-            <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-wider mt-1">
-              Government Subsidies & Schemes
-            </h2>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() =>
-                setActiveSubsidyIndex((prev) => (prev === 0 ? subsidies.length - 1 : prev - 1))
-              }
-              className="w-9 h-9 rounded-full border border-slate-800 hover:border-[#10B981] flex items-center justify-center text-slate-300 hover:text-[#10B981] transition bg-[#0B132B]"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() =>
-                setActiveSubsidyIndex((prev) => (prev === subsidies.length - 1 ? 0 : prev + 1))
-              }
-              className="w-9 h-9 rounded-full border border-slate-800 hover:border-[#10B981] flex items-center justify-center text-slate-300 hover:text-[#10B981] transition bg-[#0B132B]"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        <div className="bg-[#0B132B] border border-[#10B981]/30 rounded-2xl p-6 md:p-8 shadow-lg">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div className="space-y-3">
-              <span className="text-[10px] font-mono bg-[#10B981]/15 text-[#34D399] border border-[#10B981]/40 px-3 py-1 rounded-full font-bold">
-                {subsidies[activeSubsidyIndex].tag}
+              <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-blue-400 bg-clip-text text-transparent">
+                Connected mobility.
               </span>
-              <h3 className="text-2xl font-bold text-white">
-                {subsidies[activeSubsidyIndex].title}
-              </h3>
-              <p className="text-xs md:text-sm text-slate-300 max-w-2xl leading-relaxed">
-                {subsidies[activeSubsidyIndex].desc}
-              </p>
-            </div>
-            <div className="bg-[#070B14] border border-slate-800 rounded-xl p-4 text-center min-w-[200px]">
-              <div className="text-[11px] font-mono text-slate-400 uppercase">Incentive Framework</div>
-              <div className="text-xl font-black text-[#10B981] font-mono mt-1">
-                {subsidies[activeSubsidyIndex].amount}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* ----------------- 6. CHARGING STATIONS MAP SECTION (UPDATED) ----------------- */}
-      <section id="chargers" className="max-w-7xl mx-auto px-4 py-12">
-        <div className="text-center space-y-2 mb-8">
-          <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-wider">
-            Explore Charging Stations Near You
-          </h2>
-          <p className="text-xs md:text-sm text-slate-400">
-            Real-time port availability, fast DC chargers, and smart slot reservations
-          </p>
-        </div>
+            </h1>
 
-        <div className="relative bg-[#0B132B] border border-[#10B981]/30 rounded-3xl p-4 overflow-hidden shadow-2xl">
-          {/* Rectangular container embedding the interactive Leaflet map */}
-          <div className="w-full h-[420px] bg-[#070B14] rounded-2xl border border-slate-800 relative overflow-hidden">
-            <ChargingStationsMap />
-          </div>
-        </div>
-      </section>
-
-      {/* ----------------- 7. IMPACT STATS ----------------- */}
-      <section className="max-w-7xl mx-auto px-4 py-12">
-        <div className="text-center space-y-2 mb-10">
-          <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-wider">
-            India is Going Electric. Are You Too?
-          </h2>
-          <p className="text-xs md:text-sm text-slate-400">
-            Join thousands of drivers making the switch to cleaner, smarter mobility with EnaV.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="group relative bg-[#0B132B] border border-slate-800 hover:border-[#10B981]/60 p-7 rounded-2xl text-center transition-all duration-300 transform hover:-translate-y-1.5 shadow-lg overflow-hidden">
-            <div className="text-3xl font-black text-white font-mono tracking-tight group-hover:text-[#10B981] transition-colors">
-              2.05M+
-            </div>
-            <div className="text-[11px] font-bold text-slate-400 group-hover:text-slate-200 uppercase tracking-widest mt-2 flex items-center justify-center gap-1">
-              <Activity className="w-3.5 h-3.5 text-[#10B981]" /> EVs Sold (FY2025)
-            </div>
-          </div>
-
-          <div className="group relative bg-[#0B132B] border border-slate-800 hover:border-[#10B981]/60 p-7 rounded-2xl text-center transition-all duration-300 transform hover:-translate-y-1.5 shadow-lg overflow-hidden">
-            <div className="text-3xl font-black text-white font-mono tracking-tight group-hover:text-[#10B981] transition-colors">
-              22%
-            </div>
-            <div className="text-[11px] font-bold text-slate-400 group-hover:text-slate-200 uppercase tracking-widest mt-2 flex items-center justify-center gap-1">
-              <TrendingUp className="w-3.5 h-3.5 text-[#10B981]" /> Annual EV Growth
-            </div>
-          </div>
-
-          <div className="group relative bg-[#0B132B] border border-slate-800 hover:border-[#10B981]/60 p-7 rounded-2xl text-center transition-all duration-300 transform hover:-translate-y-1.5 shadow-lg overflow-hidden">
-            <div className="text-3xl font-black text-white font-mono tracking-tight group-hover:text-[#10B981] transition-colors">
-              29.1K+
-            </div>
-            <div className="text-[11px] font-bold text-slate-400 group-hover:text-slate-200 uppercase tracking-widest mt-2 flex items-center justify-center gap-1">
-              <Zap className="w-3.5 h-3.5 text-[#10B981]" /> Public Charging Stations
-            </div>
-          </div>
-
-          <div className="group relative bg-[#0B132B] border border-slate-800 hover:border-[#10B981]/60 p-7 rounded-2xl text-center transition-all duration-300 transform hover:-translate-y-1.5 shadow-lg overflow-hidden">
-            <div className="text-3xl font-black text-white font-mono tracking-tight group-hover:text-[#10B981] transition-colors">
-              ₹2K Cr
-            </div>
-            <div className="text-[11px] font-bold text-slate-400 group-hover:text-slate-200 uppercase tracking-widest mt-2 flex items-center justify-center gap-1">
-              <ShieldAlert className="w-3.5 h-3.5 text-[#10B981]" /> Infra Investment
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ----------------- 8. REVIEWS & FEEDBACK FORM ----------------- */}
-      <section className="max-w-7xl mx-auto px-4 py-12 space-y-10">
-        <div>
-          <div className="text-center space-y-2 mb-8">
-            <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-wider">
-              Hear From EV Owners
-            </h2>
-            <p className="text-xs md:text-sm text-slate-400">
-              Real experiences from drivers using EnaV for daily commutes & highway trips.
+            <p className="mx-auto mt-5 max-w-2xl text-xs leading-6 text-slate-400 sm:text-sm">
+              Journey planning, charging discovery and mobility
+              operations brought together in one focused platform.
             </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {reviews.map((rev, idx) => (
-              <div
-                key={idx}
-                className="bg-[#0B132B] border border-slate-800 p-6 rounded-2xl space-y-4 hover:border-[#10B981]/50 transition flex flex-col justify-between shadow-md"
+            <div className="mt-7 flex justify-center">
+
+              <Link
+                href="/auth/signup"
+                className="flex h-11 items-center justify-center gap-2 rounded-full bg-emerald-400 px-7 text-[8px] font-black uppercase tracking-wider text-slate-950 shadow-[0_0_24px_rgba(16,185,129,.25)] transition hover:bg-emerald-300"
               >
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#10B981]/20 border border-[#10B981] flex items-center justify-center font-bold text-[#10B981]">
-                      {rev.name[0]}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-sm text-white flex items-center gap-1">
-                        {rev.name}
-                      </h4>
-                      <p className="text-[11px] text-slate-400">
-                        {rev.location} • {rev.vehicle}
-                      </p>
-                    </div>
-                  </div>
+                Get started
+                <ArrowRight className="h-3 w-3" />
+              </Link>
 
-                  <div className="flex items-center justify-between text-[11px]">
-                    <div className="flex text-amber-400">
-                      {[...Array(rev.rating)].map((_, i) => (
-                        <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />
-                      ))}
-                    </div>
-                    <span className="bg-[#070B14] border border-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono">
-                      {rev.duration}
-                    </span>
-                  </div>
+            </div>
 
-                  <p className="text-xs text-slate-300 italic leading-relaxed">
-                    "{rev.review}"
-                  </p>
-                </div>
-              </div>
-            ))}
           </div>
+
+          {/* =================================================
+              HERO PRODUCT PREVIEW
+          ================================================= */}
+
+          <div className="relative mx-auto mt-12 max-w-5xl">
+
+            <div className="absolute -inset-5 rounded-[34px] bg-gradient-to-r from-emerald-400/10 via-blue-500/5 to-emerald-400/10 blur-2xl" />
+
+            <div className="relative rounded-[28px] border border-slate-800 bg-[#0B132B]/95 p-3 shadow-2xl sm:p-4">
+
+              <div className="flex items-center justify-between border-b border-slate-800 px-2 pb-3">
+
+                <div className="flex items-center gap-2">
+
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+
+                  <span className="text-[7px] font-bold uppercase tracking-widest text-slate-500">
+                    EnaV mobility workspace
+                  </span>
+
+                </div>
+
+                <div className="flex items-center gap-2 text-[6px] uppercase tracking-widest text-slate-700">
+
+                  <Layers className="h-3 w-3" />
+
+                  Preview
+
+                </div>
+
+              </div>
+
+              <div className="relative mt-3 h-[310px] overflow-hidden rounded-2xl border border-slate-800 bg-[#050810] sm:h-[370px]">
+
+                <div
+                  className="absolute inset-0 opacity-20"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(rgba(100,116,139,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(100,116,139,.12) 1px, transparent 1px)",
+                    backgroundSize: "32px 32px",
+                  }}
+                />
+
+                {/* roads */}
+
+                <div className="absolute left-[4%] top-[64%] h-[2px] w-[91%] rotate-[-12deg] bg-slate-700" />
+
+                <div className="absolute left-[19%] top-[41%] h-[2px] w-[63%] rotate-[18deg] bg-slate-700/80" />
+
+                <div className="absolute left-[51%] top-[8%] h-[2px] w-[50%] rotate-[68deg] bg-slate-700/50" />
+
+                <div className="absolute left-[0%] top-[27%] h-[2px] w-[44%] rotate-[71deg] bg-slate-800" />
+
+                {/* route */}
+
+                <div className="absolute left-[10%] top-[63%] h-[4px] w-[73%] rotate-[-12deg] rounded-full bg-gradient-to-r from-emerald-400 to-blue-400 shadow-[0_0_18px_rgba(52,211,153,.4)]" />
+
+                {/* start */}
+
+                <div className="absolute left-[7%] top-[58%] flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#050810] bg-emerald-400">
+
+                  <MapPin className="h-4 w-4 text-slate-950" />
+
+                </div>
+
+                {/* vehicle */}
+
+                <div className="absolute left-[46%] top-[53%] flex h-11 w-11 items-center justify-center rounded-full border border-emerald-400/40 bg-[#0B132B]">
+
+                  <Navigation className="h-4 w-4 text-emerald-400" />
+
+                </div>
+
+                {/* destination */}
+
+                <div className="absolute right-[8%] top-[42%] flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#050810] bg-blue-400">
+
+                  <MapPin className="h-4 w-4 text-slate-950" />
+
+                </div>
+
+                {/* product card */}
+
+                <div className="absolute left-4 top-4 w-[275px] rounded-xl border border-slate-800 bg-[#0B132B]/95 p-3 shadow-xl backdrop-blur">
+
+                  <div className="text-[6px] font-bold uppercase tracking-widest text-emerald-400">
+                    Driver journey
+                  </div>
+
+                  <div className="mt-1.5 text-[11px] font-black text-white">
+                    Plan your next journey
+                  </div>
+
+                  <div className="mt-3 flex items-center gap-2 rounded-lg border border-slate-800 bg-[#070B14] p-2">
+
+                    <MapPin className="h-3 w-3 text-emerald-400" />
+
+                    <span className="text-[7px] text-slate-400">
+                      Current location
+                    </span>
+
+                  </div>
+
+                  <div className="my-2 ml-1 h-2 border-l border-dashed border-slate-700" />
+
+                  <div className="flex items-center gap-2 rounded-lg border border-slate-800 bg-[#070B14] p-2">
+
+                    <Navigation className="h-3 w-3 text-blue-400" />
+
+                    <span className="text-[7px] text-slate-400">
+                      Search destination
+                    </span>
+
+                  </div>
+
+                </div>
+
+                {/* tiles */}
+
+                <div className="absolute bottom-4 left-4 right-4 grid grid-cols-3 gap-2 sm:left-auto sm:right-4 sm:w-[390px]">
+
+                  <HeroTile
+                    icon={<Route className="h-3 w-3" />}
+                    title="Journey"
+                    value="Plan"
+                  />
+
+                  <HeroTile
+                    icon={
+                      <BatteryCharging className="h-3 w-3" />
+                    }
+                    title="Charging"
+                    value="Discover"
+                  />
+
+                  <HeroTile
+                    icon={
+                      <ShieldCheck className="h-3 w-3" />
+                    }
+                    title="Government"
+                    value="Operate"
+                  />
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
         </div>
 
-        <div className="bg-[#0B132B] border border-[#10B981]/30 rounded-2xl p-6 md:p-8 max-w-2xl mx-auto shadow-xl">
-          <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-            <Star className="w-5 h-5 text-[#10B981] fill-[#10B981]" /> Submit Your Experience
-          </h3>
-          <p className="text-xs text-slate-400 mb-6">
-            Are you an EV owner? Help us improve EnaV network dispatch and charging accuracy.
-          </p>
+      </section>
 
-          {feedbackSubmitted ? (
-            <div className="bg-[#10B981]/15 border border-[#10B981]/40 text-[#34D399] text-xs p-4 rounded-xl text-center font-bold">
-              Thank you for your feedback! Your review helps build a stronger EV ecosystem.
-            </div>
-          ) : (
-            <form onSubmit={handleFeedbackSubmit} className="space-y-4">
-              <div>
-                <label className="text-[11px] font-mono text-slate-400 block mb-1">Rating</label>
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      type="button"
-                      key={star}
-                      onClick={() => setUserRating(star)}
-                      className="p-1 text-amber-400 transition hover:scale-110"
-                    >
-                      <Star
-                        className={`w-6 h-6 ${
-                          star <= userRating ? "fill-amber-400 text-amber-400" : "text-slate-700"
-                        }`}
-                      />
-                    </button>
-                  ))}
+      {/* =====================================================
+          PLATFORM — SHORT OVERVIEW
+      ===================================================== */}
+
+      <section
+        id="platform"
+        className="border-y border-slate-800 bg-[#0A0F1A] py-16"
+      >
+
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+
+          <SectionTitle
+            eyebrow="Platform"
+            title="One ecosystem. Clear roles."
+            description="Each side of EnaV has a focused purpose instead of putting every workflow on the same screen."
+          />
+
+          <div className="mt-9 grid gap-3 md:grid-cols-3">
+
+            <PlatformPill
+              icon={
+                <CircleUserRound className="h-4 w-4" />
+              }
+              title="Drivers"
+              text="Journey and driver workflow"
+            />
+
+            <PlatformPill
+              icon={
+                <BatteryCharging className="h-4 w-4" />
+              }
+              title="Charging"
+              text="Station discovery"
+            />
+
+            <PlatformPill
+              icon={
+                <ShieldCheck className="h-4 w-4" />
+              }
+              title="Government"
+              text="Mobility operations"
+            />
+
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* =====================================================
+          REAL FEATURE CAROUSEL
+      ===================================================== */}
+
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+
+          <SectionTitle
+            eyebrow="Explore EnaV"
+            title="See the platform in action."
+            description="Swipe through the modules on mobile or use the controls to move between them."
+          />
+
+          <div className="flex gap-2">
+
+            <button
+              type="button"
+              onClick={previousFeature}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-800 bg-[#0B132B] text-slate-400 transition hover:border-emerald-400/30 hover:text-white"
+              aria-label="Previous feature"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+
+            <button
+              type="button"
+              onClick={nextFeature}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-800 bg-[#0B132B] text-slate-400 transition hover:border-emerald-400/30 hover:text-white"
+              aria-label="Next feature"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+
+          </div>
+
+        </div>
+
+        {/* viewport */}
+
+        <div
+          className="mt-8 overflow-hidden rounded-2xl"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+
+          {/* track */}
+
+          <div
+            className="flex transition-transform duration-500 ease-out"
+            style={{
+              transform: `translateX(-${featureIndex * 100}%)`,
+            }}
+          >
+
+            {features.map(
+              (feature) => (
+                <div
+                  key={feature.badge}
+                  className="w-full shrink-0"
+                >
+
+                  <article className="overflow-hidden rounded-2xl border border-slate-800 bg-[#0B132B]">
+
+                    <div className="grid lg:grid-cols-[0.85fr_1.15fr]">
+
+                      {/* TEXT */}
+
+                      <div className="p-6 sm:p-8 lg:p-10">
+
+                        <span
+                          className={`inline-flex rounded-full border px-3 py-1.5 text-[7px] font-bold uppercase tracking-[0.2em] ${
+                            feature.accent ===
+                            "blue"
+                              ? "border-blue-400/20 bg-blue-400/10 text-blue-400"
+                              : feature.accent ===
+                                  "purple"
+                                ? "border-purple-400/20 bg-purple-400/10 text-purple-300"
+                                : "border-emerald-400/20 bg-emerald-400/10 text-emerald-400"
+                          }`}
+                        >
+                          {feature.badge}
+                        </span>
+
+                        <h3 className="mt-5 text-2xl font-black leading-tight text-white sm:text-3xl">
+                          {feature.title}
+                        </h3>
+
+                        <p className="mt-4 text-xs leading-6 text-slate-400">
+                          {feature.description}
+                        </p>
+
+                        <div className="mt-6 space-y-3">
+
+                          {feature.points.map(
+                            (point) => (
+                              <div
+                                key={point}
+                                className="flex items-center gap-3 text-[9px] font-bold text-slate-300"
+                              >
+
+                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-400/10">
+
+                                  <Check
+                                    className="h-3 w-3 text-emerald-400"
+                                    strokeWidth={3}
+                                  />
+
+                                </span>
+
+                                {point}
+
+                              </div>
+                            ),
+                          )}
+
+                        </div>
+
+                        <Link
+                          href={feature.href}
+                          className="mt-7 inline-flex items-center gap-2 rounded-full bg-emerald-400 px-5 py-3 text-[8px] font-black uppercase tracking-wider text-slate-950 transition hover:bg-emerald-300"
+                        >
+                          Open module
+                          <ArrowRight className="h-3 w-3" />
+                        </Link>
+
+                      </div>
+
+                      {/* VISUAL */}
+
+                      <div className="border-t border-slate-800 bg-[#070B14] p-3 lg:border-l lg:border-t-0 sm:p-4">
+
+                        <div className="relative h-[330px] overflow-hidden rounded-xl border border-slate-800 bg-[#050810]">
+
+                          <div
+                            className="absolute inset-0 opacity-20"
+                            style={{
+                              backgroundImage:
+                                "linear-gradient(rgba(100,116,139,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(100,116,139,.12) 1px, transparent 1px)",
+                              backgroundSize:
+                                "28px 28px",
+                            }}
+                          />
+
+                          {/* road */}
+
+                          <div className="absolute left-[8%] top-[65%] h-[3px] w-[74%] rotate-[-10deg] rounded-full bg-gradient-to-r from-emerald-400 to-blue-400 shadow-[0_0_14px_rgba(52,211,153,.4)]" />
+
+                          {/* start */}
+
+                          <div className="absolute left-[8%] top-[59%] flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400">
+
+                            <MapPin className="h-3.5 w-3.5 text-slate-950" />
+
+                          </div>
+
+                          {/* centre icon */}
+
+                          <div className="absolute left-[46%] top-[52%] flex h-10 w-10 items-center justify-center rounded-full border border-emerald-400/30 bg-[#0B132B] shadow-[0_0_20px_rgba(52,211,153,.12)]">
+
+                            {feature.badge ===
+                              "DRIVER JOURNEY" && (
+                              <Route className="h-4 w-4 text-emerald-400" />
+                            )}
+
+                            {feature.badge ===
+                              "CHARGING DISCOVERY" && (
+                              <BatteryCharging className="h-4 w-4 text-blue-400" />
+                            )}
+
+                            {feature.badge ===
+                              "DRIVER PROFILE" && (
+                              <CircleUserRound className="h-4 w-4 text-emerald-400" />
+                            )}
+
+                            {feature.badge ===
+                              "GOVERNMENT" && (
+                              <ShieldCheck className="h-4 w-4 text-purple-300" />
+                            )}
+
+                          </div>
+
+                          {/* destination */}
+
+                          <div className="absolute right-[9%] top-[42%] flex h-8 w-8 items-center justify-center rounded-full bg-blue-400">
+
+                            <MapPin className="h-3.5 w-3.5 text-slate-950" />
+
+                          </div>
+
+                          {/* top panel */}
+
+                          <div className="absolute left-4 right-4 top-4 rounded-xl border border-slate-800 bg-[#0B132B]/95 p-4 backdrop-blur">
+
+                            <div className="text-[6px] font-bold uppercase tracking-widest text-slate-600">
+                              {feature.badge}
+                            </div>
+
+                            <div className="mt-1.5 text-sm font-black text-white">
+                              {feature.title}
+                            </div>
+
+                          </div>
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  </article>
+
                 </div>
+              ),
+            )}
+
+          </div>
+
+        </div>
+
+        {/* dots */}
+
+        <div className="mt-5 flex justify-center gap-1.5">
+
+          {features.map(
+            (_, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() =>
+                  setFeatureIndex(index)
+                }
+                className={`h-1.5 rounded-full transition-all ${
+                  featureIndex === index
+                    ? "w-8 bg-emerald-400"
+                    : "w-1.5 bg-slate-700"
+                }`}
+                aria-label={`Go to feature ${index + 1}`}
+              />
+            ),
+          )}
+
+        </div>
+
+      </section>
+
+      {/* =====================================================
+          CHARGING MAP
+      ===================================================== */}
+
+      <section
+        id="charging"
+        className="border-y border-slate-800 bg-[#0A0F1A] py-16"
+      >
+
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+
+          <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-center">
+
+            <div>
+
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-400/10">
+
+                <MapPin className="h-5 w-5 text-blue-400" />
+
               </div>
 
-              <div>
-                <label className="text-[11px] font-mono text-slate-400 block mb-1">
-                  Your Feedback or Review
-                </label>
-                <textarea
-                  rows={3}
-                  required
-                  value={feedback}
-                  onChange={(e) => setFeedback(e.target.value)}
-                  placeholder="Share your charging, dispatch, or range planning experience..."
-                  className="w-full bg-[#070B14] border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#10B981]"
-                />
+              <div className="mt-5 text-[7px] font-bold uppercase tracking-[0.22em] text-blue-400">
+                Charging network
+              </div>
+
+              <h2 className="mt-2 text-3xl font-black leading-tight text-white sm:text-4xl">
+                Find charging around your journey.
+              </h2>
+
+              <p className="mt-4 max-w-md text-xs leading-6 text-slate-400">
+                Explore charging locations and review the station
+                information available through EnaV.
+              </p>
+
+              <Link
+                href="/drivers/chargers"
+                className="mt-7 inline-flex items-center gap-2 rounded-full bg-blue-400 px-5 py-3 text-[8px] font-black uppercase tracking-wider text-slate-950 transition hover:bg-blue-300"
+              >
+                Open charging
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+
+            </div>
+
+            <div className="rounded-[24px] border border-slate-800 bg-[#0B132B] p-3 sm:p-4">
+
+              <div className="h-[390px] overflow-hidden rounded-2xl border border-slate-800">
+
+                <ChargingStationsMap />
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* =====================================================
+          SCHEME CAROUSEL
+      ===================================================== */}
+
+      <section
+        id="schemes"
+        className="border-b border-slate-800 bg-[#070B14] py-16"
+      >
+
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+
+            <SectionTitle
+              eyebrow="EV schemes & policies"
+              title="Government EV schemes, in one place."
+              description="Browse verified policy and scheme information instead of generic subsidy claims."
+            />
+
+            <div className="flex items-center gap-2">
+
+              <button
+                type="button"
+                onClick={previousScheme}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-800 bg-[#0B132B] text-slate-400 transition hover:border-emerald-400/30 hover:text-white"
+                aria-label="Previous scheme"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+
+              <div className="min-w-[42px] text-center text-[7px] font-bold uppercase tracking-widest text-slate-600">
+                {schemeIndex + 1} / {schemes.length}
               </div>
 
               <button
-                type="submit"
-                className="w-full bg-[#10B981] hover:bg-[#34D399] text-slate-950 font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition"
+                type="button"
+                onClick={nextScheme}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-800 bg-[#0B132B] text-slate-400 transition hover:border-emerald-400/30 hover:text-white"
+                aria-label="Next scheme"
               >
-                Submit Feedback <Send className="w-3.5 h-3.5" />
+                <ChevronRight className="h-4 w-4" />
               </button>
-            </form>
-          )}
+
+            </div>
+
+          </div>
+
+          <div className="relative mt-8 overflow-hidden rounded-2xl border border-emerald-400/15 bg-[#0B132B]">
+
+            <div className="grid min-h-[270px] lg:grid-cols-[1fr_270px]">
+
+              {/* TEXT */}
+
+              <div className="p-6 sm:p-8">
+
+                <span className="inline-flex rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 text-[7px] font-bold uppercase tracking-[0.2em] text-emerald-400">
+                  {currentScheme.tag}
+                </span>
+
+                <h3 className="mt-5 text-2xl font-black text-white sm:text-3xl">
+                  {currentScheme.title}
+                </h3>
+
+                <p className="mt-4 max-w-2xl text-xs leading-6 text-slate-400">
+                  {currentScheme.description}
+                </p>
+
+                <div className="mt-6 flex items-start gap-3 rounded-xl border border-slate-800 bg-[#070B14] p-3">
+
+                  <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-600" />
+
+                  <div>
+
+                    <div className="text-[7px] font-bold uppercase tracking-widest text-slate-600">
+                      Source
+                    </div>
+
+                    <div className="mt-1 text-[8px] leading-4 text-slate-500">
+                      {currentScheme.source}
+                    </div>
+
+                  </div>
+
+                </div>
+
+                <a
+                  href={currentScheme.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-6 inline-flex items-center gap-2 rounded-full border border-slate-700 bg-[#070B14] px-4 py-2.5 text-[8px] font-bold uppercase tracking-wider text-slate-300 transition hover:border-emerald-400/30 hover:text-emerald-400"
+                >
+                  Official information
+                  <ArrowRight className="h-3 w-3" />
+                </a>
+
+              </div>
+
+              {/* VISUAL */}
+
+              <div className="hidden items-center justify-center border-l border-slate-800 bg-[#070B14] p-6 lg:flex">
+
+                <div className="text-center">
+
+                  <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-emerald-400/20 bg-emerald-400/5 shadow-[0_0_30px_rgba(52,211,153,.08)]">
+
+                    <Zap className="h-8 w-8 text-emerald-400" />
+
+                  </div>
+
+                  <div className="mt-5 text-[7px] font-bold uppercase tracking-[0.18em] text-slate-600">
+                    Government source
+                  </div>
+
+                  <div className="mt-1 text-[10px] font-black text-white">
+                    EV policy information
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* scheme dots */}
+
+          <div className="mt-5 flex justify-center gap-1.5">
+
+            {schemes.map(
+              (_, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() =>
+                    setSchemeIndex(index)
+                  }
+                  className={`h-1.5 rounded-full transition-all ${
+                    schemeIndex === index
+                      ? "w-8 bg-emerald-400"
+                      : "w-1.5 bg-slate-700"
+                  }`}
+                  aria-label={`Go to scheme ${index + 1}`}
+                />
+              ),
+            )}
+
+          </div>
+
         </div>
+
       </section>
 
-      {/* ----------------- 9. FOOTER ----------------- */}
-      <footer id="about" className="bg-[#070B14] border-t border-slate-800 pt-16 pb-12">
-        <div id="contact" className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-10">
-          <div className="space-y-4 md:col-span-1">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-[#10B981] flex items-center justify-center text-slate-950 font-black shadow-[0_0_15px_#10B981]">
-                <Zap className="w-4 h-4 fill-slate-950" />
+      {/* =====================================================
+          GOVERNMENT
+      ===================================================== */}
+
+      <section
+        id="government"
+        className="border-b border-slate-800 bg-[#0A0F1A] py-16"
+      >
+
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+
+          <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
+
+            <div>
+
+              <div className="inline-flex rounded-full border border-purple-400/20 bg-purple-400/10 px-3 py-1.5 text-[7px] font-bold uppercase tracking-[0.2em] text-purple-300">
+                Government mobility
               </div>
-              <span className="text-xl font-black text-white tracking-wider">
-                Ena<span className="text-[#10B981]">V</span>
-              </span>
-            </Link>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              EnaV is India's premier EV grid platform—powering 112 emergency breakdown dispatch,
-              live charger booking, and intelligent range routing.
-            </p>
+
+              <h2 className="mt-5 text-3xl font-black leading-tight text-white sm:text-4xl">
+                A dedicated workspace for government teams.
+              </h2>
+
+              <p className="mt-4 max-w-xl text-xs leading-6 text-slate-400">
+                Government-facing mobility and infrastructure workflows
+                stay separate from the driver's everyday experience.
+              </p>
+
+              <Link
+                href="/gov"
+                className="mt-7 inline-flex items-center gap-2 rounded-full border border-purple-400/20 bg-purple-400/5 px-5 py-3 text-[8px] font-black uppercase tracking-wider text-purple-300 transition hover:bg-purple-400/10"
+              >
+                Open government platform
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+
+            </div>
+
+            <div className="rounded-2xl border border-slate-800 bg-[#0B132B] p-5">
+
+              <GovernmentItem
+                title="Mobility operations"
+                text="Keep government operational information organised."
+              />
+
+              <GovernmentItem
+                title="Infrastructure workflows"
+                text="Work with relevant charging and mobility infrastructure information."
+              />
+
+              <GovernmentItem
+                title="Planning support"
+                text="Keep government-focused mobility information in one workspace."
+              />
+
+            </div>
+
           </div>
 
-          <div className="space-y-3">
-            <h4 className="text-xs font-mono uppercase text-[#10B981] font-bold tracking-wider">
-              Quick Links
-            </h4>
-            <ul className="space-y-2 text-xs text-slate-300">
-              <li>
-                <Link href="#features" className="hover:text-[#10B981] transition">
-                  Platform Features
-                </Link>
-              </li>
-              <li>
-                <Link href="#subsidies" className="hover:text-[#10B981] transition">
-                  State EV Incentives
-                </Link>
-              </li>
-              <li>
-                <Link href="/drivers/chargers" className="hover:text-[#10B981] transition">
-                  Charger Locator
-                </Link>
-              </li>
-              <li>
-                <Link href="/gov/dispatch" className="hover:text-[#10B981] transition">
-                  112 SOS Command Engine
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div className="space-y-3">
-            <h4 className="text-xs font-mono uppercase text-[#10B981] font-bold tracking-wider">
-              Contact Us
-            </h4>
-            <ul className="space-y-2.5 text-xs text-slate-300">
-              <li className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-[#10B981]" /> support@enav.in
-              </li>
-              <li className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-[#10B981]" /> 1800-112-ENAV (Toll Free)
-              </li>
-              <li className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-[#10B981]" /> New Delhi, Delhi NCR, India
-              </li>
-            </ul>
-          </div>
-
-          <div className="bg-[#0B132B] border border-slate-800 p-4 rounded-xl space-y-2">
-            <h5 className="text-xs font-bold text-white flex items-center gap-1.5">
-              <ShieldAlert className="w-4 h-4 text-[#10B981]" /> 24/7 Grid Support
-            </h5>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              Integrated directly with city energy grids and emergency EV response units for uninterrupted journey safety.
-            </p>
-          </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 mt-12 pt-6 border-t border-slate-800/60 flex flex-col sm:flex-row justify-between items-center text-[11px] text-slate-500">
-          <div>© 2026 EnaV Infrastructure Platform. All rights reserved.</div>
-          <div className="flex gap-4 mt-2 sm:mt-0">
-            <span className="hover:text-slate-400 cursor-pointer">Privacy Policy</span>
-            <span className="hover:text-slate-400 cursor-pointer">Terms of Service</span>
+      </section>
+
+      {/* =====================================================
+          DRIVER SECTION — LAST MAJOR PRODUCT SECTION
+      ===================================================== */}
+
+      <section
+        id="drivers"
+        className="border-b border-slate-800 bg-[#070B14] py-16"
+      >
+
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+
+          <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
+
+            <div>
+
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400/10">
+                <CircleUserRound className="h-5 w-5 text-emerald-400" />
+              </div>
+
+              <div className="mt-5 text-[7px] font-bold uppercase tracking-[0.22em] text-emerald-400">
+                Driver experience
+              </div>
+
+              <h2 className="mt-2 text-3xl font-black leading-tight text-white sm:text-4xl">
+                Everything important for the journey.
+              </h2>
+
+              <p className="mt-4 max-w-xl text-xs leading-6 text-slate-400">
+                The driver side of EnaV keeps route planning, charging
+                discovery, active journeys and profile information
+                together without unnecessary dashboard clutter.
+              </p>
+
+              <Link
+                href="/drivers"
+                className="mt-7 inline-flex items-center gap-2 rounded-full bg-emerald-400 px-5 py-3 text-[8px] font-black uppercase tracking-wider text-slate-950 transition hover:bg-emerald-300"
+              >
+                Open driver platform
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+
+              <DriverCard
+                icon={<Route className="h-4 w-4" />}
+                title="Route planning"
+                text="Compare routes before beginning the journey."
+              />
+
+              <DriverCard
+                icon={
+                  <BatteryCharging className="h-4 w-4" />
+                }
+                title="Charging"
+                text="Find stations and review available connectors."
+              />
+
+              <DriverCard
+                icon={
+                  <Navigation className="h-4 w-4" />
+                }
+                title="Active journey"
+                text="Keep the selected route and next action in focus."
+              />
+
+              <DriverCard
+                icon={
+                  <CircleUserRound className="h-4 w-4" />
+                }
+                title="Profile"
+                text="Manage personal, vehicle and account information."
+              />
+
+            </div>
+
           </div>
+
         </div>
+
+      </section>
+
+      {/* =====================================================
+          DRIVER REVIEWS
+      ===================================================== */}
+
+      <section className="border-b border-slate-800 bg-[#0A0F1A] py-16">
+
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+
+          <SectionTitle
+            eyebrow="Driver perspective"
+            title="Designed around the road."
+            description="These are illustrative prototype testimonials and should be replaced with verified driver feedback."
+          />
+
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+
+            {driverFeedback.map(
+              (review, index) => (
+                <article
+                  key={index}
+                  className="rounded-2xl border border-slate-800 bg-[#0B132B] p-5"
+                >
+
+                  {/* GOLDEN STARS */}
+
+                  <div className="flex gap-1">
+
+                    {[1, 2, 3, 4, 5].map(
+                      (star) => (
+                        <Star
+                          key={star}
+                          className="h-4 w-4 fill-[#FBBF24] text-[#FBBF24]"
+                          strokeWidth={1.8}
+                        />
+                      ),
+                    )}
+
+                  </div>
+
+                  <p className="mt-5 text-xs leading-6 text-slate-400">
+                    “{review.quote}”
+                  </p>
+
+                  <div className="mt-5 border-t border-slate-800 pt-4">
+
+                    <div className="text-[9px] font-bold text-slate-300">
+                      Sample driver feedback
+                    </div>
+
+                    <div className="mt-1 text-[7px] uppercase tracking-widest text-slate-700">
+                      Prototype content
+                    </div>
+
+                  </div>
+
+                </article>
+              ),
+            )}
+
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* =====================================================
+          FINAL CTA
+      ===================================================== */}
+
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+
+        <div className="relative overflow-hidden rounded-[28px] border border-emerald-400/20 bg-gradient-to-br from-[#0B132B] to-[#08101d] px-6 py-14 text-center shadow-2xl sm:px-10">
+
+          <div className="pointer-events-none absolute left-1/2 top-0 h-60 w-60 -translate-x-1/2 rounded-full bg-emerald-400/5 blur-3xl" />
+
+          <div className="relative">
+
+            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400/10">
+              <Zap className="h-4 w-4 text-emerald-400" />
+            </div>
+
+            <div className="mt-5 text-[7px] font-bold uppercase tracking-[0.22em] text-emerald-400">
+              EnaV
+            </div>
+
+            <h2 className="mx-auto mt-2 max-w-3xl text-3xl font-black tracking-tight text-white sm:text-5xl">
+              Connected mobility without unnecessary complexity.
+            </h2>
+
+            <p className="mx-auto mt-4 max-w-xl text-xs leading-6 text-slate-500">
+              One platform for driver journeys, charging discovery
+              and government mobility workflows.
+            </p>
+
+            <div className="mt-7 flex justify-center">
+
+              <Link
+                href="/auth/signup"
+                className="flex h-11 items-center justify-center gap-2 rounded-full bg-emerald-400 px-7 text-[8px] font-black uppercase tracking-wider text-slate-950 transition hover:bg-emerald-300"
+              >
+                Get started
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* =====================================================
+          FOOTER
+      ===================================================== */}
+
+      <footer className="border-t border-slate-800 bg-[#050810]">
+
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+
+          <div className="grid gap-8 md:grid-cols-4">
+
+            <div className="md:col-span-2">
+
+              <Link
+                href="/"
+                className="flex items-center gap-2.5"
+              >
+
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400 text-slate-950">
+                  <Zap className="h-3.5 w-3.5 fill-current" />
+                </div>
+
+                <div className="text-sm font-black">
+                  Ena<span className="text-emerald-400">
+                    V
+                  </span>
+                </div>
+
+              </Link>
+
+              <p className="mt-3 max-w-md text-[10px] leading-5 text-slate-600">
+                Intelligent mobility platform for journey planning,
+                charging discovery and government mobility workflows.
+              </p>
+
+            </div>
+
+            <div>
+
+              <div className="text-[7px] font-bold uppercase tracking-widest text-slate-500">
+                Platform
+              </div>
+
+              <div className="mt-4 space-y-3">
+
+                <FooterLink href="/drivers">
+                  Drivers
+                </FooterLink>
+
+                <FooterLink href="/drivers/route-optimizer">
+                  Journey
+                </FooterLink>
+
+                <FooterLink href="/drivers/chargers">
+                  Charging
+                </FooterLink>
+
+                <FooterLink href="/gov">
+                  Government
+                </FooterLink>
+
+              </div>
+
+            </div>
+
+            <div>
+
+              <div className="text-[7px] font-bold uppercase tracking-widest text-slate-500">
+                Explore
+              </div>
+
+              <div className="mt-4 space-y-3">
+
+                <a
+                  href="#platform"
+                  className="block text-[9px] text-slate-600 transition hover:text-white"
+                >
+                  Platform
+                </a>
+
+                <a
+                  href="#schemes"
+                  className="block text-[9px] text-slate-600 transition hover:text-white"
+                >
+                  EV Schemes
+                </a>
+
+                <a
+                  href="#charging"
+                  className="block text-[9px] text-slate-600 transition hover:text-white"
+                >
+                  Charging
+                </a>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div className="mt-10 flex flex-col gap-2 border-t border-slate-800 pt-5 text-[7px] uppercase tracking-widest text-slate-700 sm:flex-row sm:items-center sm:justify-between">
+
+            <span>
+              © {new Date().getFullYear()} EnaV
+            </span>
+
+            <span>
+              Intelligent Mobility Platform
+            </span>
+
+          </div>
+
+        </div>
+
       </footer>
+
     </main>
+  );
+}
+
+/* =========================================================
+   REUSABLE COMPONENTS
+========================================================= */
+
+function SectionTitle({
+  eyebrow,
+  title,
+  description,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="max-w-2xl">
+
+      <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/5 px-3 py-1 text-[7px] font-bold uppercase tracking-[0.2em] text-emerald-400">
+
+        <Sparkles className="h-2.5 w-2.5" />
+
+        {eyebrow}
+
+      </div>
+
+      <h2 className="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">
+        {title}
+      </h2>
+
+      <p className="mt-2 text-xs leading-relaxed text-slate-400">
+        {description}
+      </p>
+
+    </div>
+  );
+}
+
+function PlatformPill({
+  icon,
+  title,
+  text,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  text: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-slate-800 bg-[#0B132B] p-4">
+
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-400/10 text-emerald-400">
+        {icon}
+      </div>
+
+      <div>
+
+        <div className="text-[10px] font-black text-white">
+          {title}
+        </div>
+
+        <div className="mt-1 text-[8px] text-slate-600">
+          {text}
+        </div>
+
+      </div>
+
+    </div>
+  );
+}
+
+function HeroTile({
+  icon,
+  title,
+  value,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-lg border border-slate-800 bg-[#0B132B]/95 p-2.5 backdrop-blur">
+
+      <div className="flex items-center gap-1.5 text-slate-500">
+
+        {icon}
+
+        <span className="text-[6px] font-bold uppercase tracking-wider">
+          {title}
+        </span>
+
+      </div>
+
+      <div className="mt-1 text-[8px] font-black text-white">
+        {value}
+      </div>
+
+    </div>
+  );
+}
+
+function GovernmentItem({
+  title,
+  text,
+}: {
+  title: string;
+  text: string;
+}) {
+  return (
+    <div className="flex gap-3 border-b border-slate-800 py-4 last:border-b-0">
+
+      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-purple-400/10">
+
+        <Check
+          className="h-3.5 w-3.5 text-purple-300"
+          strokeWidth={3}
+        />
+
+      </div>
+
+      <div>
+
+        <div className="text-[10px] font-bold text-white">
+          {title}
+        </div>
+
+        <div className="mt-1 text-[8px] leading-4 text-slate-600">
+          {text}
+        </div>
+
+      </div>
+
+    </div>
+  );
+}
+
+function DriverCard({
+  icon,
+  title,
+  text,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  text: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-[#0B132B] p-4 transition hover:border-emerald-400/20">
+
+      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-400/10 text-emerald-400">
+        {icon}
+      </div>
+
+      <h3 className="mt-4 text-xs font-black text-white">
+        {title}
+      </h3>
+
+      <p className="mt-1.5 text-[9px] leading-5 text-slate-500">
+        {text}
+      </p>
+
+    </div>
+  );
+}
+
+function FooterLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="block text-[9px] text-slate-600 transition hover:text-white"
+    >
+      {children}
+    </Link>
   );
 }
