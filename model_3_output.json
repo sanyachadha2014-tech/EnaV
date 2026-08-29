@@ -1,0 +1,78 @@
+{
+    "model": "Infrastructure Feasibility Ranking",
+    "model_version": "1.0",
+    "method": "Weighted scoring and ranking",
+    "weights": {
+        "demand": 0.25,
+        "wait": 0.2,
+        "traffic": 0.15,
+        "charger_coverage": 0.1,
+        "grid_capacity": 0.15,
+        "land_suitability": 0.15
+    },
+    "top_3_sites": [
+        {
+            "rank": 1,
+            "site_id": "SITE_007",
+            "zone": "Zone_G",
+            "feasibility_score": 97.15,
+            "predicted_demand": 95.0,
+            "predicted_wait_time_minutes": 20.0,
+            "traffic_density": 94.0,
+            "existing_charger_coverage": 20.0,
+            "grid_capacity": 88.0,
+            "land_suitability": 93.0,
+            "recommended_charger_type": "DC Fast Charger",
+            "recommended_number_of_chargers": 8
+        },
+        {
+            "rank": 2,
+            "site_id": "SITE_003",
+            "zone": "Zone_C",
+            "feasibility_score": 89.81,
+            "predicted_demand": 92.0,
+            "predicted_wait_time_minutes": 18.0,
+            "traffic_density": 91.0,
+            "existing_charger_coverage": 25.0,
+            "grid_capacity": 91.0,
+            "land_suitability": 88.0,
+            "recommended_charger_type": "DC Fast Charger",
+            "recommended_number_of_chargers": 8
+        },
+        {
+            "rank": 3,
+            "site_id": "SITE_001",
+            "zone": "Zone_A",
+            "feasibility_score": 75.19,
+            "predicted_demand": 88.0,
+            "predicted_wait_time_minutes": 14.0,
+            "traffic_density": 82.0,
+            "existing_charger_coverage": 35.0,
+            "grid_capacity": 82.0,
+            "land_suitability": 91.0,
+            "recommended_charger_type": "DC Fast Charger",
+            "recommended_number_of_chargers": 6
+        }
+    ],
+    "reliability": {
+        "model_3_type": "Rule-based weighted scoring and ranking",
+        "model_3_note": "Model 3 does not produce a statistical confidence percentage. It ranks candidate sites using a transparent weighted scoring system.",
+        "upstream_models": {
+            "demand_model": {
+                "model": "Random Forest",
+                "MAE": 7.698,
+                "RMSE": 9.29,
+                "R2": 0.887,
+                "MAPE_percent": 18.6
+            },
+            "wait_time_model": {
+                "model": "XGBoost",
+                "MAE_minutes": 1.37,
+                "RMSE_minutes": 1.74,
+                "R2": 0.936,
+                "MAPE_percent": 9.599
+            }
+        },
+        "interpretation": "MAE, RMSE, R2 and MAPE describe model performance on held-out test data. They should not be interpreted as an individual prediction confidence percentage."
+    }
+}

@@ -1,0 +1,62 @@
+{
+    "model_name": "EV Charging Infrastructure Feasibility",
+    "model_version": "1.0",
+    "model_type": "Weighted scoring and ranking",
+    "description": "Ranks candidate charging-station sites using predicted demand, predicted wait time, traffic, existing charger coverage, grid capacity and land suitability.",
+    "inputs": {
+        "site_context": [
+            "site_id",
+            "zone"
+        ],
+        "scoring_features": [
+            "predicted_demand",
+            "predicted_wait_time_minutes",
+            "traffic_density",
+            "charger_coverage",
+            "grid_capacity",
+            "land_suitability"
+        ]
+    },
+    "outputs": [
+        "rank",
+        "site_id",
+        "zone",
+        "feasibility_score",
+        "predicted_demand",
+        "predicted_wait_time_minutes",
+        "traffic_density",
+        "existing_charger_coverage",
+        "grid_capacity",
+        "land_suitability",
+        "recommended_charger_type",
+        "recommended_number_of_chargers"
+    ],
+    "weights": {
+        "demand": 0.25,
+        "wait": 0.2,
+        "traffic": 0.15,
+        "charger_coverage": 0.1,
+        "grid_capacity": 0.15,
+        "land_suitability": 0.15
+    },
+    "ranking_method": "Descending feasibility score",
+    "top_sites_returned": 3,
+    "upstream_model_reliability": {
+        "demand_model": {
+            "model": "Random Forest",
+            "MAE": 7.698,
+            "RMSE": 9.29,
+            "R2": 0.887,
+            "MAPE_percent": 18.6
+        },
+        "wait_time_model": {
+            "model": "XGBoost",
+            "MAE_minutes": 1.37,
+            "RMSE_minutes": 1.74,
+            "R2": 0.936,
+            "MAPE_percent": 9.599
+        }
+    },
+    "reliability_note": "MAE, RMSE, R2 and MAPE describe performance on held-out test data. They are not individual prediction confidence percentages.",
+    "data_note": "Candidate-site traffic, charger coverage, grid capacity and land suitability values used in this prototype are demonstration inputs. Production deployment should replace them with validated real-world data."
+}
