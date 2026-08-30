@@ -3,21 +3,16 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function SignupPage() {
-  // Main account category: 'user' ya 'government'
-  const [accountCategory, setAccountCategory] = useState<'user' | 'government'>('user');
+  // Main account category: 'user'
+  const [accountCategory, setAccountCategory] = useState<'user'>('user');
   
-  // Agar 'user' selected hai, toh sub-type: 'private' ya 'gov_driver'
+  // Sub-type: 'private' ya 'gov_driver'
   const [userSubType, setUserSubType] = useState<'private' | 'gov_driver'>('private');
   const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (accountCategory === 'government') {
-      router.push('/gov/dashboard');
-    } else {
-      router.push('/drivers/dashboard');
-    }
+    router.push('/drivers/dashboard');
   };
 
   return (
@@ -84,92 +79,40 @@ export default function SignupPage() {
             <p className="text-xs sm:text-sm text-gray-400 mt-1">Register to access EnaV mobility services.</p>
           </div>
 
-          {/* Primary Account Category Selection */}
-          <div className="flex gap-3 mb-4">
-            <button
-              type="button"
-              onClick={() => setAccountCategory('user')}
-              className={`flex-1 py-3 px-4 rounded-xl border text-xs sm:text-sm font-medium tracking-wide transition ${
-                accountCategory === 'user' 
-                  ? 'border-cyan-500 bg-cyan-500/10 text-white' 
-                  : 'border-gray-800 bg-gray-900/50 text-gray-400'
-              }`}
-            >
-              USER / DRIVER
-            </button>
-            <button
-              type="button"
-              onClick={() => setAccountCategory('government')}
-              className={`flex-1 py-3 px-4 rounded-xl border text-xs sm:text-sm font-medium tracking-wide transition ${
-                accountCategory === 'government' 
-                  ? 'border-cyan-500 bg-cyan-500/10 text-white' 
-                  : 'border-gray-800 bg-gray-900/50 text-gray-400'
-              }`}
-            >
-              GOVERNMENT OFFICIAL
-            </button>
-          </div>
-
-          {/* Secondary Sub-Type Selection (Visible ONLY if USER is selected) */}
-          {accountCategory === 'user' && (
-            <div className="mb-6 p-3 bg-gray-900/60 border border-gray-800 rounded-xl">
-              <label className="text-[10px] text-gray-400 uppercase tracking-wider block mb-2">Select User Type</label>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setUserSubType('private')}
-                  className={`flex-1 py-2 px-3 rounded-lg border text-xs font-medium transition ${
-                    userSubType === 'private'
-                      ? 'border-cyan-400 bg-cyan-500/20 text-white'
-                      : 'border-gray-800 text-gray-400 bg-gray-900'
-                  }`}
-                >
-                  Private / Normal User
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setUserSubType('gov_driver')}
-                  className={`flex-1 py-2 px-3 rounded-lg border text-xs font-medium transition ${
-                    userSubType === 'gov_driver'
-                      ? 'border-cyan-400 bg-cyan-500/20 text-white'
-                      : 'border-gray-800 text-gray-400 bg-gray-900'
-                  }`}
-                >
-                  Gov Driver / Operator
-                </button>
-              </div>
+          {/* Secondary Sub-Type Selection (Visible for User) */}
+          <div className="mb-6 p-3 bg-gray-900/60 border border-gray-800 rounded-xl">
+            <label className="text-[10px] text-gray-400 uppercase tracking-wider block mb-2">Select User Type</label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setUserSubType('private')}
+                className={`flex-1 py-2 px-3 rounded-lg border text-xs font-medium transition ${
+                  userSubType === 'private'
+                    ? 'border-cyan-400 bg-cyan-500/20 text-white'
+                    : 'border-gray-800 text-gray-400 bg-gray-900'
+                }`}
+              >
+                Private / Normal User
+              </button>
+              <button
+                type="button"
+                onClick={() => setUserSubType('gov_driver')}
+                className={`flex-1 py-2 px-3 rounded-lg border text-xs font-medium transition ${
+                  userSubType === 'gov_driver'
+                    ? 'border-cyan-400 bg-cyan-500/20 text-white'
+                    : 'border-gray-800 text-gray-400 bg-gray-900'
+                }`}
+              >
+                Gov Driver / Operator
+              </button>
             </div>
-          )}
+          </div>
 
           {/* Single Form Wrapper Controlling All Fields & Submission */}
           <form onSubmit={handleSubmit} className="space-y-4">
             
-            {/* 1. GOVERNMENT OFFICIAL: Only Email ID and Password */}
-            {accountCategory === 'government' && (
-              <>
-                <div>
-                  <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Official Email Address</label>
-                  <input 
-                    type="email" 
-                    placeholder="official@gov.in" 
-                    required
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Password</label>
-                  <input 
-                    type="password" 
-                    placeholder="Create a password" 
-                    required
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
-                  />
-                </div>
-              </>
-            )}
-
-            {/* 2. USER -> GOV DRIVER: Name, Email, Driver/Badge ID, Department, Password */}
-            {accountCategory === 'user' && userSubType === 'gov_driver' && (
+            {/* 1. USER -> GOV DRIVER: Name, Email, Driver/Badge ID, Department, Password */}
+            {userSubType === 'gov_driver' && (
               <>
                 <div>
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Full Name</label>
@@ -219,8 +162,8 @@ export default function SignupPage() {
               </>
             )}
 
-            {/* 3. USER -> PRIVATE / NORMAL USER: Standard fields */}
-            {accountCategory === 'user' && userSubType === 'private' && (
+            {/* 2. USER -> PRIVATE / NORMAL USER: Standard fields */}
+            {userSubType === 'private' && (
               <>
                 <div>
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Full Name</label>

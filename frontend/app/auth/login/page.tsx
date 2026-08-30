@@ -227,9 +227,12 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="text-center mt-6 text-xs sm:text-sm text-gray-400">
-            Don't have an account? <a href="/auth/signup" className="text-cyan-400 font-medium hover:underline">Create account</a>
-          </div>
+          {/* Conditional rendering: Visible ONLY when 'user' accountCategory is selected */}
+          {accountCategory === 'user' && (
+            <div className="text-center mt-6 text-xs sm:text-sm text-gray-400">
+              Don't have an account? <a href="/auth/signup" className="text-cyan-400 font-medium hover:underline">Create account</a>
+            </div>
+          )}
 
         </div>
       </div>

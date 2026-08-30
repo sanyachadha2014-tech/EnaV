@@ -102,24 +102,24 @@ function MetricCard({
   trendLabel?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-800 bg-[#091221] p-5">
+    <div className="rounded-xl border border-emerald-500 bg-[#f0fdf4] p-4 shadow-sm">
       <div className="flex items-start justify-between">
-        <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-slate-600">
+        <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-emerald-950">
           {label}
         </span>
 
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-800 bg-[#050A13]">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-500 bg-white shadow-sm">
           {icon}
         </div>
       </div>
 
       <div className="mt-4 flex items-end gap-1">
-        <span className="text-2xl font-black tracking-tight text-white">
+        <span className="text-2xl font-black tracking-tight text-slate-900">
           {value}
         </span>
 
         {unit && (
-          <span className="mb-1 text-[10px] font-medium text-slate-500">
+          <span className="mb-1 text-[10px] font-medium text-slate-700">
             {unit}
           </span>
         )}
@@ -127,9 +127,8 @@ function MetricCard({
 
       {trend && trendLabel && (
         <div
-          className={`mt-3 flex items-center gap-1.5 text-[9px] font-bold ${
-            trend === "up" ? "text-emerald-400" : "text-blue-400"
-          }`}
+          className={`mt-3 flex items-center gap-1.5 text-[9px] font-bold ${trend === "up" ? "text-emerald-700" : "text-emerald-800"
+            }`}
         >
           {trend === "up" ? (
             <TrendingUp className="h-3 w-3" />
@@ -155,15 +154,15 @@ function SectionTitle({
 }) {
   return (
     <div className="mb-5">
-      <div className="text-[8px] font-bold uppercase tracking-[0.18em] text-blue-400">
+      <div className="text-[8px] font-bold uppercase tracking-[0.18em] text-emerald-700">
         {eyebrow}
       </div>
 
-      <h2 className="mt-1 text-base font-black uppercase tracking-wider text-white">
+      <h2 className="mt-1 text-base font-black uppercase tracking-wider text-slate-900">
         {title}
       </h2>
 
-      <p className="mt-1 max-w-2xl text-[11px] leading-5 text-slate-500">
+      <p className="mt-1 max-w-2xl text-[11px] font-medium leading-5 text-slate-700">
         {description}
       </p>
     </div>
@@ -195,13 +194,13 @@ function LineChart({
     const x =
       paddingX +
       (index / Math.max(data.length - 1, 1)) *
-        (width - paddingX * 2);
+      (width - paddingX * 2);
 
     const y =
       height -
       paddingY -
       ((item.value - min) / range) *
-        (height - paddingY * 2);
+      (height - paddingY * 2);
 
     return {
       ...item,
@@ -226,15 +225,13 @@ function LineChart({
   `;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-800 bg-[#050A13]">
+    <div className="overflow-hidden rounded-2xl border border-emerald-500 bg-white shadow-sm">
       <div className="overflow-x-auto">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           className="h-[280px] min-w-[720px] w-full"
           preserveAspectRatio="none"
         >
-          {/* GRID */}
-
           {[0, 1, 2, 3].map((row) => {
             const y =
               paddingY +
@@ -248,33 +245,27 @@ function LineChart({
                 y1={y}
                 y2={y}
                 stroke="currentColor"
-                className="text-slate-800"
+                className="text-emerald-100"
                 strokeWidth="1"
               />
             );
           })}
 
-          {/* AREA */}
-
           <path
             d={areaPath}
             fill="currentColor"
-            className="text-blue-500/5"
+            className="text-blue-500/10"
           />
-
-          {/* LINE */}
 
           <path
             d={path}
             fill="none"
             stroke="currentColor"
-            className="text-blue-400"
+            className="text-blue-600"
             strokeWidth="3"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-
-          {/* POINTS */}
 
           {points.map((point) => (
             <g key={point.label}>
@@ -283,7 +274,7 @@ function LineChart({
                 cy={point.y}
                 r="4"
                 fill="currentColor"
-                className="text-blue-400"
+                className="text-blue-600"
               />
 
               <text
@@ -299,7 +290,7 @@ function LineChart({
                 x={point.x}
                 y={point.y - 12}
                 textAnchor="middle"
-                className="fill-slate-400 text-[9px]"
+                className="fill-slate-700 font-bold text-[9px]"
               >
                 {point.value}
                 {suffix}
@@ -320,13 +311,13 @@ function ZoneBars() {
   const max = Math.max(...zoneCarbonData.map((item) => item.value));
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-[#050A13] p-5">
+    <div className="rounded-2xl border border-emerald-500 bg-white p-5 shadow-sm">
       <div className="mb-5">
-        <h3 className="text-[10px] font-black uppercase tracking-wider text-white">
+        <h3 className="text-[10px] font-black uppercase tracking-wider text-slate-900">
           CO₂ Reduction by Zone
         </h3>
 
-        <p className="mt-1 text-[9px] text-slate-600">
+        <p className="mt-1 text-[9px] font-medium text-slate-700">
           Relative contribution to estimated network carbon reduction.
         </p>
       </div>
@@ -335,18 +326,18 @@ function ZoneBars() {
         {zoneCarbonData.map((item) => (
           <div key={item.zone}>
             <div className="mb-1.5 flex items-center justify-between">
-              <span className="text-[9px] font-bold text-slate-400">
+              <span className="text-[9px] font-bold text-slate-800">
                 {item.zone}
               </span>
 
-              <span className="text-[9px] font-bold text-slate-500">
+              <span className="text-[9px] font-bold text-slate-700">
                 {item.value} t
               </span>
             </div>
 
-            <div className="h-2 overflow-hidden rounded-full bg-slate-800">
+            <div className="h-2 overflow-hidden rounded-full border border-blue-300 bg-blue-100">
               <div
-                className="h-full rounded-full bg-emerald-400"
+                className="h-full rounded-full bg-blue-600"
                 style={{
                   width: `${(item.value / max) * 100}%`,
                 }}
@@ -364,70 +355,182 @@ function ZoneBars() {
 ========================================================= */
 
 function FinanceChart() {
+  const [selectedYear, setSelectedYear] = useState("2026");
+  const [fromMonth, setFromMonth] = useState("Jan");
+  const [toMonth, setToMonth] = useState("Aug");
+
+  // Years for which actual finance data is currently available.
+  // Add future years here when actual year-wise data is available.
+  const availableYears = ["2026"];
+
+  const monthOrder = financeData.map((item) => item.label);
+
+  const fromIndex = monthOrder.indexOf(fromMonth);
+  const toIndex = monthOrder.indexOf(toMonth);
+
+  const startIndex = Math.min(fromIndex, toIndex);
+  const endIndex = Math.max(fromIndex, toIndex);
+
+  const filteredData = financeData.slice(
+    startIndex,
+    endIndex + 1,
+  );
+
   const max = Math.max(
-    ...financeData.flatMap((item) => [
+    ...filteredData.flatMap((item) => [
       item.revenue,
       item.spending,
     ]),
   );
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-[#050A13] p-5">
-      <div className="mb-5 flex items-center justify-between">
+    <div className="rounded-2xl border border-emerald-500 bg-white p-5 shadow-sm">
+      {/* HEADER */}
+      <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h3 className="text-[10px] font-black uppercase tracking-wider text-white">
+          <h3 className="text-[10px] font-black uppercase tracking-wider text-slate-900">
             Revenue vs Spending
           </h3>
 
-          <p className="mt-1 text-[9px] text-slate-600">
-            Monthly financial movement.
+          <p className="mt-1 text-[9px] font-medium text-slate-700">
+            Monthly comparison between revenue collected and program spending.
           </p>
         </div>
 
-        <div className="flex items-center gap-4 text-[8px] uppercase tracking-wider text-slate-500">
-          <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            Revenue
-          </span>
+        {/* FILTERS + LEGEND */}
+        <div className="flex flex-wrap items-end gap-3">
+          {/* YEAR */}
+          <div>
+            <label className="mb-1 block text-[8px] font-black uppercase tracking-wider text-slate-600">
+              Year
+            </label>
 
-          <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-blue-400" />
-            Spending
-          </span>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="h-8 rounded-md border border-emerald-400 bg-white px-2 text-[9px] font-bold text-slate-800 outline-none focus:border-emerald-700"
+            >
+              {availableYears.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* FROM */}
+          <div>
+            <label className="mb-1 block text-[8px] font-black uppercase tracking-wider text-slate-600">
+              From
+            </label>
+
+            <select
+              value={fromMonth}
+              onChange={(e) => setFromMonth(e.target.value)}
+              className="h-8 rounded-md border border-emerald-400 bg-white px-2 text-[9px] font-bold text-slate-800 outline-none focus:border-emerald-700"
+            >
+              {monthOrder.map((month) => (
+                <option key={month} value={month}>
+                  {month}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* TO */}
+          <div>
+            <label className="mb-1 block text-[8px] font-black uppercase tracking-wider text-slate-600">
+              To
+            </label>
+
+            <select
+              value={toMonth}
+              onChange={(e) => setToMonth(e.target.value)}
+              className="h-8 rounded-md border border-emerald-400 bg-white px-2 text-[9px] font-bold text-slate-800 outline-none focus:border-emerald-700"
+            >
+              {monthOrder.map((month) => (
+                <option key={month} value={month}>
+                  {month}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* LEGEND */}
+          <div className="flex h-8 items-center gap-4 text-[8px] font-semibold uppercase tracking-wider text-slate-700">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-600" />
+              Revenue
+            </span>
+
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-blue-600" />
+              Spending
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="space-y-5">
-        {financeData.map((item) => (
+      {/* SELECTED PERIOD */}
+      <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+        <span className="text-[8px] font-bold uppercase tracking-wider text-emerald-800">
+          Showing {selectedYear} · {fromMonth} – {toMonth}
+        </span>
+      </div>
+
+      {/* CHART */}
+      <div className="space-y-6">
+        {filteredData.map((item) => (
           <div key={item.label}>
+            {/* MONTH */}
             <div className="mb-2 flex items-center justify-between">
-              <span className="w-8 text-[9px] font-bold text-slate-600">
+              <span className="text-[9px] font-black uppercase text-slate-800">
                 {item.label}
               </span>
+            </div>
 
-              <div className="flex flex-1 gap-2">
-                <div className="h-3 flex-1 overflow-hidden rounded-sm bg-slate-800">
-                  <div
-                    className="h-full rounded-sm bg-emerald-400"
-                    style={{
-                      width: `${(item.revenue / max) * 100}%`,
-                    }}
-                  />
-                </div>
+            {/* REVENUE */}
+            <div className="mb-2">
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-[8px] font-bold uppercase tracking-wider text-slate-600">
+                  Revenue
+                </span>
 
-                <div className="h-3 flex-1 overflow-hidden rounded-sm bg-slate-800">
-                  <div
-                    className="h-full rounded-sm bg-blue-400"
-                    style={{
-                      width: `${(item.spending / max) * 100}%`,
-                    }}
-                  />
-                </div>
+                <span className="text-[9px] font-black text-emerald-700">
+                  ₹{item.revenue}L
+                </span>
               </div>
 
-              <span className="ml-3 w-14 text-right text-[9px] font-bold text-slate-400">
-                ₹{item.revenue}L
-              </span>
+              <div className="h-3 w-full overflow-hidden rounded-sm border border-emerald-300 bg-emerald-100">
+                <div
+                  className="h-full rounded-sm bg-emerald-600"
+                  style={{
+                    width: `${(item.revenue / max) * 100}%`,
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* SPENDING */}
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-[8px] font-bold uppercase tracking-wider text-slate-600">
+                  Spending
+                </span>
+
+                <span className="text-[9px] font-black text-blue-700">
+                  ₹{item.spending}L
+                </span>
+              </div>
+
+              <div className="h-3 w-full overflow-hidden rounded-sm border border-blue-300 bg-blue-100">
+                <div
+                  className="h-full rounded-sm bg-blue-600"
+                  style={{
+                    width: `${(item.spending / max) * 100}%`,
+                  }}
+                />
+              </div>
             </div>
           </div>
         ))}
@@ -435,7 +538,6 @@ function FinanceChart() {
     </div>
   );
 }
-
 /* =========================================================
    TAB NAV
 ========================================================= */
@@ -451,27 +553,27 @@ function TabNav({
     id: AnalyticsTab;
     label: string;
   }[] = [
-    {
-      id: "overview",
-      label: "Overview",
-    },
-    {
-      id: "charging",
-      label: "Charging",
-    },
-    {
-      id: "sustainability",
-      label: "Sustainability",
-    },
-    {
-      id: "finance",
-      label: "Finance",
-    },
-  ];
+      {
+        id: "overview",
+        label: "Overview",
+      },
+      {
+        id: "charging",
+        label: "Charging",
+      },
+      {
+        id: "sustainability",
+        label: "Sustainability",
+      },
+      {
+        id: "finance",
+        label: "Finance",
+      },
+    ];
 
   return (
-    <div className="overflow-x-auto border-b border-slate-800">
-      <div className="flex min-w-max gap-1">
+    <div className="overflow-x-auto border-b border-emerald-500 bg-[#f0fdf4]">
+      <div className="flex min-w-max gap-1 px-4">
         {tabs.map((tab) => {
           const active = activeTab === tab.id;
 
@@ -479,17 +581,12 @@ function TabNav({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`relative px-5 py-4 text-[9px] font-black uppercase tracking-wider transition ${
-                active
-                  ? "text-white"
-                  : "text-slate-600 hover:text-slate-300"
-              }`}
+              className={`relative rounded-t-lg px-5 py-4 text-[9px] font-black uppercase tracking-wider transition ${active
+                ? "border-t border-x border-emerald-700 bg-emerald-800 text-white"
+                : "text-slate-700 hover:text-slate-900"
+                }`}
             >
               {tab.label}
-
-              {active && (
-                <span className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full bg-blue-400" />
-              )}
             </button>
           );
         })}
@@ -515,27 +612,21 @@ function Overview() {
         <MetricCard
           label="EV Sessions"
           value="184.6K"
-          icon={<Car className="h-4 w-4 text-blue-400" />}
-          trend="up"
-          trendLabel="+18.4% vs previous period"
+          icon={<Car className="h-4 w-4 text-emerald-700" />}
         />
 
         <MetricCard
           label="Energy Delivered"
           value="1.84"
           unit="GWh"
-          icon={<Zap className="h-4 w-4 text-amber-400" />}
-          trend="up"
-          trendLabel="+12.7% vs previous period"
+          icon={<Zap className="h-4 w-4 text-emerald-700" />}
         />
 
         <MetricCard
           label="CO₂ Avoided"
           value="2,460"
           unit="t"
-          icon={<Cloud className="h-4 w-4 text-emerald-400" />}
-          trend="up"
-          trendLabel="+21.3% vs previous period"
+          icon={<Cloud className="h-4 w-4 text-emerald-700" />}
         />
 
         <MetricCard
@@ -543,10 +634,8 @@ function Overview() {
           value="₹2.84"
           unit="Cr"
           icon={
-            <CircleDollarSign className="h-4 w-4 text-purple-400" />
+            <Activity className="h-4 w-4 text-emerald-700" />
           }
-          trend="up"
-          trendLabel="+14.1% vs previous period"
         />
       </div>
 
@@ -558,44 +647,6 @@ function Overview() {
         />
 
         <LineChart data={activityData} />
-      </section>
-
-      <section>
-        <SectionTitle
-          eyebrow="Change indicators"
-          title="Performance Summary"
-          description="The main directional changes currently visible in the program."
-        />
-
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-          <SummaryItem
-            title="EV adoption"
-            value="+18%"
-            description="Growth in registered EV activity."
-            positive
-          />
-
-          <SummaryItem
-            title="Charging demand"
-            value="+12.7%"
-            description="Increase in energy delivered."
-            positive
-          />
-
-          <SummaryItem
-            title="Carbon impact"
-            value="+21.3%"
-            description="Increase in avoided emissions."
-            positive
-          />
-
-          <SummaryItem
-            title="Financial return"
-            value="+14.1%"
-            description="Growth in government revenue."
-            positive
-          />
-        </div>
       </section>
     </div>
   );
@@ -619,33 +670,29 @@ function Charging() {
           label="Charging Sessions"
           value="184.6K"
           icon={
-            <BatteryCharging className="h-4 w-4 text-blue-400" />
+            <BatteryCharging className="h-4 w-4 text-emerald-700" />
           }
-          trend="up"
-          trendLabel="+18.4%"
         />
 
         <MetricCard
           label="Energy Delivered"
           value="1.84"
           unit="GWh"
-          icon={<Zap className="h-4 w-4 text-amber-400" />}
-          trend="up"
-          trendLabel="+12.7%"
+          icon={<Zap className="h-4 w-4 text-emerald-700" />}
         />
 
         <MetricCard
           label="Avg Session"
           value="34"
           unit="min"
-          icon={<Activity className="h-4 w-4 text-purple-400" />}
+          icon={<Activity className="h-4 w-4 text-emerald-700" />}
         />
 
         <MetricCard
           label="Peak Demand"
           value="18:00"
           unit="– 21:00"
-          icon={<TrendingUp className="h-4 w-4 text-red-400" />}
+          icon={<TrendingUp className="h-4 w-4 text-emerald-700" />}
         />
       </div>
 
@@ -667,14 +714,14 @@ function Charging() {
           title="Demand growth"
           value="+12.7%"
           description="Energy delivered has increased consistently over the measured period."
-          icon={<TrendingUp className="h-4 w-4 text-emerald-400" />}
+          icon={<TrendingUp className="h-4 w-4 text-emerald-700" />}
         />
 
         <InsightBlock
           title="Peak period"
           value="18:00–21:00"
           description="The strongest charging demand occurs during the evening period."
-          icon={<Activity className="h-4 w-4 text-amber-400" />}
+          icon={<Activity className="h-4 w-4 text-emerald-700" />}
         />
 
         <InsightBlock
@@ -682,7 +729,7 @@ function Charging() {
           value="34 min"
           description="Average charging session duration across the network."
           icon={
-            <BatteryCharging className="h-4 w-4 text-blue-400" />
+            <BatteryCharging className="h-4 w-4 text-emerald-700" />
           }
         />
       </div>
@@ -703,41 +750,26 @@ function Sustainability() {
         description="Measures the environmental benefit produced by EV adoption and charging activity."
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         <MetricCard
           label="EV Kilometres"
           value="18.6M"
           unit="km"
-          icon={<Car className="h-4 w-4 text-blue-400" />}
-          trend="up"
-          trendLabel="+16.8%"
+          icon={<Car className="h-4 w-4 text-emerald-700" />}
         />
 
         <MetricCard
           label="CO₂ Avoided"
           value="2,460"
           unit="t"
-          icon={<Cloud className="h-4 w-4 text-emerald-400" />}
-          trend="up"
-          trendLabel="+21.3%"
+          icon={<Cloud className="h-4 w-4 text-emerald-700" />}
         />
 
         <MetricCard
           label="Fuel Displaced"
           value="1.12"
           unit="ML"
-          icon={<Fuel className="h-4 w-4 text-amber-400" />}
-          trend="up"
-          trendLabel="+14.6%"
-        />
-
-        <MetricCard
-          label="Renewable Energy"
-          value="27"
-          unit="%"
-          icon={<Leaf className="h-4 w-4 text-emerald-400" />}
-          trend="up"
-          trendLabel="+4.2 percentage points"
+          icon={<Fuel className="h-4 w-4 text-emerald-700" />}
         />
       </div>
 
@@ -786,10 +818,8 @@ function Finance() {
           value="₹4.82"
           unit="Cr"
           icon={
-            <CircleDollarSign className="h-4 w-4 text-emerald-400" />
+            <Activity className="h-4 w-4 text-emerald-700" />
           }
-          trend="up"
-          trendLabel="+16.2%"
         />
 
         <MetricCard
@@ -797,10 +827,8 @@ function Finance() {
           value="₹2.84"
           unit="Cr"
           icon={
-            <CircleDollarSign className="h-4 w-4 text-purple-400" />
+            <ShieldCheck className="h-4 w-4 text-emerald-700" />
           }
-          trend="up"
-          trendLabel="+14.1%"
         />
 
         <MetricCard
@@ -814,9 +842,7 @@ function Finance() {
           label="Estimated ROI"
           value="14.2"
           unit="%"
-          icon={<Percent className="h-4 w-4 text-blue-400" />}
-          trend="up"
-          trendLabel="+1.8 points"
+          icon={<Percent className="h-4 w-4 text-emerald-700" />}
         />
       </div>
 
@@ -841,13 +867,13 @@ function Finance() {
           <MetricCard
             label="Applications"
             value="8,420"
-            icon={<Activity className="h-4 w-4 text-blue-400" />}
+            icon={<Activity className="h-4 w-4 text-emerald-700" />}
           />
 
           <MetricCard
             label="Approved"
             value="6,184"
-            icon={<ShieldCheck className="h-4 w-4 text-emerald-400" />}
+            icon={<ShieldCheck className="h-4 w-4 text-emerald-700" />}
           />
 
           <MetricCard
@@ -855,7 +881,7 @@ function Finance() {
             value="₹1.42"
             unit="Cr"
             icon={
-              <CircleDollarSign className="h-4 w-4 text-purple-400" />
+              <Activity className="h-4 w-4 text-emerald-700" />
             }
           />
 
@@ -863,9 +889,7 @@ function Finance() {
             label="EV Adoption Impact"
             value="+9.6"
             unit="%"
-            icon={<TrendingUp className="h-4 w-4 text-amber-400" />}
-            trend="up"
-            trendLabel="associated growth"
+            icon={<TrendingUp className="h-4 w-4 text-emerald-700" />}
           />
         </div>
       </section>
@@ -889,22 +913,22 @@ function SummaryItem({
   positive?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-[#091221] p-4">
+    <div className="rounded-xl border border-emerald-500 bg-[#f0fdf4] p-4 shadow-sm">
       <div className="flex items-center justify-between">
-        <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600">
+        <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-950">
           {title}
         </span>
 
         {positive && (
-          <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
+          <TrendingUp className="h-3.5 w-3.5 text-emerald-700" />
         )}
       </div>
 
-      <div className="mt-3 text-lg font-black text-white">
+      <div className="mt-3 text-lg font-black text-slate-900">
         {value}
       </div>
 
-      <p className="mt-1 text-[9px] leading-4 text-slate-600">
+      <p className="mt-1 text-[9px] font-medium leading-4 text-slate-700">
         {description}
       </p>
     </div>
@@ -923,20 +947,20 @@ function InsightBlock({
   icon: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-[#091221] p-4">
+    <div className="rounded-xl border border-emerald-500 bg-[#f0fdf4] p-4 shadow-sm">
       <div className="flex items-center gap-2">
         {icon}
 
-        <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600">
+        <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-950">
           {title}
         </span>
       </div>
 
-      <div className="mt-3 text-lg font-black text-white">
+      <div className="mt-3 text-lg font-black text-slate-900">
         {value}
       </div>
 
-      <p className="mt-1 text-[9px] leading-4 text-slate-600">
+      <p className="mt-1 text-[9px] font-medium leading-4 text-slate-700">
         {description}
       </p>
     </div>
@@ -950,7 +974,7 @@ function BuildingIcon() {
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
-      className="h-4 w-4 text-blue-400"
+      className="h-4 w-4 text-emerald-700"
     >
       <path d="M3 21h18" />
       <path d="M6 21V5l6-3 6 3v16" />
@@ -990,56 +1014,46 @@ export default function AnalyticsPage() {
   }, [activeTab]);
 
   return (
-    <main className="min-h-screen bg-[#050912] text-slate-100">
-      <div className="mx-auto max-w-[1450px] px-4 py-6 sm:px-6 lg:px-8">
-        {/* =====================================================
-            HEADER
-        ===================================================== */}
+    <main className="min-h-screen bg-white text-slate-900">
+      <div className="mx-auto max-w-[1500px] space-y-7 px-4 py-6 sm:px-6 lg:px-8">
+        <header className="rounded-2xl border border-emerald-500 bg-[#f0fdf4] shadow-sm">
+          <div className="p-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-500 bg-white shadow-sm">
+                <Activity className="h-5 w-5 text-emerald-700" />
+              </div>
 
-        <header className="mb-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-blue-500/20 bg-blue-500/10">
-              <Activity className="h-5 w-5 text-blue-400" />
-            </div>
+              <div>
+                <h1 className="text-lg font-black uppercase tracking-[0.16em] text-slate-900">
+                  Analytics
+                </h1>
 
-            <div>
-              <h1 className="text-lg font-black uppercase tracking-[0.16em] text-white">
-                Analytics
-              </h1>
-
-              <p className="mt-1 text-[10px] text-slate-600">
-                EV program performance, impact and financial outcomes
-              </p>
+                <p className="mt-1 text-[10px] font-medium text-slate-700">
+                  EV program performance, impact and financial outcomes
+                </p>
+              </div>
             </div>
           </div>
         </header>
 
-        {/* =====================================================
-            TAB CONTAINER
-        ===================================================== */}
-
-        <section className="overflow-hidden rounded-2xl border border-slate-800 bg-[#070D18]">
+        <section className="overflow-hidden rounded-2xl border border-emerald-500 bg-[#f0fdf4] shadow-sm">
           <TabNav
             activeTab={activeTab}
             setActiveTab={setActiveTab}
           />
 
-          <div className="p-5 sm:p-6 lg:p-7">
+          <div className="bg-white p-5 sm:p-6 lg:p-7">
             {content}
           </div>
         </section>
 
-        {/* =====================================================
-            FOOTER
-        ===================================================== */}
-
-        <footer className="mt-5 flex items-center justify-between border-t border-slate-800 pt-4">
-          <span className="text-[8px] uppercase tracking-widest text-slate-700">
+        <footer className="flex items-center justify-between border-t border-emerald-500 px-1 pt-4">
+          <span className="text-[8px] font-semibold uppercase tracking-widest text-slate-700">
             Program analytics
           </span>
 
-          <span className="flex items-center gap-1.5 text-[8px] uppercase tracking-widest text-slate-700">
-            <ShieldCheck className="h-3 w-3 text-emerald-500" />
+          <span className="flex items-center gap-1.5 text-[8px] font-semibold uppercase tracking-widest text-slate-700">
+            <ShieldCheck className="h-3 w-3 text-emerald-700" />
             Verified reporting data
           </span>
         </footer>
