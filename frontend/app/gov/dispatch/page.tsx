@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   Ambulance,
   Route,
-  ChevronRight,
   Activity,
   Car,
 } from "lucide-react";
@@ -20,9 +19,9 @@ import {
 const CommandMap = dynamic(() => import("@/components/CommandMap"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full min-h-0 items-center justify-center bg-[#050d19] text-slate-400">
+    <div className="flex h-full min-h-0 items-center justify-center bg-white text-emerald-900">
       <div className="flex items-center gap-2 text-sm">
-        <Radio className="h-4 w-4 animate-pulse text-emerald-400" />
+        <Radio className="h-4 w-4 animate-pulse text-emerald-700" />
         Loading emergency map...
       </div>
     </div>
@@ -42,7 +41,7 @@ const incidents = [
     received: "14:28 IST",
     priority: "CRITICAL",
     source: "112 Emergency Network",
-    status: "Awaiting Unit",
+    status: "awaited",
   },
   {
     id: "E104",
@@ -52,7 +51,7 @@ const incidents = [
     received: "14:30 IST",
     priority: "HIGH",
     source: "112 Emergency Network",
-    status: "Awaiting Unit",
+    status: "awaited",
   },
   {
     id: "E098",
@@ -62,7 +61,7 @@ const incidents = [
     received: "14:21 IST",
     priority: "HIGH",
     source: "Traffic Control",
-    status: "Unit En Route",
+    status: "assigned",
   },
   {
     id: "E091",
@@ -72,7 +71,7 @@ const incidents = [
     received: "14:16 IST",
     priority: "MEDIUM",
     source: "112 Emergency Network",
-    status: "Assigned",
+    status: "assigned",
   },
   {
     id: "E087",
@@ -82,7 +81,7 @@ const incidents = [
     received: "14:11 IST",
     priority: "HIGH",
     source: "112 Emergency Network",
-    status: "Awaiting Unit",
+    status: "awaited",
   },
   {
     id: "E081",
@@ -92,7 +91,7 @@ const incidents = [
     received: "14:05 IST",
     priority: "MEDIUM",
     source: "Traffic Control",
-    status: "Awaiting Unit",
+    status: "completed",
   },
 ];
 
@@ -106,7 +105,7 @@ const vehicles = [
     type: "Advanced Life Support",
     distance: "3.2 km",
     battery: 74,
-    eta: "6 min",
+    eta: "14 min",
     traffic: "Moderate",
     score: 98.4,
     recommended: true,
@@ -117,7 +116,7 @@ const vehicles = [
     type: "Basic Life Support",
     distance: "2.4 km",
     battery: 8,
-    eta: "4 min",
+    eta: "14 min",
     traffic: "Low",
     score: 71.2,
     recommended: false,
@@ -128,7 +127,7 @@ const vehicles = [
     type: "Advanced Life Support",
     distance: "5.1 km",
     battery: 91,
-    eta: "9 min",
+    eta: "14 min",
     traffic: "Moderate",
     score: 89.6,
     recommended: false,
@@ -139,7 +138,7 @@ const vehicles = [
     type: "Rapid Response Unit",
     distance: "5.8 km",
     battery: 67,
-    eta: "10 min",
+    eta: "14 min",
     traffic: "Low",
     score: 82.4,
     recommended: false,
@@ -150,7 +149,7 @@ const vehicles = [
     type: "Advanced Life Support",
     distance: "7.2 km",
     battery: 81,
-    eta: "12 min",
+    eta: "14 min",
     traffic: "High",
     score: 78.8,
     recommended: false,
@@ -197,57 +196,53 @@ export default function EmergencyPage() {
   );
 
   const openIncidents = incidents.filter(
-    (incident) => incident.status !== "Assigned",
+    (incident) => incident.status !== "completed",
   ).length;
 
+  const awaitedCount = incidents.filter(i => i.status === "awaited").length;
+  const assignedCount = incidents.filter(i => i.status === "assigned").length;
+  const completedCount = incidents.filter(i => i.status === "completed").length;
+
   return (
-    <div className="h-screen min-h-0 w-full overflow-hidden bg-[#040b16] text-slate-100">
+    <div className="h-screen min-h-0 w-full overflow-hidden bg-white text-emerald-950">
       {/* ================================================================== */}
       {/* HEADER                                                             */}
       {/* ================================================================== */}
 
-      <header className="h-[68px] shrink-0 border-b border-slate-800/80 bg-[#07111f]">
+      <header className="h-[68px] shrink-0 border-b border-emerald-200 bg-white">
         <div className="flex h-full min-w-0 items-center justify-between px-5">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-red-500/30 bg-red-950/30">
-              <Siren className="h-5 w-5 text-red-400" />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-emerald-700/30 bg-emerald-50">
+              <Siren className="h-5 w-5 text-emerald-700" />
             </div>
 
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="truncate text-base font-bold tracking-tight text-white">
+                <h1 className="truncate text-base font-bold tracking-tight text-emerald-950">
                   Emergency Response
                 </h1>
 
-                <span className="shrink-0 rounded-full border border-red-500/30 bg-red-950/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-400">
+                <span className="shrink-0 rounded-full border border-emerald-700/30 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
                   LIVE
                 </span>
               </div>
 
-              <div className="mt-0.5 flex items-center gap-2 text-[12px] text-slate-500">
+              <div className="mt-0.5 flex items-center gap-2 text-[12px] text-emerald-700">
                 <MapPin className="h-3.5 w-3.5 shrink-0" />
                 <span>Delhi NCR</span>
-                <span className="text-slate-700">•</span>
+                <span className="text-emerald-300">•</span>
                 <span>Emergency Operations</span>
               </div>
             </div>
           </div>
 
           <div className="flex shrink-0 items-center gap-5">
-            <div className="hidden items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-950/20 px-3 py-2 sm:flex">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-
-              <span className="text-[11px] font-bold text-emerald-400">
-                DISPATCH SYSTEM OPERATIONAL
-              </span>
-            </div>
-
             <div className="hidden text-right md:block">
-              <p className="text-[10px] uppercase tracking-wider text-slate-600">
+              <p className="text-[10px] uppercase tracking-wider text-emerald-600">
                 CURRENT TIME
               </p>
 
-              <p className="text-sm font-bold text-slate-300">
+              <p className="text-sm font-bold text-emerald-900">
                 14:32 IST
               </p>
             </div>
@@ -260,14 +255,6 @@ export default function EmergencyPage() {
       {/* ================================================================== */}
 
       <main className="h-[calc(100vh-68px)] min-h-0 w-full overflow-hidden p-3">
-        {/* IMPORTANT:
-            All 3 columns are fluid.
-            The side panels have minimum widths.
-            The map gets whatever space remains.
-            Therefore opening/closing the government sidebar moves
-            ALL THREE panels together instead of only the map.
-        */}
-
         <div
           className="
             grid
@@ -284,24 +271,24 @@ export default function EmergencyPage() {
           {/* ============================================================ */}
 
           <section className="flex min-h-0 min-w-0 flex-col gap-3">
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-800 bg-[#07111f]">
-              <div className="shrink-0 border-b border-slate-800 px-4 py-3">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-emerald-200 bg-white">
+              <div className="shrink-0 border-b border-emerald-200 px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-red-500" />
+                      <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-emerald-700" />
 
-                      <h2 className="text-[15px] font-bold text-white">
+                      <h2 className="text-[15px] font-bold text-emerald-950">
                         Active Incidents
                       </h2>
                     </div>
 
-                    <p className="mt-1 text-[11px] text-slate-500">
+                    <p className="mt-1 text-[11px] text-emerald-700">
                       Emergency calls requiring monitoring
                     </p>
                   </div>
 
-                  <span className="shrink-0 rounded-md border border-red-500/20 bg-red-950/30 px-2 py-1 text-[10px] font-bold text-red-400">
+                  <span className="shrink-0 rounded-md border border-emerald-700/20 bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700">
                     {openIncidents} OPEN
                   </span>
                 </div>
@@ -324,15 +311,15 @@ export default function EmergencyPage() {
                     incident.id === selectedIncidentId;
 
                   return (
-                    <button
+                    <div
                       key={incident.id}
                       onClick={() =>
                         setSelectedIncidentId(incident.id)
                       }
-                      className={`w-full rounded-lg border p-3.5 text-left transition ${
+                      className={`w-full rounded-lg border p-3.5 text-left transition cursor-pointer ${
                         active
-                          ? "border-red-500/50 bg-red-950/20 shadow-lg shadow-red-950/20"
-                          : "border-slate-800 bg-[#050d19] hover:border-slate-700 hover:bg-[#081423]"
+                          ? "border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100"
+                          : "border-emerald-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/50"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -341,8 +328,8 @@ export default function EmergencyPage() {
                             <span
                               className={`text-[13px] font-bold ${
                                 active
-                                  ? "text-white"
-                                  : "text-slate-300"
+                                  ? "text-emerald-950"
+                                  : "text-emerald-900"
                               }`}
                             >
                               #{incident.id}
@@ -353,21 +340,13 @@ export default function EmergencyPage() {
                             />
                           </div>
 
-                          <p className="mt-1.5 text-[13px] font-semibold text-slate-200">
+                          <p className="mt-1.5 text-[13px] font-semibold text-emerald-900">
                             {incident.type}
                           </p>
                         </div>
-
-                        <ChevronRight
-                          className={`mt-0.5 h-4 w-4 shrink-0 ${
-                            active
-                              ? "text-red-400"
-                              : "text-slate-700"
-                          }`}
-                        />
                       </div>
 
-                      <div className="mt-2.5 flex items-center gap-1.5 text-[11px] text-slate-500">
+                      <div className="mt-2.5 flex items-center gap-1.5 text-[11px] text-emerald-700">
                         <MapPin className="h-3.5 w-3.5 shrink-0" />
 
                         <span className="truncate">
@@ -375,80 +354,74 @@ export default function EmergencyPage() {
                         </span>
                       </div>
 
-                      <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-slate-800/80 pt-2.5 text-[10px]">
-                        <span className="text-slate-600">
+                      <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-emerald-100 pt-2.5 text-[10px]">
+                        <span className="text-emerald-600">
                           {incident.received}
                         </span>
 
                         <span
                           className={
-                            incident.status === "Unit En Route"
-                              ? "font-semibold text-blue-400"
-                              : incident.status === "Assigned"
-                                ? "font-semibold text-emerald-400"
-                                : "font-semibold text-amber-400"
+                            incident.status === "assigned"
+                              ? "font-semibold text-amber-700"
+                              : incident.status === "completed"
+                              ? "font-semibold text-emerald-700"
+                              : "font-semibold text-red-600"
                           }
                         >
                           {incident.status}
                         </span>
                       </div>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
             </div>
 
-            {/* RESPONSE STATUS */}
+            {/* RESPONSE STATUS (Only 3 types: awaited, assigned, completed) */}
 
-            <div className="shrink-0 rounded-xl border border-slate-800 bg-[#07111f] p-3.5">
+            <div className="shrink-0 rounded-xl border border-emerald-200 bg-white p-3.5">
               <div className="mb-3 flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                <ShieldCheck className="h-4 w-4 text-emerald-700" />
 
-                <h3 className="text-[14px] font-bold text-white">
+                <h3 className="text-[14px] font-bold text-emerald-950">
                   Response Status
                 </h3>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 <StatusBox
-                  label="Verified"
-                  value="Complete"
-                  tone="green"
+                  label="Awaited"
+                  value={String(awaitedCount)}
+                  tone="amber"
                 />
 
                 <StatusBox
-                  label="Unit Match"
-                  value="Complete"
-                  tone="green"
-                />
-
-                <StatusBox
-                  label="Route"
-                  value="Ready"
+                  label="Assigned"
+                  value={String(assignedCount)}
                   tone="blue"
                 />
 
                 <StatusBox
-                  label="Dispatch"
-                  value="Pending"
-                  tone="amber"
+                  label="Completed"
+                  value={String(completedCount)}
+                  tone="green"
                 />
               </div>
             </div>
           </section>
 
           {/* ============================================================ */}
-          {/* CENTER — MAP                                                  */}
+          {/* CENTER — MAP                                                 */}
           {/* ============================================================ */}
 
-          <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-slate-800 bg-[#07111f]">
-            <div className="flex h-[60px] shrink-0 items-center justify-between border-b border-slate-800 px-4">
+          <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-emerald-200 bg-white">
+            <div className="flex h-[60px] shrink-0 items-center justify-between border-b border-emerald-200 px-4">
               <div className="min-w-0">
-                <h2 className="text-[15px] font-bold text-white">
+                <h2 className="text-[15px] font-bold text-emerald-950">
                   Live Response Map
                 </h2>
 
-                <p className="mt-0.5 truncate text-[11px] text-slate-500">
+                <p className="mt-0.5 truncate text-[11px] text-emerald-700">
                   {selectedIncident.location} · emergency units · response
                   corridor
                 </p>
@@ -461,32 +434,37 @@ export default function EmergencyPage() {
                 />
 
                 <MapLegend
-                  color="bg-emerald-400"
+                  color="bg-emerald-600"
                   label="EV Unit"
                 />
 
                 <MapLegend
-                  color="bg-amber-400"
+                  color="bg-amber-500"
                   label="Traffic"
                 />
               </div>
             </div>
 
             <div className="relative min-h-0 flex-1 overflow-hidden">
-              <CommandMap />
+              <iframe
+                title="Delhi OpenStreetMap"
+                className="w-full h-full border-0 filter contrast-125"
+                src="https://www.openstreetmap.org/export/embed.html?bbox=76.84%2C28.40%2C77.35%2C28.88&layer=mapnik"
+                loading="lazy"
+              />
 
               {/* INCIDENT MAP CARD */}
 
-              <div className="absolute left-3 top-3 z-[400] max-w-[calc(100%-24px)] rounded-lg border border-red-500/40 bg-[#07111f]/95 px-3.5 py-2.5 shadow-xl backdrop-blur">
+              <div className="absolute left-3 top-3 z-[400] max-w-[calc(100%-24px)] rounded-lg border border-red-200 bg-white/95 px-3.5 py-2.5 shadow-xl backdrop-blur">
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-red-500" />
 
-                  <span className="text-[12px] font-bold text-red-400">
+                  <span className="text-[12px] font-bold text-red-600">
                     INCIDENT #{selectedIncident.id}
                   </span>
                 </div>
 
-                <p className="mt-1 truncate text-[11px] text-slate-400">
+                <p className="mt-1 truncate text-[11px] text-emerald-700">
                   {selectedIncident.location} ·{" "}
                   {selectedIncident.type}
                 </p>
@@ -494,28 +472,24 @@ export default function EmergencyPage() {
 
               {/* RESPONSE CORRIDOR */}
 
-              <div className="absolute bottom-3 left-3 right-3 z-[400] rounded-lg border border-emerald-500/20 bg-[#07111f]/95 p-3.5 shadow-xl backdrop-blur">
+              <div className="absolute bottom-3 left-3 right-3 z-[400] rounded-lg border border-emerald-200 bg-white/95 p-3.5 shadow-xl backdrop-blur">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-2">
-                    <Navigation className="h-4 w-4 shrink-0 text-emerald-400" />
+                    <Navigation className="h-4 w-4 shrink-0 text-emerald-700" />
 
                     <div className="min-w-0">
-                      <p className="truncate text-[12px] font-bold text-white">
-                        Recommended response corridor
-                      </p>
-
-                      <p className="mt-0.5 truncate text-[10px] text-slate-500">
+                      <p className="mt-0.5 truncate text-[10px] text-emerald-800 font-medium">
                         Optimized for emergency priority and vehicle battery
                       </p>
                     </div>
                   </div>
 
                   <div className="shrink-0 text-right">
-                    <p className="text-[15px] font-bold text-emerald-400">
-                      {selectedVehicle.eta}
+                    <p className="text-[15px] font-bold text-emerald-700">
+                      14 min
                     </p>
 
-                    <p className="text-[9px] uppercase tracking-wide text-slate-600">
+                    <p className="text-[9px] uppercase tracking-wide text-emerald-600">
                       ETA
                     </p>
                   </div>
@@ -523,15 +497,15 @@ export default function EmergencyPage() {
               </div>
             </div>
 
-            <div className="flex h-[42px] shrink-0 items-center justify-between border-t border-slate-800 px-4">
-              <div className="flex items-center gap-2 text-[10px] text-slate-500">
-                <Activity className="h-3.5 w-3.5 text-emerald-400" />
+            <div className="flex h-[42px] shrink-0 items-center justify-between border-t border-emerald-200 px-4 bg-emerald-50/50">
+              <div className="flex items-center gap-2 text-[10px] text-emerald-800">
+                <Activity className="h-3.5 w-3.5 text-emerald-700" />
                 Live telemetry connected
               </div>
 
-              <div className="flex items-center gap-2 text-[10px] text-slate-500">
-                <Route className="h-3.5 w-3.5 text-blue-400" />
-                Route intelligence ready
+              <div className="flex items-center gap-2 text-[10px] text-emerald-800">
+                <Route className="h-3.5 w-3.5 text-emerald-700" />
+                Route intelligence
               </div>
             </div>
           </section>
@@ -540,20 +514,20 @@ export default function EmergencyPage() {
           {/* RIGHT — AVAILABLE UNITS                                      */}
           {/* ============================================================ */}
 
-          <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-slate-800 bg-[#07111f]">
-            <div className="shrink-0 border-b border-slate-800 px-4 py-3">
+          <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-emerald-200 bg-white">
+            <div className="shrink-0 border-b border-emerald-200 px-4 py-3">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <h2 className="text-[15px] font-bold text-white">
+                  <h2 className="text-[15px] font-bold text-emerald-950">
                     Available Units
                   </h2>
 
-                  <p className="mt-1 text-[11px] text-slate-500">
+                  <p className="mt-1 text-[11px] text-emerald-700">
                     Ranked by emergency feasibility
                   </p>
                 </div>
 
-                <span className="shrink-0 rounded-md bg-emerald-950/30 px-2 py-1 text-[10px] font-bold text-emerald-400">
+                <span className="shrink-0 rounded-md bg-emerald-100 px-2 py-1 text-[10px] font-bold text-emerald-800">
                   {availableVehicles.length} ONLINE
                 </span>
               </div>
@@ -585,16 +559,16 @@ export default function EmergencyPage() {
                 ))}
               </div>
 
-              <div className="mt-3 rounded-lg border border-blue-500/15 bg-blue-950/10 p-3.5">
+              <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/50 p-3.5">
                 <div className="flex items-center gap-2">
-                  <Car className="h-4 w-4 shrink-0 text-blue-400" />
+                  <Car className="h-4 w-4 shrink-0 text-emerald-700" />
 
                   <div className="min-w-0">
-                    <p className="text-[12px] font-bold text-blue-300">
+                    <p className="text-[12px] font-bold text-emerald-900">
                       Fleet availability
                     </p>
 
-                    <p className="mt-0.5 text-[10px] text-slate-500">
+                    <p className="mt-0.5 text-[10px] text-emerald-700">
                       {vehicles.length} units monitored ·{" "}
                       {availableVehicles.length} dispatchable
                     </p>
@@ -603,13 +577,13 @@ export default function EmergencyPage() {
               </div>
             </div>
 
-            <div className="shrink-0 border-t border-slate-800 p-3.5">
+            <div className="shrink-0 border-t border-emerald-200 p-3.5">
               <div className="mb-2.5 flex items-center justify-between gap-2">
-                <span className="text-[10px] uppercase tracking-wide text-slate-600">
+                <span className="text-[10px] uppercase tracking-wide text-emerald-600">
                   Selected unit
                 </span>
 
-                <span className="truncate text-[12px] font-bold text-emerald-400">
+                <span className="truncate text-[12px] font-bold text-emerald-700">
                   {selectedVehicle.id}
                 </span>
               </div>
@@ -620,18 +594,18 @@ export default function EmergencyPage() {
                 }
                 className={`flex w-full items-center justify-center gap-2 rounded-lg px-3 py-3 text-[12px] font-bold transition ${
                   selectedVehicle.status === "AVAILABLE"
-                    ? "bg-emerald-500 text-[#03110c] shadow-lg shadow-emerald-500/10 hover:bg-emerald-400"
-                    : "cursor-not-allowed bg-slate-800 text-slate-500"
+                    ? "bg-emerald-700 text-white shadow-lg shadow-emerald-700/10 hover:bg-emerald-800"
+                    : "cursor-not-allowed bg-emerald-100 text-emerald-400"
                 }`}
               >
                 <Siren className="h-4 w-4" />
 
                 {selectedVehicle.status === "AVAILABLE"
-                  ? `DISPATCH ${selectedVehicle.id}`
+                  ? `ASSIGN ${selectedVehicle.id}`
                   : "UNIT NOT DISPATCHABLE"}
               </button>
 
-              <p className="mt-2 text-center text-[10px] text-slate-600">
+              <p className="mt-2 text-center text-[10px] text-emerald-600">
                 Dispatch creates an emergency route for the selected unit.
               </p>
             </div>
@@ -653,10 +627,10 @@ function PriorityBadge({
 }) {
   const styles =
     priority === "CRITICAL"
-      ? "border-red-500/30 bg-red-950/40 text-red-400"
+      ? "border-red-200 bg-red-50 text-red-600"
       : priority === "HIGH"
-        ? "border-amber-500/30 bg-amber-950/30 text-amber-400"
-        : "border-blue-500/30 bg-blue-950/30 text-blue-400";
+        ? "border-amber-200 bg-amber-50 text-amber-700"
+        : "border-emerald-200 bg-emerald-50 text-emerald-700";
 
   return (
     <span
@@ -682,32 +656,32 @@ function StatusBox({
 }) {
   const styles = {
     green: {
-      border: "border-emerald-500/15",
-      value: "text-emerald-400",
-      icon: "bg-emerald-400",
+      border: "border-emerald-200",
+      value: "text-emerald-700",
+      icon: "bg-emerald-600",
     },
     blue: {
-      border: "border-blue-500/15",
-      value: "text-blue-400",
-      icon: "bg-blue-400",
+      border: "border-blue-200",
+      value: "text-blue-700",
+      icon: "bg-blue-600",
     },
     amber: {
-      border: "border-amber-500/15",
-      value: "text-amber-400",
-      icon: "bg-amber-400",
+      border: "border-amber-200",
+      value: "text-amber-700",
+      icon: "bg-amber-500",
     },
   }[tone];
 
   return (
     <div
-      className={`rounded-lg border ${styles.border} bg-[#050d19] px-3 py-2.5`}
+      className={`rounded-lg border ${styles.border} bg-emerald-50/30 px-3 py-2.5`}
     >
       <div className="flex items-center gap-2">
         <span
           className={`h-1.5 w-1.5 shrink-0 rounded-full ${styles.icon}`}
         />
 
-        <span className="text-[10px] text-slate-500">
+        <span className="text-[10px] text-emerald-700">
           {label}
         </span>
       </div>
@@ -733,7 +707,7 @@ function MapLegend({
   label: string;
 }) {
   return (
-    <span className="flex items-center gap-1.5 whitespace-nowrap text-slate-500">
+    <span className="flex items-center gap-1.5 whitespace-nowrap text-emerald-700">
       <span className={`h-2 w-2 rounded-full ${color}`} />
       {label}
     </span>
@@ -766,12 +740,12 @@ function VehicleCard({
   const lowBattery = vehicle.battery < 20;
 
   return (
-    <button
+    <div
       onClick={onSelect}
-      className={`w-full rounded-xl border p-3.5 text-left transition ${
+      className={`w-full rounded-xl border p-3.5 text-left transition cursor-pointer ${
         selected
-          ? "border-emerald-500/50 bg-emerald-950/15 shadow-lg shadow-emerald-950/20"
-          : "border-slate-800 bg-[#050d19] hover:border-slate-700"
+          ? "border-emerald-500 bg-emerald-50/60 shadow-md shadow-emerald-100"
+          : "border-emerald-200 bg-white hover:border-emerald-300"
       }`}
     >
       {/* TITLE */}
@@ -781,10 +755,10 @@ function VehicleCard({
           <div
             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
               lowBattery
-                ? "bg-red-950/30 text-red-400"
+                ? "bg-red-50 text-red-600 border border-red-200"
                 : selected
-                  ? "bg-emerald-500/10 text-emerald-400"
-                  : "bg-slate-800 text-slate-400"
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-emerald-50 text-emerald-700"
             }`}
           >
             <Ambulance className="h-4 w-4" />
@@ -792,18 +766,18 @@ function VehicleCard({
 
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-1.5">
-              <h3 className="text-[13px] font-bold text-white">
+              <h3 className="text-[13px] font-bold text-emerald-950">
                 {vehicle.id}
               </h3>
 
               {vehicle.recommended && (
-                <span className="rounded bg-emerald-500 px-1.5 py-0.5 text-[8px] font-black text-[#03110c]">
+                <span className="rounded bg-emerald-700 px-1.5 py-0.5 text-[8px] font-black text-white">
                   BEST MATCH
                 </span>
               )}
             </div>
 
-            <p className="mt-0.5 truncate text-[10px] text-slate-500">
+            <p className="mt-0.5 truncate text-[10px] text-emerald-700">
               {vehicle.type}
             </p>
           </div>
@@ -813,16 +787,16 @@ function VehicleCard({
           <p
             className={`text-[15px] font-bold ${
               vehicle.score >= 90
-                ? "text-emerald-400"
+                ? "text-emerald-700"
                 : vehicle.score >= 80
-                  ? "text-blue-400"
-                  : "text-amber-400"
+                  ? "text-emerald-600"
+                  : "text-amber-600"
             }`}
           >
             {vehicle.score}%
           </p>
 
-          <p className="text-[9px] text-slate-600">
+          <p className="text-[9px] text-emerald-600">
             MATCH
           </p>
         </div>
@@ -850,19 +824,19 @@ function VehicleCard({
 
       {/* TRAFFIC */}
 
-      <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-slate-800/80 pt-2.5">
+      <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-emerald-100 pt-2.5">
         <div className="flex min-w-0 items-center gap-1.5">
           <span
             className={`h-1.5 w-1.5 shrink-0 rounded-full ${
               vehicle.traffic === "Low"
-                ? "bg-emerald-400"
-                : "bg-amber-400"
+                ? "bg-emerald-600"
+                : "bg-amber-500"
             }`}
           />
 
-          <span className="truncate text-[10px] text-slate-500">
+          <span className="truncate text-[10px] text-emerald-700">
             Traffic:{" "}
-            <span className="text-slate-300">
+            <span className="text-emerald-900 font-medium">
               {vehicle.traffic}
             </span>
           </span>
@@ -871,8 +845,8 @@ function VehicleCard({
         <span
           className={`shrink-0 text-[9px] font-bold ${
             lowBattery
-              ? "text-red-400"
-              : "text-emerald-400"
+              ? "text-red-600"
+              : "text-emerald-700"
           }`}
         >
           {vehicle.status}
@@ -882,16 +856,16 @@ function VehicleCard({
       {/* RECOMMENDATION */}
 
       {vehicle.recommended && (
-        <div className="mt-2.5 rounded-lg border border-emerald-500/15 bg-[#07111f] px-3 py-2.5">
+        <div className="mt-2.5 rounded-lg border border-emerald-200 bg-emerald-50/50 px-3 py-2.5">
           <div className="flex items-center gap-1.5">
-            <Zap className="h-3.5 w-3.5 text-emerald-400" />
+            <Zap className="h-3.5 w-3.5 text-emerald-700" />
 
-            <span className="text-[10px] font-bold text-emerald-400">
+            <span className="text-[10px] font-bold text-emerald-800">
               WHY THIS UNIT
             </span>
           </div>
 
-          <div className="mt-1.5 grid grid-cols-2 gap-x-2 gap-y-1 text-[9px] text-slate-500">
+          <div className="mt-1.5 grid grid-cols-2 gap-x-2 gap-y-1 text-[9px] text-emerald-700">
             <span>✓ Feasible route</span>
             <span>✓ Battery sufficient</span>
             <span>✓ No charging needed</span>
@@ -903,12 +877,12 @@ function VehicleCard({
       {/* SELECTED */}
 
       {selected && (
-        <div className="mt-2.5 flex items-center justify-center gap-1.5 text-[9px] font-bold text-emerald-400">
+        <div className="mt-2.5 flex items-center justify-center gap-1.5 text-[9px] font-bold text-emerald-700">
           <CheckCircle2 className="h-3.5 w-3.5" />
           SELECTED FOR DISPATCH
         </div>
       )}
-    </button>
+    </div>
   );
 }
 
@@ -926,16 +900,16 @@ function VehicleMetric({
   danger?: boolean;
 }) {
   return (
-    <div className="rounded-md bg-[#07111f] px-2.5 py-2">
-      <p className="text-[9px] uppercase tracking-wide text-slate-600">
+    <div className="rounded-md bg-emerald-50/50 border border-emerald-100 px-2.5 py-2">
+      <p className="text-[9px] uppercase tracking-wide text-emerald-600">
         {label}
       </p>
 
       <p
         className={`mt-0.5 text-[11px] font-bold ${
           danger
-            ? "text-red-400"
-            : "text-slate-200"
+            ? "text-red-600"
+            : "text-emerald-950"
         }`}
       >
         {value}

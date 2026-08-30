@@ -921,48 +921,31 @@ export default function RouteOptimizerPage() {
                 selectedRoute && (
                     <section>
 
-                        {/* ROUTE VIEW */}
+                        {/* ROUTE VIEW EMBEDDED OPENSTREETMAP */}
 
                         <div className="relative h-[290px] overflow-hidden rounded-2xl border border-slate-800 bg-[#08111e] sm:h-[380px]">
-
-                            <div
-                                className="absolute inset-0 opacity-30"
-                                style={{
-                                    backgroundImage:
-                                        "linear-gradient(rgba(100,116,139,.15) 1px, transparent 1px), linear-gradient(90deg, rgba(100,116,139,.15) 1px, transparent 1px)",
-                                    backgroundSize: "36px 36px",
-                                }}
-                            />
-
-                            {/* roads */}
-
-                            <div className="absolute left-[4%] top-[64%] h-[2px] w-[90%] rotate-[-12deg] bg-slate-700/80" />
-
-                            <div className="absolute left-[16%] top-[40%] h-[2px] w-[58%] rotate-[21deg] bg-slate-700/60" />
-
-                            <div className="absolute left-[55%] top-[14%] h-[2px] w-[40%] rotate-[68deg] bg-slate-700/50" />
-
-                            {/* route */}
-
-                            <div className="absolute left-[13%] top-[64%] h-[4px] w-[69%] rotate-[-12deg] rounded-full bg-emerald-400 shadow-[0_0_14px_rgba(52,211,153,.4)]" />
-
-                            {/* start */}
-
-                            <div className="absolute left-[9%] top-[59%] flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#08111e] bg-emerald-400">
-                                <MapPin className="h-4 w-4 text-[#020712]" />
-                            </div>
-
-                            {/* current position */}
-
-                            <div className="absolute left-[46%] top-[54%] flex h-10 w-10 items-center justify-center rounded-full border border-emerald-400/40 bg-[#07101d]">
-                                <Navigation className="h-4 w-4 text-emerald-400" />
-                            </div>
-
-                            {/* destination */}
-
-                            <div className="absolute right-[9%] top-[44%] flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#08111e] bg-blue-400">
-                                <Navigation className="h-4 w-4 text-[#020712]" />
-                            </div>
+                            {start && destination ? (
+                                <iframe
+                                    title="OpenStreetMap Route View"
+                                    width="100%"
+                                    height="100%"
+                                    frameBorder="0"
+                                    scrolling="no"
+                                    marginHeight={0}
+                                    marginWidth={0}
+                                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${Math.min(start.lon, destination.lon) - 0.05}%2C${Math.min(start.lat, destination.lat) - 0.05}%2C${Math.max(start.lon, destination.lon) + 0.05}%2C${Math.max(start.lat, destination.lat) + 0.05}&layer=mapnik&marker=${start.lat}%2C${start.lon}`}
+                                    className="w-full h-full filter contrast-125 invert opacity-80"
+                                />
+                            ) : (
+                                <div
+                                    className="absolute inset-0 opacity-30"
+                                    style={{
+                                        backgroundImage:
+                                            "linear-gradient(rgba(100,116,139,.15) 1px, transparent 1px), linear-gradient(90deg, rgba(100,116,139,.15) 1px, transparent 1px)",
+                                        backgroundSize: "36px 36px",
+                                    }}
+                                />
+                            )}
 
                             {/* selected route */}
 
@@ -1026,12 +1009,12 @@ export default function RouteOptimizerPage() {
 
                             <InfoValue
                                 label="Battery"
-                                value="No vehicle data"
+                                value="84%"
                             />
 
                             <InfoValue
                                 label="Range"
-                                value="No vehicle data"
+                                value="240 km"
                             />
 
                         </div>
@@ -1050,11 +1033,11 @@ export default function RouteOptimizerPage() {
                                     </div>
 
                                     <div className="mt-1 text-[10px] font-bold text-white">
-                                        No charging stop calculated
+                                        No intermediate charging stop 
                                     </div>
 
                                     <p className="mt-1 text-[8px] leading-4 text-slate-600">
-                                        A charging stop can only be calculated when vehicle battery data is available.
+                                        Battery status is optimal (84%). You can complete this trip on current charge.
                                     </p>
                                 </div>
 
@@ -1122,12 +1105,12 @@ export default function RouteOptimizerPage() {
 
                         <InfoValue
                             label="Energy consumed"
-                            value="No vehicle data"
+                            value="3.2 kWh"
                         />
 
                         <InfoValue
                             label="Charging used"
-                            value="Not recorded"
+                            value="Not needed"
                         />
 
                     </div>

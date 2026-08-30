@@ -2,11 +2,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function SignupPage() {
-  // Main account category: 'user' ya 'government'
+export default function LoginPage() {
   const [accountCategory, setAccountCategory] = useState<'user' | 'government'>('user');
-  
-  // Agar 'user' selected hai, toh sub-type: 'private' ya 'gov_driver'
   const [userSubType, setUserSubType] = useState<'private' | 'gov_driver'>('private');
   const router = useRouter();
 
@@ -31,18 +28,18 @@ export default function SignupPage() {
               ⚡
             </div>
             <span className="text-xl font-bold tracking-wider">EnaV</span>
-            <span className="text-xs text-gray-400 ml-2 hidden sm:inline">SMART MOBILITY INTELLIGENCE</span>
+            <span className="text-xs text-gray-400 ml-2 hidden sm:inline">AI-POWERED MOBILITY INTELLIGENCE</span>
           </div>
 
           <div className="max-w-lg">
             <span className="text-xs uppercase tracking-widest text-cyan-400 font-semibold bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
-              Join EnaV
+              Welcome Back
             </span>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mt-4 mb-4 leading-tight">
-              Mobility intelligence for <span className="text-cyan-400">real-world response.</span>
+              Driving the future of <span className="text-cyan-400">smart mobility.</span>
             </h1>
             <p className="text-gray-400 text-sm sm:text-base leading-relaxed">
-              EnaV connects emergency mobility, electric vehicles and charging infrastructure through one intelligent platform.
+              Log in to access real-time emergency coordination, smart EV routing, and infrastructure dashboards.
             </p>
           </div>
         </div>
@@ -75,13 +72,10 @@ export default function SignupPage() {
         <div className="max-w-md w-full mx-auto">
           
           <div className="mb-6">
-            <a href="/auth/login" className="text-xs text-gray-400 hover:text-white transition flex items-center gap-1 mb-2">
-              ← Back to sign in
-            </a>
             <h2 className="text-2xl sm:text-3xl font-bold">
-              Create your <span className="text-cyan-400">EnaV</span> account
+              Login to <span className="text-cyan-400">EnaV</span>
             </h2>
-            <p className="text-xs sm:text-sm text-gray-400 mt-1">Register to access EnaV mobility services.</p>
+            <p className="text-xs sm:text-sm text-gray-400 mt-1">Access your dashboard and services.</p>
           </div>
 
           {/* Primary Account Category Selection */}
@@ -141,10 +135,10 @@ export default function SignupPage() {
             </div>
           )}
 
-          {/* Single Form Wrapper Controlling All Fields & Submission */}
+          {/* Dynamic Login Form Fields Wrapped with onSubmit */}
           <form onSubmit={handleSubmit} className="space-y-4">
             
-            {/* 1. GOVERNMENT OFFICIAL: Only Email ID and Password */}
+            {/* 1. GOVERNMENT OFFICIAL: Only Official Email & Password */}
             {accountCategory === 'government' && (
               <>
                 <div>
@@ -160,7 +154,7 @@ export default function SignupPage() {
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Password</label>
                   <input 
                     type="password" 
-                    placeholder="Create a password" 
+                    placeholder="Enter your password" 
                     required
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
                   />
@@ -168,18 +162,9 @@ export default function SignupPage() {
               </>
             )}
 
-            {/* 2. USER -> GOV DRIVER: Name, Email, Driver/Badge ID, Department, Password */}
+            {/* 2. USER -> GOV DRIVER: Email & Driver ID/Badge, Password */}
             {accountCategory === 'user' && userSubType === 'gov_driver' && (
               <>
-                <div>
-                  <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Full Name</label>
-                  <input 
-                    type="text" 
-                    placeholder="Enter your full name" 
-                    required
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
-                  />
-                </div>
                 <div>
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Email Address</label>
                   <input 
@@ -199,19 +184,10 @@ export default function SignupPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Department / Agency</label>
-                  <input 
-                    type="text" 
-                    placeholder="e.g., Municipal Transport" 
-                    required
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
-                  />
-                </div>
-                <div>
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Password</label>
                   <input 
                     type="password" 
-                    placeholder="Create a password" 
+                    placeholder="Enter your password" 
                     required
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
                   />
@@ -219,18 +195,9 @@ export default function SignupPage() {
               </>
             )}
 
-            {/* 3. USER -> PRIVATE / NORMAL USER: Standard fields */}
+            {/* 3. USER -> PRIVATE / NORMAL USER: Standard Email & Password */}
             {accountCategory === 'user' && userSubType === 'private' && (
               <>
-                <div>
-                  <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Full Name</label>
-                  <input 
-                    type="text" 
-                    placeholder="Enter your full name" 
-                    required
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
-                  />
-                </div>
                 <div>
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Email Address</label>
                   <input 
@@ -244,7 +211,7 @@ export default function SignupPage() {
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Password</label>
                   <input 
                     type="password" 
-                    placeholder="Create a password" 
+                    placeholder="Enter your password" 
                     required
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
                   />
@@ -256,12 +223,12 @@ export default function SignupPage() {
               type="submit" 
               className="w-full py-3.5 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold rounded-xl transition shadow-lg shadow-cyan-500/20 text-sm mt-2"
             >
-              CREATE ACCOUNT →
+              LOGIN →
             </button>
           </form>
 
           <div className="text-center mt-6 text-xs sm:text-sm text-gray-400">
-            Already have an account? <a href="/auth/login" className="text-cyan-400 font-medium hover:underline">Log in</a>
+            Don't have an account? <a href="/auth/signup" className="text-cyan-400 font-medium hover:underline">Create account</a>
           </div>
 
         </div>

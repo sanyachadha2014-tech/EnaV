@@ -1,1099 +1,363 @@
-"use client";
+'use client';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-import dynamic from "next/dynamic";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import type { ComponentType, ReactNode } from "react";
-import {
-  Bell,
-  UserCircle,
-  Activity,
-  Siren,
-  Zap,
-  Clock3,
-  Car,
-  MapPin,
-  AlertTriangle,
-  CheckCircle2,
-  TrendingUp,
-  Leaf,
-  Radio,
-  Navigation,
-  BatteryCharging,
-  Gauge,
-  LogOut,
-  Check,
-} from "lucide-react";
-
-const CommandMap = dynamic(
-  () => import("@/components/CommandMap"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex h-full min-h-[390px] items-center justify-center bg-[#071426] text-sm text-slate-500">
-        <Activity className="mr-2 h-5 w-5 animate-spin text-emerald-400" />
-        Loading city map...
-      </div>
-    ),
-  },
-);
-
-/* =========================================================
-   PRIORITIES
-========================================================= */
-
-type PriorityType =
-  | "emergency"
-  | "warning"
-  | "success";
-
-const priorities: {
-  type: PriorityType;
-  icon: ComponentType<{ className?: string }>;
-  title: string;
-  description: string;
-  meta: string;
-}[] = [
-  {
-    type: "emergency",
-    icon: Siren,
-    title: "Emergency #E102",
-    description: "Ambulance required",
-    meta: "ETA: 6 min",
-  },
-  {
-    type: "warning",
-    icon: Zap,
-    title: "Station #C42",
-    description: "High congestion predicted",
-    meta: "Wait: 5 min",
-  },
-  {
-    type: "success",
-    icon: CheckCircle2,
-    title: "Emergency #E098",
-    description: "Police dispatched",
-    meta: "En route",
-  },
-];
-
-/* =========================================================
-   PRIORITY STYLES
-========================================================= */
-
-const priorityStyles: Record<
-  PriorityType,
-  {
-    icon: string;
-    dot: string;
-    title: string;
-  }
-> = {
-  emergency: {
-    icon:
-      "border-red-500/20 bg-red-500/10 text-red-400",
-    dot: "bg-red-500",
-    title: "text-red-300",
-  },
-
-  warning: {
-    icon:
-      "border-amber-500/20 bg-amber-500/10 text-amber-400",
-    dot: "bg-amber-400",
-    title: "text-amber-300",
-  },
-
-  success: {
-    icon:
-      "border-emerald-500/20 bg-emerald-500/10 text-emerald-400",
-    dot: "bg-emerald-400",
-    title: "text-emerald-300",
-  },
-};
-
-/* =========================================================
-   DASHBOARD STATS
-========================================================= */
-
-const stats = [
-  {
-    label: "ACTIVE EVs",
-    value: "1,284",
-    detail: "+8.2% today",
-    icon: Car,
-    iconClass:
-      "text-blue-400 bg-blue-500/10 border-blue-500/20",
-    valueClass: "text-white",
-  },
-  {
-    label: "CHARGERS",
-    value: "342",
-    detail: "328 online",
-    icon: Zap,
-    iconClass:
-      "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
-    valueClass: "text-white",
-  },
-  {
-    label: "EMERGENCIES",
-    value: "07",
-    detail: "2 high priority",
-    icon: Siren,
-    iconClass:
-      "text-red-400 bg-red-500/10 border-red-500/20",
-    valueClass: "text-red-400",
-  },
-  {
-    label: "AVG ETA",
-    value: "8.4 min",
-    detail: "-12% today",
-    icon: Clock3,
-    iconClass:
-      "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
-    valueClass: "text-white",
-  },
-];
-
-/* =========================================================
-   MAP LEGEND
-========================================================= */
-
-const mapLegend = [
-  {
-    label: "EVs",
-    color: "bg-blue-400",
-  },
-  {
-    label: "Chargers",
-    color: "bg-emerald-400",
-  },
-  {
-    label: "Emergency",
-    color: "bg-red-500",
-  },
-  {
-    label: "Traffic",
-    color: "bg-amber-400",
-  },
-];
-
-/* =========================================================
-   PAGE
-========================================================= */
-
-export default function GovernmentDashboardOverview() {
+export default function GovDashboard() {
   const router = useRouter();
-
-  const [notificationsOpen, setNotificationsOpen] =
-    useState(false);
-
-  const [profileOpen, setProfileOpen] =
-    useState(false);
-
-  /* =======================================================
-     NOTIFICATION TOGGLE
-  ======================================================= */
-
-  function toggleNotifications() {
-    setNotificationsOpen((current) => !current);
-    setProfileOpen(false);
-  }
-
-  /* =======================================================
-     PROFILE TOGGLE
-  ======================================================= */
-
-  function toggleProfile() {
-    setProfileOpen((current) => !current);
-    setNotificationsOpen(false);
-  }
-
-  /* =======================================================
-     CLOSE DROPDOWNS
-  ======================================================= */
-
-  function closeDropdowns() {
-    setNotificationsOpen(false);
-    setProfileOpen(false);
-  }
-
-  /* =======================================================
-     SIGN OUT
-  ======================================================= */
-
-  function handleSignOut() {
-    closeDropdowns();
-
-    try {
-      localStorage.removeItem("enav-role");
-      localStorage.removeItem("enav-user");
-      localStorage.removeItem("enav-auth");
-    } catch {
-      // Ignore localStorage errors.
-    }
-
-    router.push("/auth/signin");
-  }
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
 
   return (
-    <div className="min-h-screen bg-[#040B16] text-slate-100">
-
-      {/* =====================================================
-          COMMAND HEADER
-      ===================================================== */}
-
-      <header className="border-b border-[#1A304B] bg-[#071426]">
-
-        <div className="flex min-h-[68px] items-center justify-between gap-4 px-5 py-3 xl:px-6">
-
-          {/* =================================================
-              LEFT
-          ================================================= */}
-
-          <div className="min-w-0">
-
-            <div className="flex items-center gap-2.5">
-
-              <h1 className="truncate text-base font-black uppercase tracking-[0.08em] text-white sm:text-lg">
-                ENA V — City Mobility Command
-              </h1>
-
-              <span className="hidden rounded border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-400 md:inline-flex">
-                Government
-              </span>
-
-            </div>
-
-            <div className="mt-1.5 flex items-center gap-2 text-[10px] font-medium text-slate-400 sm:text-xs">
-
-              <MapPin className="h-3.5 w-3.5 text-blue-400" />
-
-              <span>Delhi NCR</span>
-
-              <span className="text-slate-600">
-                •
-              </span>
-
-              <span>
-                27 Aug 2026 | 14:32 IST
-              </span>
-
-            </div>
-
+    <div className="min-h-screen bg-white text-gray-900 flex flex-col relative">
+      
+      {/* Top Navbar */}
+      <header className="h-16 border-b border-emerald-200/80 px-8 flex items-center justify-between bg-white sticky top-0 z-20">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-emerald-700/10 border border-emerald-700 flex items-center justify-center text-emerald-800 font-bold">
+            ⚡
           </div>
-
-          {/* =================================================
-              RIGHT
-          ================================================= */}
-
-          <div className="relative flex shrink-0 items-center gap-2">
-
-            {/* =================================================
-                NOTIFICATION
-            ================================================= */}
-
-            <div className="relative">
-
-              <button
-                type="button"
-                aria-label="Notifications"
-                onClick={toggleNotifications}
-                className={`relative flex h-9 w-9 items-center justify-center rounded-lg border bg-[#091A2D] transition ${
-                  notificationsOpen
-                    ? "border-emerald-500/40 text-emerald-400"
-                    : "border-[#1D3855] text-slate-400 hover:border-blue-500/40 hover:text-white"
-                }`}
-              >
-
-                <Bell className="h-4 w-4" />
-
-                <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-
-              </button>
-
-              {/* NOTIFICATION DROPDOWN */}
-
-              {notificationsOpen && (
-                <div className="absolute right-0 top-11 z-[100] w-[300px] overflow-hidden rounded-xl border border-[#1D3855] bg-[#071426] shadow-2xl shadow-black/50">
-
-                  <div className="flex items-center justify-between border-b border-[#1A304B] px-4 py-3">
-
-                    <div>
-
-                      <div className="text-[10px] font-black uppercase tracking-wider text-white">
-                        Notifications
-                      </div>
-
-                      <div className="mt-1 text-[8px] text-slate-600">
-                        Recent system updates
-                      </div>
-
-                    </div>
-
-                    <span className="rounded-full bg-red-500/10 px-2 py-1 text-[7px] font-bold text-red-400">
-                      1 NEW
-                    </span>
-
-                  </div>
-
-                  <div className="divide-y divide-[#172A42]">
-
-                    <NotificationItem
-                      icon={
-                        <Siren className="h-3.5 w-3.5" />
-                      }
-                      title="Emergency #E102"
-                      description="Ambulance required in Janakpuri."
-                      time="2 min ago"
-                      tone="red"
-                    />
-
-                    <NotificationItem
-                      icon={
-                        <Zap className="h-3.5 w-3.5" />
-                      }
-                      title="Station #C42"
-                      description="High congestion predicted."
-                      time="8 min ago"
-                      tone="amber"
-                    />
-
-                    <NotificationItem
-                      icon={
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                      }
-                      title="Emergency #E098"
-                      description="Police unit dispatched."
-                      time="14 min ago"
-                      tone="green"
-                    />
-
-                  </div>
-
-                  <div className="border-t border-[#1A304B] p-2.5">
-
-                    <button
-                      type="button"
-                      onClick={closeDropdowns}
-                      className="w-full rounded-lg border border-[#1D3855] bg-[#091A2D] px-3 py-2 text-[8px] font-bold uppercase tracking-wider text-slate-400 transition hover:border-blue-500/30 hover:text-white"
-                    >
-                      Close
-                    </button>
-
-                  </div>
-
-                </div>
-              )}
-
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-lg font-bold tracking-wider text-slate-900">ENAV</span>
+              <span className="text-[10px] bg-emerald-700 text-white font-semibold px-1.5 py-0.5 rounded">GOV</span>
             </div>
-
-            {/* =================================================
-                OFFICER PROFILE
-            ================================================= */}
-
-            <div className="relative">
-
-              <button
-                type="button"
-                onClick={toggleProfile}
-                className={`flex h-9 items-center gap-2 rounded-lg border bg-[#091A2D] px-3 text-[10px] font-bold transition ${
-                  profileOpen
-                    ? "border-emerald-500/40 text-white"
-                    : "border-[#1D3855] text-slate-300 hover:border-blue-500/40 hover:text-white"
-                }`}
-              >
-
-                <UserCircle
-                  className={`h-4 w-4 ${
-                    profileOpen
-                      ? "text-emerald-400"
-                      : "text-blue-400"
-                  }`}
-                />
-
-                <span className="hidden sm:inline">
-                  Officer Profile
-                </span>
-
-              </button>
-
-              {/* PROFILE DROPDOWN */}
-
-              {profileOpen && (
-                <div className="absolute right-0 top-11 z-[100] w-[280px] overflow-hidden rounded-xl border border-[#1D3855] bg-[#071426] shadow-2xl shadow-black/50">
-
-                  {/* PROFILE HEADER */}
-
-                  <div className="border-b border-[#1A304B] px-4 py-4">
-
-                    <div className="flex items-center gap-3">
-
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10">
-
-                        <UserCircle className="h-5 w-5 text-emerald-400" />
-
-                      </div>
-
-                      <div className="min-w-0">
-
-                        <div className="text-[10px] font-black text-white">
-                          Government Officer
-                        </div>
-
-                        <div className="mt-1 text-[8px] text-slate-600">
-                          Government Account
-                        </div>
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-                  {/* PROFILE INFORMATION */}
-
-                  <div className="space-y-3 px-4 py-4">
-
-                    <ProfileInfo
-                      label="Full name"
-                      value="Government Officer"
-                    />
-
-                    <ProfileInfo
-                      label="Email address"
-                      value="officer@enav.com"
-                    />
-
-                    <ProfileInfo
-                      label="Driver / Employee ID"
-                      value="MUNICIPAL-ADMIN-01"
-                    />
-
-                    <ProfileInfo
-                      label="Department"
-                      value="City Mobility Operations"
-                    />
-
-                  </div>
-
-                  {/* SIGN OUT */}
-
-                  <div className="border-t border-[#1A304B] p-2">
-
-                    <button
-                      type="button"
-                      onClick={handleSignOut}
-                      className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-[9px] font-semibold text-red-400 transition hover:bg-red-950/20"
-                    >
-
-                      <LogOut className="h-3.5 w-3.5" />
-
-                      Sign out
-
-                    </button>
-
-                  </div>
-
-                </div>
-              )}
-
-            </div>
-
+            <p className="text-[10px] text-emerald-800 font-medium tracking-tight">Smart Mobility Intelligence</p>
           </div>
-
         </div>
 
+        <div className="flex items-center gap-4 relative">
+          <button 
+            onClick={() => setShowNotifications(!showNotifications)}
+            aria-label="Notifications" 
+            className="w-9 h-9 rounded-xl border border-emerald-200 flex items-center justify-center text-gray-600 hover:bg-emerald-50 transition relative"
+          >
+            🔔
+            <span className="absolute top-2 right-2 w-2 h-2 bg-emerald-700 rounded-full animate-pulse" />
+          </button>
+
+          {/* Notifications Dropdown */}
+          {showNotifications && (
+            <div className="absolute right-24 top-12 w-80 bg-white rounded-2xl border border-emerald-200 shadow-xl p-4 z-50">
+              <div className="flex justify-between items-center pb-3 border-b border-emerald-100 mb-3">
+                <h3 className="font-bold text-xs text-slate-900 uppercase">System Notifications</h3>
+                <span className="text-[10px] bg-emerald-700 text-white px-2 py-0.5 rounded font-bold">3 NEW</span>
+              </div>
+              <div className="space-y-2.5 text-xs">
+                <div className="p-2.5 bg-emerald-50/50 rounded-xl border border-emerald-200">
+                  <span className="font-bold text-slate-800 block">Emergency #E102 Dispatched</span>
+                  <span className="text-[11px] text-gray-500">Ambulance en route to Janakpuri.</span>
+                </div>
+                <div className="p-2.5 bg-emerald-50/50 rounded-xl border border-emerald-200">
+                  <span className="font-bold text-slate-800 block">EV Station #C-47 Alert</span>
+                  <span className="text-[11px] text-gray-500">High congestion threshold reached.</span>
+                </div>
+                <div className="p-2.5 bg-emerald-50/50 rounded-xl border border-emerald-200">
+                  <span className="font-bold text-slate-800 block">Grid Telemetry Synced</span>
+                  <span className="text-[11px] text-gray-500">All primary city systems nominal.</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Officer Profile Button */}
+          <button 
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-200 hover:bg-emerald-50 transition text-xs font-semibold text-slate-700"
+          >
+            <div className="w-6 h-6 rounded-full bg-emerald-700 text-white flex items-center justify-center text-xs">👤</div>
+            Officer Profile
+          </button>
+
+          {/* Officer Profile Popup Menu */}
+          {showProfileMenu && (
+            <div className="absolute right-0 top-12 w-80 bg-white rounded-2xl border border-emerald-200 shadow-xl p-5 z-50">
+              <div className="flex items-center gap-3 pb-4 border-b border-emerald-100">
+                <div className="w-10 h-10 rounded-full bg-emerald-700 text-white flex items-center justify-center font-bold">
+                  👤
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-slate-900">Government Officer</h3>
+                  <p className="text-xs text-emerald-800 font-medium">Government Account</p>
+                </div>
+              </div>
+
+              <div className="py-4 space-y-3 text-xs">
+                <div>
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider block">Full Name</span>
+                  <span className="font-semibold text-slate-800">Government Officer</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider block">Email Address</span>
+                  <span className="font-semibold text-slate-800">officer@enav.com</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider block">Driver / Employee ID</span>
+                  <span className="font-semibold text-slate-800">MUNICIPAL-ADMIN-01</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider block">Department</span>
+                  <span className="font-semibold text-slate-800">City Mobility Operations</span>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-emerald-100">
+                <button 
+                  onClick={() => router.push('/auth/login')}
+                  className="w-full py-2 bg-red-50 text-red-600 rounded-xl font-semibold hover:bg-red-100 transition text-xs"
+                >
+                  Sign out
+                </button>
+              </div>
+            </div>
+          )}
+
+          <button 
+            onClick={() => router.push('/auth/login')}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 transition text-xs font-semibold text-red-600"
+          >
+            <span>🚪</span> Sign Out
+          </button>
+        </div>
       </header>
 
-      {/* =====================================================
-          PAGE CONTENT
-      ===================================================== */}
-
-      <main className="px-4 py-4 xl:px-6 xl:py-5">
-
-        {/* ===================================================
-            STATUS ROW
-        =================================================== */}
-
-        <div className="mb-4 flex items-center justify-between gap-3">
-
+      {/* Main Content Area */}
+      <main className="flex-1 p-8 space-y-6 overflow-y-auto">
+        
+        {/* Aligned Top Headers Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-emerald-200">
           <div>
+            <h1 className="text-sm font-bold tracking-wide text-slate-800 uppercase">ENA V — CITY MOBILITY COMMAND</h1>
+            <p className="text-[11px] text-gray-500">Delhi NCR • 27 Aug 2026 | 14:32 IST</p>
+          </div>
+          <h2 className="text-xl font-black tracking-tight text-slate-900">City Operations Overview</h2>
+        </div>
 
-            <div className="flex items-center gap-2">
-
-              <Radio className="h-3.5 w-3.5 text-emerald-400" />
-
-              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                COMMAND CENTER
+        {/* Top Metric Cards with Info Tooltips */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          
+          <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200 flex flex-col justify-between relative">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-semibold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
+                Registered EVs
+                <button 
+                  onClick={() => setActiveTooltip(activeTooltip === 'evs' ? null : 'evs')}
+                  className="w-4 h-4 rounded-full bg-emerald-200 text-emerald-900 text-[10px] font-bold flex items-center justify-center hover:bg-emerald-300 transition"
+                >
+                  i
+                </button>
               </span>
-
+              <span className="text-lg">🔋</span>
             </div>
-
-            <h2 className="mt-1 text-xl font-black tracking-tight text-white">
-              City Operations Overview
-            </h2>
-
+            <div className="text-3xl font-black text-slate-900">1,284</div>
+            {activeTooltip === 'evs' && (
+              <div className="absolute top-12 left-4 right-4 bg-white border border-emerald-200 p-3 rounded-xl shadow-lg text-[11px] text-gray-600 z-30">
+                Total active electric vehicles registered and tracked across Delhi NCR grid.
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/5 px-3 py-1.5">
+          <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200 flex flex-col justify-between relative">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-semibold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
+                EV Stations
+                <button 
+                  onClick={() => setActiveTooltip(activeTooltip === 'stations' ? null : 'stations')}
+                  className="w-4 h-4 rounded-full bg-emerald-200 text-emerald-900 text-[10px] font-bold flex items-center justify-center hover:bg-emerald-300 transition"
+                >
+                  i
+                </button>
+              </span>
+              <span className="text-lg">⚡</span>
+            </div>
+            <div className="text-3xl font-black text-slate-900">342</div>
+            {activeTooltip === 'stations' && (
+              <div className="absolute top-12 left-4 right-4 bg-white border border-emerald-200 p-3 rounded-xl shadow-lg text-[11px] text-gray-600 z-30">
+                Number of public and municipal EV charging stations currently operational.
+              </div>
+            )}
+          </div>
 
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+          <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200 flex flex-col justify-between relative">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-semibold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
+                Emergencies
+                <button 
+                  onClick={() => setActiveTooltip(activeTooltip === 'emergencies' ? null : 'emergencies')}
+                  className="w-4 h-4 rounded-full bg-emerald-200 text-emerald-900 text-[10px] font-bold flex items-center justify-center hover:bg-emerald-300 transition"
+                >
+                  i
+                </button>
+              </span>
+              <span className="text-lg">🚨</span>
+            </div>
+            <div className="text-3xl font-black text-slate-900">07</div>
+            {activeTooltip === 'emergencies' && (
+              <div className="absolute top-12 left-4 right-4 bg-white border border-emerald-200 p-3 rounded-xl shadow-lg text-[11px] text-gray-600 z-30">
+                Active emergency response incidents requiring municipal dispatch or tracking.
+              </div>
+            )}
+          </div>
 
-            <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-400 sm:text-[10px]">
-              Systems Operational
-            </span>
-
+          <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200 flex flex-col justify-between relative">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-xs font-semibold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
+                Avg ETA
+                <button 
+                  onClick={() => setActiveTooltip(activeTooltip === 'eta' ? null : 'eta')}
+                  className="w-4 h-4 rounded-full bg-emerald-200 text-emerald-900 text-[10px] font-bold flex items-center justify-center hover:bg-emerald-300 transition"
+                >
+                  i
+                </button>
+              </span>
+              <span className="text-lg">⏱️</span>
+            </div>
+            <div className="text-3xl font-black text-slate-900">8.4 min</div>
+            {activeTooltip === 'eta' && (
+              <div className="absolute top-12 left-4 right-4 bg-white border border-emerald-200 p-3 rounded-xl shadow-lg text-[11px] text-gray-600 z-30">
+                Average estimated time of arrival for emergency vehicles across active routes.
+              </div>
+            )}
           </div>
 
         </div>
 
-        {/* ===================================================
-            KPI ROW
-        =================================================== */}
-
-        <section className="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
-
-          {stats.map((stat) => {
-
-            const Icon = stat.icon;
-
-            return (
-              <div
-                key={stat.label}
-                className="rounded-xl border border-[#1A304B] bg-[#071426] px-4 py-3.5 shadow-[0_8px_30px_rgba(0,0,0,0.18)]"
-              >
-
-                <div className="flex items-center justify-between">
-
-                  <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-500">
-                    {stat.label}
-                  </span>
-
-                  <div
-                    className={`flex h-8 w-8 items-center justify-center rounded-lg border ${stat.iconClass}`}
-                  >
-                    <Icon className="h-4 w-4" />
-                  </div>
-
-                </div>
-
-                <div
-                  className={`mt-2 text-2xl font-black tracking-tight ${stat.valueClass}`}
-                >
-                  {stat.value}
-                </div>
-
-                <div className="mt-1 text-[9px] font-semibold text-slate-500">
-                  {stat.detail}
-                </div>
-
-              </div>
-            );
-          })}
-
-        </section>
-
-        {/* ===================================================
-            MAIN COMMAND AREA
-        =================================================== */}
-
-        <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_310px]">
-
-          {/* =================================================
-              MAP
-          ================================================= */}
-
-          <div className="overflow-hidden rounded-xl border border-[#1A304B] bg-[#071426] shadow-[0_10px_35px_rgba(0,0,0,0.22)]">
-
-            {/* MAP HEADER */}
-
-            <div className="flex min-h-[58px] items-center justify-between gap-3 border-b border-[#1A304B] px-4 py-3">
-
-              <div>
-
-                <div className="flex items-center gap-2">
-
-                  <Navigation className="h-3.5 w-3.5 text-blue-400" />
-
-                  <h3 className="text-xs font-black uppercase tracking-wider text-white">
-                    Delhi NCR Live Map
-                  </h3>
-
-                </div>
-
-                <p className="mt-1 text-[9px] text-slate-500">
-                  Real-time city mobility intelligence
-                </p>
-
-              </div>
-
-              <div className="hidden items-center gap-3 md:flex">
-
-                {mapLegend.map((item) => (
-                  <span
-                    key={item.label}
-                    className="flex items-center gap-1.5 text-[9px] font-medium text-slate-500"
-                  >
-
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${item.color}`}
-                    />
-
-                    {item.label}
-
-                  </span>
-                ))}
-
-              </div>
-
+        {/* Map & Live Priorities Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* OpenStreetMap Integration */}
+          <div className="lg:col-span-2 bg-slate-100 rounded-2xl border border-emerald-200 overflow-hidden flex flex-col h-[450px]">
+            <div className="bg-white px-4 py-3 border-b border-emerald-200 flex justify-between items-center">
+              <span className="text-xs font-bold text-slate-700">DELHI NCR LIVE MAP</span>
+              <span className="text-[10px] bg-emerald-700 text-white px-2 py-0.5 rounded font-medium">Live Feed</span>
             </div>
-
-            {/* MAP */}
-
-            <div className="relative h-[410px] overflow-hidden bg-[#06111F] lg:h-[430px]">
-
-              <CommandMap />
-
-              {/* MAP TOP STATUS */}
-
-              <div className="pointer-events-none absolute left-3 top-3 z-[400]">
-
-                <div className="flex items-center gap-2 rounded-lg border border-[#27405D] bg-[#071426]/90 px-3 py-2 shadow-lg backdrop-blur">
-
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-400">
-                    Live telemetry
-                  </span>
-
-                  <span className="text-[9px] text-slate-600">
-                    |
-                  </span>
-
-                  <span className="text-[9px] text-slate-400">
-                    1,284 EV units
-                  </span>
-
-                </div>
-
-              </div>
-
-              {/* MAP BOTTOM INCIDENT */}
-
-              <div className="pointer-events-none absolute bottom-3 left-3 z-[400]">
-
-                <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-[#120A12]/95 px-3 py-2 shadow-[0_0_20px_rgba(239,68,68,0.12)] backdrop-blur">
-
-                  <AlertTriangle className="h-3.5 w-3.5 text-red-400" />
-
-                  <div>
-
-                    <div className="text-[9px] font-bold text-red-400">
-                      ACTIVE INCIDENT
-                    </div>
-
-                    <div className="text-[9px] text-slate-400">
-                      Emergency #E102 • Janakpuri
-                    </div>
-
-                  </div>
-
-                </div>
-
-              </div>
-
+            <div className="flex-1 w-full relative">
+              <iframe
+                title="Delhi OpenStreetMap"
+                className="w-full h-full border-0 filter contrast-125"
+                src="https://www.openstreetmap.org/export/embed.html?bbox=76.84%2C28.40%2C77.35%2C28.88&layer=mapnik"
+                loading="lazy"
+              />
             </div>
-
-            {/* MAP FOOTER */}
-
-            <div className="flex items-center justify-between border-t border-[#1A304B] px-4 py-2.5">
-
-              <div className="flex items-center gap-2 text-[9px] text-slate-500">
-
-                <Gauge className="h-3.5 w-3.5 text-blue-400" />
-
-                Traffic layer active
-
-              </div>
-
-              <div className="flex items-center gap-2 text-[9px]">
-
-                <span className="text-slate-600">
-                  Last sync
-                </span>
-
-                <span className="font-bold text-emerald-400">
-                  14:31:58 IST
-                </span>
-
-              </div>
-
-            </div>
-
           </div>
 
-          {/* =================================================
-              LIVE PRIORITIES
-          ================================================= */}
-
-          <aside className="flex flex-col overflow-hidden rounded-xl border border-[#1A304B] bg-[#071426] shadow-[0_10px_35px_rgba(0,0,0,0.22)]">
-
-            <div className="border-b border-[#1A304B] px-4 py-3.5">
-
-              <div className="flex items-center justify-between">
-
-                <div>
-
-                  <div className="flex items-center gap-2">
-
-                    <Activity className="h-3.5 w-3.5 text-emerald-400" />
-
-                    <h3 className="text-xs font-black uppercase tracking-wider text-white">
-                      Live Priorities
-                    </h3>
-
-                  </div>
-
-                  <p className="mt-1 text-[9px] text-slate-500">
-                    Officer attention required
-                  </p>
-
-                </div>
-
-                <span className="rounded border border-red-500/20 bg-red-500/10 px-2 py-1 text-[8px] font-bold text-red-400">
-                  3 ACTIVE
-                </span>
-
-              </div>
-
-            </div>
-
-            <div className="flex-1 divide-y divide-[#172A42]">
-
-              {priorities.map((item) => {
-
-                const Icon = item.icon;
-                const styles =
-                  priorityStyles[item.type];
-
-                return (
-                  <div
-                    key={item.title}
-                    className="group px-4 py-4 transition hover:bg-[#091A2D]"
-                  >
-
-                    <div className="flex gap-3">
-
-                      <div
-                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border ${styles.icon}`}
-                      >
-                        <Icon className="h-4 w-4" />
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-
-                        <div className="flex items-start justify-between gap-2">
-
-                          <h4
-                            className={`text-[11px] font-bold ${styles.title}`}
-                          >
-                            {item.title}
-                          </h4>
-
-                          <span
-                            className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${styles.dot}`}
-                          />
-
-                        </div>
-
-                        <p className="mt-1 text-[10px] text-slate-400">
-                          {item.description}
-                        </p>
-
-                        <p className="mt-2 text-[10px] font-bold text-slate-300">
-                          {item.meta}
-                        </p>
-
-                      </div>
-
-                    </div>
-
-                  </div>
-                );
-              })}
-
-            </div>
-
-            <div className="border-t border-[#1A304B] p-3">
-
-              <button
-                type="button"
-                className="w-full rounded-lg border border-[#25415F] bg-[#091A2D] px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-300 transition hover:border-blue-500/40 hover:bg-[#0C2037] hover:text-white"
-              >
-                View all alerts
-              </button>
-
-            </div>
-
-          </aside>
-
-        </section>
-
-        {/* ===================================================
-            CITY PERFORMANCE
-        =================================================== */}
-
-        <section className="mt-4">
-
-          <div className="mb-3 flex items-end justify-between">
-
+          {/* Live Priorities Panel with Emergency Symbols */}
+          <div className="bg-emerald-50/30 rounded-2xl border border-emerald-200 p-5 flex flex-col justify-between">
             <div>
-
-              <div className="flex items-center gap-2">
-
-                <TrendingUp className="h-3.5 w-3.5 text-blue-400" />
-
-                <h3 className="text-xs font-black uppercase tracking-wider text-white">
-                  City Performance
-                </h3>
-
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-sm text-slate-900">LIVE PRIORITIES</h3>
+                <span className="text-[10px] bg-emerald-700 text-white px-2 py-0.5 rounded font-bold">ACTIVE</span>
               </div>
-
-              <p className="mt-1 text-[9px] text-slate-500">
-                Key mobility indicators for today
-              </p>
-
+              
+              <div className="space-y-3">
+                <div className="p-3 bg-white rounded-xl border border-emerald-200 flex items-start gap-3">
+                  <span className="text-xl">🏥</span>
+                  <div>
+                    <span className="text-xs font-bold text-slate-800 block">Emergency #E102</span>
+                    <span className="text-[11px] text-gray-500">Ambulance required</span>
+                  </div>
+                </div>
+                <div className="p-3 bg-white rounded-xl border border-emerald-200 flex items-start gap-3">
+                  <span className="text-xl">⚡</span>
+                  <div>
+                    <span className="text-xs font-bold text-slate-800 block">Station #C-47</span>
+                    <span className="text-[11px] text-gray-500">High congestion predicted</span>
+                  </div>
+                </div>
+                <div className="p-3 bg-white rounded-xl border border-emerald-200 flex items-start gap-3">
+                  <span className="text-xl">🛡️</span>
+                  <div>
+                    <span className="text-xs font-bold text-slate-800 block">Emergency #E088</span>
+                    <span className="text-[11px] text-gray-500">Police dispatched</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <span className="hidden text-[9px] text-slate-600 sm:block">
-              TODAY • 27 AUG 2026
-            </span>
-
+            <button className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-semibold text-xs transition shadow-md shadow-emerald-700/20 mt-4">
+              View All Alerts
+            </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        </div>
 
-            {/* CHARGING */}
-
-            <div className="rounded-xl border border-[#1A304B] bg-[#071426] p-3.5">
-
-              <div className="flex items-center justify-between">
-
-                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-                  Charging Utilization
-                </span>
-
-                <Zap className="h-3.5 w-3.5 text-emerald-400" />
-
-              </div>
-
-              <div className="mt-2 text-xl font-black text-white">
-                72%
-              </div>
-
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#102238]">
-
-                <div className="h-full w-[72%] rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.4)]" />
-
-              </div>
-
-              <p className="mt-2 text-[9px] text-emerald-400">
-                +5% vs yesterday
-              </p>
-
-            </div>
-
-            {/* EMERGENCY */}
-
-            <div className="rounded-xl border border-[#1A304B] bg-[#071426] p-3.5">
-
-              <div className="flex items-center justify-between">
-
-                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-                  Emergency Response
-                </span>
-
-                <Siren className="h-3.5 w-3.5 text-red-400" />
-
-              </div>
-
-              <div className="mt-2 text-xl font-black text-white">
-                8.4 min
-              </div>
-
-              <p className="mt-2 flex items-center gap-1 text-[9px] text-emerald-400">
-
-                <TrendingUp className="h-3 w-3" />
-
-                12% faster today
-
-              </p>
-
-            </div>
-
-            {/* EV ADOPTION */}
-
-            <div className="rounded-xl border border-[#1A304B] bg-[#071426] p-3.5">
-
-              <div className="flex items-center justify-between">
-
-                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-                  EV Adoption
-                </span>
-
-                <Car className="h-3.5 w-3.5 text-blue-400" />
-
-              </div>
-
-              <div className="mt-2 text-xl font-black text-white">
-                18.6%
-              </div>
-
-              <p className="mt-2 text-[9px] text-blue-400">
-                +2.4% this quarter
-              </p>
-
-            </div>
-
-            {/* CO2 */}
-
-            <div className="rounded-xl border border-[#1A304B] bg-[#071426] p-3.5">
-
-              <div className="flex items-center justify-between">
-
-                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-                  CO₂ Avoided
-                </span>
-
-                <Leaf className="h-3.5 w-3.5 text-emerald-400" />
-
-              </div>
-
-              <div className="mt-2 text-xl font-black text-white">
-                642 t
-              </div>
-
-              <p className="mt-2 text-[9px] text-emerald-400">
-                Estimated from EV activity
-              </p>
-
-            </div>
-
-          </div>
-
-        </section>
-
-        {/* ===================================================
-            COMMAND STATUS
-        =================================================== */}
-
-        <div className="mt-4 flex flex-col gap-2 rounded-lg border border-[#1A304B] bg-[#071426] px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-
+        {/* City Performance Section with Graph Icon & Card Info Tooltips */}
+        <div className="space-y-4">
           <div className="flex items-center gap-2">
+            <span className="text-lg">📊</span>
+            <h3 className="text-base font-bold text-slate-900">CITY PERFORMANCE</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            
+            <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200 flex flex-col justify-between relative">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-bold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
+                  Emergency Response
+                  <button 
+                    onClick={() => setActiveTooltip(activeTooltip === 'response' ? null : 'response')}
+                    className="w-4 h-4 rounded-full bg-emerald-200 text-emerald-900 text-[10px] font-bold flex items-center justify-center hover:bg-emerald-300 transition"
+                  >
+                    i
+                  </button>
+                </span>
+                <span className="text-lg">🚨</span>
+              </div>
+              <div className="text-2xl font-black text-slate-900">8.4 min</div>
+              {activeTooltip === 'response' && (
+                <div className="absolute top-12 left-4 right-4 bg-white border border-emerald-200 p-3 rounded-xl shadow-lg text-[11px] text-gray-600 z-30">
+                  Mean response duration for emergency units across urban deployment zones.
+                </div>
+              )}
+            </div>
 
-            <BatteryCharging className="h-3.5 w-3.5 text-emerald-400" />
+            <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200 flex flex-col justify-between relative">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-bold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
+                  EV Adoption
+                  <button 
+                    onClick={() => setActiveTooltip(activeTooltip === 'adoption' ? null : 'adoption')}
+                    className="w-4 h-4 rounded-full bg-emerald-200 text-emerald-900 text-[10px] font-bold flex items-center justify-center hover:bg-emerald-300 transition"
+                  >
+                    i
+                  </button>
+                </span>
+                <span className="text-lg">📈</span>
+              </div>
+              <div className="text-2xl font-black text-slate-900">18.6%</div>
+              {activeTooltip === 'adoption' && (
+                <div className="absolute top-12 left-4 right-4 bg-white border border-emerald-200 p-3 rounded-xl shadow-lg text-[11px] text-gray-600 z-30">
+                  Percentage growth rate of electric vehicle registrations relative to total city fleet.
+                </div>
+              )}
+            </div>
 
-            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-              City telemetry
-            </span>
-
-            <span className="text-[9px] text-slate-600">
-              •
-            </span>
-
-            <span className="text-[9px] text-emerald-400">
-              All primary systems connected
-            </span>
+            <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200 flex flex-col justify-between relative">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-bold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
+                  CO2 Avoided
+                  <button 
+                    onClick={() => setActiveTooltip(activeTooltip === 'co2' ? null : 'co2')}
+                    className="w-4 h-4 rounded-full bg-emerald-200 text-emerald-900 text-[10px] font-bold flex items-center justify-center hover:bg-emerald-300 transition"
+                  >
+                    i
+                  </button>
+                </span>
+                <span className="text-lg">🌱</span>
+              </div>
+              <div className="text-2xl font-black text-slate-900">642 t</div>
+              {activeTooltip === 'co2' && (
+                <div className="absolute top-12 left-4 right-4 bg-white border border-emerald-200 p-3 rounded-xl shadow-lg text-[11px] text-gray-600 z-30">
+                  Estimated carbon dioxide emissions offset through active electric mobility usage today.
+                </div>
+              )}
+            </div>
 
           </div>
-
-          <div className="text-[9px] text-slate-600">
-            Demo environment • Simulated city data
-          </div>
-
         </div>
 
       </main>
 
-    </div>
-  );
-}
-
-/* =========================================================
-   NOTIFICATION ITEM
-========================================================= */
-
-function NotificationItem({
-  icon,
-  title,
-  description,
-  time,
-  tone,
-}: {
-  icon: ReactNode;
-  title: string;
-  description: string;
-  time: string;
-  tone: "red" | "amber" | "green";
-}) {
-  const toneStyles = {
-    red:
-      "border-red-500/20 bg-red-500/10 text-red-400",
-    amber:
-      "border-amber-500/20 bg-amber-500/10 text-amber-400",
-    green:
-      "border-emerald-500/20 bg-emerald-500/10 text-emerald-400",
-  };
-
-  return (
-    <div className="flex gap-3 px-4 py-3.5 transition hover:bg-[#091A2D]">
-
-      <div
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border ${toneStyles[tone]}`}
-      >
-        {icon}
-      </div>
-
-      <div className="min-w-0 flex-1">
-
-        <div className="text-[9px] font-bold text-slate-200">
-          {title}
-        </div>
-
-        <div className="mt-1 text-[8px] leading-4 text-slate-500">
-          {description}
-        </div>
-
-        <div className="mt-1 text-[7px] text-slate-700">
-          {time}
-        </div>
-
-      </div>
-
-    </div>
-  );
-}
-
-/* =========================================================
-   PROFILE INFO
-========================================================= */
-
-function ProfileInfo({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div>
-      <div className="text-[7px] font-bold uppercase tracking-wider text-slate-600">
-        {label}
-      </div>
-
-      <div className="mt-1 text-[9px] font-semibold text-slate-300">
-        {value}
-      </div>
     </div>
   );
 }
