@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { api } from "@/lib/api";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -11,14 +12,52 @@ export default function SignupPage() {
   // If 'user' is selected, sub-type: 'private' or 'gov_driver'
   const [userSubType, setUserSubType] = useState<'private' | 'gov_driver'>('private');
 
-  const handleSignup = (e: React.FormEvent) => {
+  // Form field states
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [driverId, setDriverId] = useState('');
+  const [department, setDepartment] = useState('');
+  
+  // UI states
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Perform your authentication logic/API call here, then route based on category:
-    if (accountCategory === 'government') {
-      router.push('/gov/dashboard');
-    } else {
-      router.push('/drivers/');
+    setLoading(true);
+    setError('');
+
+    // Prepare payload based on the selected registration route
+    const payload = {
+      full_name: fullName,
+      email,
+      password,
+      account_category: accountCategory,
+      user_sub_type: accountCategory === 'user' ? userSubType : null,
+      driver_id: accountCategory === 'user' && userSubType === 'gov_driver' ? driverId : null,
+      department: accountCategory === 'user' && userSubType === 'gov_driver' ? department : null,
+    };
+
+    try {
+      // 1. Call your backend registration endpoint
+      const response = await api.post("/auth/register", payload);
+
+      // 2. Automatically save token if returned upon registration, or direct user to login/dashboard
+      if (response.data?.access_token) {
+        localStorage.setItem("token", response.data.access_token);
+      }
+
+      // 3. Route based on account category
+      if (accountCategory === 'government') {
+        router.push('/gov/dashboard');
+      } else {
+        router.push('/drivers/');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.detail || "Failed to create account. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -77,7 +116,7 @@ export default function SignupPage() {
         <div className="max-w-md w-full mx-auto">
           
           <div className="mb-6">
-            <a href="#" className="text-xs text-gray-400 hover:text-white transition flex items-center gap-1 mb-2">
+            <a href="/auth/login" className="text-xs text-gray-400 hover:text-white transition flex items-center gap-1 mb-2">
               ← Back to sign in
             </a>
             <h2 className="text-2xl sm:text-3xl font-bold">
@@ -143,10 +182,17 @@ export default function SignupPage() {
             </div>
           )}
 
+          {/* Error Message Container */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs">
+              {error}
+            </div>
+          )}
+
           {/* Dynamic Form Fields based on Selections */}
           <form onSubmit={handleSignup} className="space-y-4">
             
-            {/* 1. GOVERNMENT OFFICIAL: Only Email ID and Password */}
+            {/* 1. GOVERNMENT OFFICIAL */}
             {accountCategory === 'government' && (
               <>
                 <div>
@@ -154,6 +200,8 @@ export default function SignupPage() {
                   <input 
                     type="email" 
                     required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="official@gov.in" 
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
                   />
@@ -163,6 +211,8 @@ export default function SignupPage() {
                   <input 
                     type="password" 
                     required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="Create a password" 
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
                   />
@@ -170,7 +220,7 @@ export default function SignupPage() {
               </>
             )}
 
-            {/* 2. USER -> GOV DRIVER: Name, Email, Driver/Badge ID, Department, Password */}
+            {/* 2. USER -> GOV DRIVER */}
             {accountCategory === 'user' && userSubType === 'gov_driver' && (
               <>
                 <div>
@@ -178,6 +228,8 @@ export default function SignupPage() {
                   <input 
                     type="text" 
                     required
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
                     placeholder="Enter your full name" 
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
                   />
@@ -187,6 +239,8 @@ export default function SignupPage() {
                   <input 
                     type="email" 
                     required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com" 
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
                   />
@@ -196,6 +250,8 @@ export default function SignupPage() {
                   <input 
                     type="text" 
                     required
+                    value={driverId}
+                    onChange={(e) => setDriverId(e.target.value)}
                     placeholder="Enter official driver ID" 
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
                   />
@@ -205,6 +261,8 @@ export default function SignupPage() {
                   <input 
                     type="text" 
                     required
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
                     placeholder="e.g., Municipal Transport" 
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
                   />
@@ -214,6 +272,8 @@ export default function SignupPage() {
                   <input 
                     type="password" 
                     required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="Create a password" 
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
                   />
@@ -221,7 +281,7 @@ export default function SignupPage() {
               </>
             )}
 
-            {/* 3. USER -> PRIVATE / NORMAL USER: Standard fields */}
+            {/* 3. USER -> PRIVATE / NORMAL USER */}
             {accountCategory === 'user' && userSubType === 'private' && (
               <>
                 <div>
@@ -229,6 +289,8 @@ export default function SignupPage() {
                   <input 
                     type="text" 
                     required
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
                     placeholder="Enter your full name" 
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
                   />
@@ -238,6 +300,8 @@ export default function SignupPage() {
                   <input 
                     type="email" 
                     required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com" 
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
                   />
@@ -247,6 +311,8 @@ export default function SignupPage() {
                   <input 
                     type="password" 
                     required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="Create a password" 
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
                   />
@@ -256,14 +322,15 @@ export default function SignupPage() {
 
             <button 
               type="submit" 
-              className="w-full py-3.5 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold rounded-xl transition shadow-lg shadow-cyan-500/20 text-sm mt-2"
+              disabled={loading}
+              className="w-full py-3.5 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold rounded-xl transition shadow-lg shadow-cyan-500/20 text-sm mt-2 disabled:opacity-50"
             >
-              CREATE ACCOUNT →
+              {loading ? "CREATING ACCOUNT..." : "CREATE ACCOUNT →"}
             </button>
           </form>
 
           <div className="text-center mt-6 text-xs sm:text-sm text-gray-400">
-            Already have an account? <a href="#" className="text-cyan-400 font-medium hover:underline">Sign in</a>
+            Already have an account? <a href="/auth/login" className="text-cyan-400 font-medium hover:underline">Log in</a>
           </div>
 
         </div>

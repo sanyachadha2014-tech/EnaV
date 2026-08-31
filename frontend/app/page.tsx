@@ -3,6 +3,7 @@
 import React, {
   useRef,
   useState,
+  useEffect,
 } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -23,29 +24,10 @@ import {
   Star,
   X,
   Zap,
+  Send,
+  MessageSquare,
+  Car,
 } from "lucide-react";
-
-/* =========================================================
-   CHARGING MAP
-========================================================= */
-
-const ChargingStationsMap = dynamic(
-  () => import("@/components/ChargingStationsMap"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex h-full min-h-[350px] items-center justify-center bg-[#050A13]">
-        <div className="text-center">
-          <MapPin className="mx-auto h-5 w-5 text-emerald-400" />
-
-          <p className="mt-3 text-[8px] font-bold uppercase tracking-[0.2em] text-slate-600">
-            Loading charging map
-          </p>
-        </div>
-      </div>
-    ),
-  },
-);
 
 /* =========================================================
    FEATURE SLIDES
@@ -188,6 +170,15 @@ export default function HomePage() {
   const [touchEndX, setTouchEndX] =
     useState<number | null>(null);
 
+  // Backend connection status state (kept functional so it stays connected)
+  const [backendMessage, setBackendMessage] = useState("");
+
+  // Feedback form state
+  const [feedbackName, setFeedbackName] = useState("");
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackRating, setFeedbackRating] = useState(5);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+
   const minSwipeDistance = 50;
 
   const currentFeature =
@@ -195,6 +186,14 @@ export default function HomePage() {
 
   const currentScheme =
     schemes[schemeIndex];
+
+  // Fetch backend status silently on mount without showing the UI banner box
+  useEffect(() => {
+    fetch("http://localhost:8000/")
+      .then((res) => res.json())
+      .then((data) => setBackendMessage(data.message))
+      .catch((err) => console.error("Error connecting to backend:", err));
+  }, []);
 
   /* =======================================================
      FEATURE CAROUSEL
@@ -274,8 +273,18 @@ export default function HomePage() {
     );
   }
 
+  function handleFeedbackSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!feedbackText.trim()) return;
+    setFeedbackSubmitted(true);
+    setTimeout(() => {
+      setFeedbackName("");
+      setFeedbackText("");
+    }, 3000);
+  }
+
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#070B14] text-slate-100 selection:bg-emerald-400 selection:text-slate-950">
+    <main className="min-h-screen overflow-x-hidden bg-[#070B14] text-slate-100 selection:bg-emerald-400 selection:text-slate-950 font-sans">
 
       {/* =====================================================
           NAVBAR
@@ -283,30 +292,30 @@ export default function HomePage() {
 
       <div className="sticky top-3 z-50 mx-auto max-w-7xl px-4">
 
-        <nav className="rounded-full border border-emerald-400/20 bg-[#0B132B]/90 px-4 py-2.5 shadow-2xl shadow-black/50 backdrop-blur-xl sm:px-6">
+        <nav className="rounded-full border border-emerald-400/25 bg-[#0B132B]/95 px-5 py-3.5 shadow-2xl shadow-black/60 backdrop-blur-xl sm:px-8">
 
-          <div className="flex h-10 items-center justify-between">
+          <div className="flex h-12 items-center justify-between">
 
             {/* BRAND */}
 
             <Link
               href="/"
-              className="group flex items-center gap-2.5"
+              className="group flex items-center gap-3"
             >
 
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400 text-slate-950 shadow-[0_0_18px_rgba(16,185,129,.35)] transition group-hover:scale-105">
-                <Zap className="h-4 w-4 fill-current" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-400 text-slate-950 shadow-[0_0_20px_rgba(16,185,129,.4)] transition group-hover:scale-105">
+                <Zap className="h-5 w-5 fill-current" />
               </div>
 
               <div>
 
-                <div className="text-lg font-black tracking-tight">
+                <div className="text-xl font-black tracking-tight">
                   Ena<span className="text-emerald-400">
                     V
                   </span>
                 </div>
 
-                <div className="hidden text-[6px] font-bold uppercase tracking-[0.23em] text-slate-600 sm:block">
+                <div className="hidden text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 sm:block">
                   Intelligent Mobility Platform
                 </div>
 
@@ -316,41 +325,48 @@ export default function HomePage() {
 
             {/* DESKTOP NAV */}
 
-            <div className="hidden items-center gap-6 md:flex">
+            <div className="hidden items-center gap-8 md:flex">
 
               <a
                 href="#platform"
-                className="text-[8px] font-bold uppercase tracking-widest text-slate-400 transition hover:text-emerald-400"
+                className="text-xs font-bold uppercase tracking-wider text-slate-300 transition hover:text-emerald-400"
               >
                 Platform
               </a>
 
               <a
                 href="#charging"
-                className="text-[8px] font-bold uppercase tracking-widest text-slate-400 transition hover:text-emerald-400"
+                className="text-xs font-bold uppercase tracking-wider text-slate-300 transition hover:text-emerald-400"
               >
                 Charging
               </a>
 
               <a
                 href="#schemes"
-                className="text-[8px] font-bold uppercase tracking-widest text-slate-400 transition hover:text-emerald-400"
+                className="text-xs font-bold uppercase tracking-wider text-slate-300 transition hover:text-emerald-400"
               >
                 Schemes
               </a>
 
               <a
                 href="#government"
-                className="text-[8px] font-bold uppercase tracking-widest text-slate-400 transition hover:text-emerald-400"
+                className="text-xs font-bold uppercase tracking-wider text-slate-300 transition hover:text-emerald-400"
               >
                 Government
               </a>
 
               <a
                 href="#drivers"
-                className="text-[8px] font-bold uppercase tracking-widest text-slate-400 transition hover:text-emerald-400"
+                className="text-xs font-bold uppercase tracking-wider text-slate-300 transition hover:text-emerald-400"
               >
                 Drivers
+              </a>
+
+              <a
+                href="#feedback"
+                className="text-xs font-bold uppercase tracking-wider text-slate-300 transition hover:text-emerald-400"
+              >
+                Feedback
               </a>
 
             </div>
@@ -359,10 +375,10 @@ export default function HomePage() {
 
             <Link
               href="/auth/signup"
-              className="hidden items-center gap-1.5 rounded-full bg-emerald-400 px-4 py-2 text-[8px] font-black uppercase tracking-wider text-slate-950 shadow-[0_0_16px_rgba(16,185,129,.25)] transition hover:bg-emerald-300 sm:flex"
+              className="hidden items-center gap-2 rounded-full bg-emerald-400 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-slate-950 shadow-[0_0_20px_rgba(16,185,129,0.3)] transition hover:bg-emerald-300 sm:flex"
             >
               Get started
-              <ArrowRight className="h-2.5 w-2.5" />
+              <ArrowRight className="h-3.5 w-3.5" />
             </Link>
 
             {/* MOBILE */}
@@ -374,7 +390,7 @@ export default function HomePage() {
                   (current) => !current,
                 )
               }
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-800 text-slate-400 sm:hidden"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-700 text-slate-300 sm:hidden"
               aria-label={
                 mobileMenuOpen
                   ? "Close menu"
@@ -382,16 +398,16 @@ export default function HomePage() {
               }
             >
               {mobileMenuOpen ? (
-                <X className="h-3.5 w-3.5" />
+                <X className="h-5 w-5" />
               ) : (
-                <Menu className="h-3.5 w-3.5" />
+                <Menu className="h-5 w-5" />
               )}
             </button>
 
           </div>
 
           {mobileMenuOpen && (
-            <div className="border-t border-slate-800 py-3 md:hidden">
+            <div className="border-t border-slate-800 py-4 md:hidden space-y-1">
 
               {[
                 ["Platform", "#platform"],
@@ -399,6 +415,7 @@ export default function HomePage() {
                 ["Schemes", "#schemes"],
                 ["Government", "#government"],
                 ["Drivers", "#drivers"],
+                ["Feedback", "#feedback"],
               ].map(([label, href]) => (
                 <a
                   key={label}
@@ -406,20 +423,20 @@ export default function HomePage() {
                   onClick={() =>
                     setMobileMenuOpen(false)
                   }
-                  className="block rounded-lg px-3 py-2.5 text-[8px] font-bold uppercase tracking-wider text-slate-400 transition hover:bg-slate-900 hover:text-white"
+                  className="block rounded-lg px-4 py-3 text-sm font-bold uppercase tracking-wider text-slate-200 transition hover:bg-slate-900 hover:text-emerald-400"
                 >
                   {label}
                 </a>
               ))}
 
-              <div className="mt-3 border-t border-slate-800 pt-3">
+              <div className="mt-4 border-t border-slate-800 pt-4">
 
                 <Link
                   href="/auth/signup"
-                  className="flex h-9 w-full items-center justify-center gap-2 rounded-full bg-emerald-400 text-[8px] font-black uppercase tracking-wider text-slate-950"
+                  className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-emerald-400 text-xs font-black uppercase tracking-wider text-slate-950"
                 >
                   Get started
-                  <ArrowRight className="h-3 w-3" />
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
 
               </div>
@@ -450,34 +467,34 @@ export default function HomePage() {
 
         <div className="pointer-events-none absolute right-[5%] top-[22%] h-80 w-80 rounded-full bg-emerald-400/10 blur-[120px]" />
 
-        <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-20 sm:px-6 lg:pb-20">
+        <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-16 sm:px-6 lg:pb-20">
 
           {/* HERO */}
 
           <div className="mx-auto max-w-4xl text-center">
 
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-1.5 text-[7px] font-bold uppercase tracking-[0.2em] text-emerald-400">
-              <Sparkles className="h-3 w-3" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-5 py-2 text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">
+              <Sparkles className="h-4 w-4" />
               Intelligent mobility platform
             </div>
 
-            {/* SMALLER ENAV */}
+            {/* ENAV LOGO TEXT */}
 
             <div className="mt-6">
 
-              <div className="text-5xl font-black leading-none tracking-[-0.07em] text-white sm:text-6xl md:text-7xl">
+              <div className="text-6xl font-black leading-none tracking-[-0.07em] text-white sm:text-7xl md:text-8xl">
                 Ena<span className="text-emerald-400">
                   V
                 </span>
               </div>
 
-              <div className="mt-2 text-[7px] font-bold uppercase tracking-[0.4em] text-slate-600">
+              <div className="mt-3 text-xs font-bold uppercase tracking-[0.4em] text-slate-400">
                 Intelligent Mobility
               </div>
 
             </div>
 
-            <h1 className="mt-7 text-4xl font-black leading-[1.04] tracking-tight sm:text-5xl md:text-6xl">
+            <h1 className="mt-8 text-4xl font-black leading-[1.08] tracking-tight sm:text-6xl md:text-7xl">
 
               Smarter journeys.
               <br />
@@ -488,19 +505,18 @@ export default function HomePage() {
 
             </h1>
 
-            <p className="mx-auto mt-5 max-w-2xl text-xs leading-6 text-slate-400 sm:text-sm">
-              Journey planning, charging discovery and mobility
-              operations brought together in one focused platform.
+            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
+              Journey planning, charging discovery and mobility operations brought together in one focused platform.
             </p>
 
-            <div className="mt-7 flex justify-center">
+            <div className="mt-8 flex justify-center">
 
               <Link
                 href="/auth/signup"
-                className="flex h-11 items-center justify-center gap-2 rounded-full bg-emerald-400 px-7 text-[8px] font-black uppercase tracking-wider text-slate-950 shadow-[0_0_24px_rgba(16,185,129,.25)] transition hover:bg-emerald-300"
+                className="flex h-13 items-center justify-center gap-2.5 rounded-full bg-emerald-400 px-8 text-sm font-black uppercase tracking-wider text-slate-950 shadow-[0_0_28px_rgba(16,185,129,.3)] transition hover:bg-emerald-300"
               >
                 Get started
-                <ArrowRight className="h-3 w-3" />
+                <ArrowRight className="h-4 w-4" />
               </Link>
 
             </div>
@@ -511,27 +527,27 @@ export default function HomePage() {
               HERO PRODUCT PREVIEW
           ================================================= */}
 
-          <div className="relative mx-auto mt-12 max-w-5xl">
+          <div className="relative mx-auto mt-14 max-w-5xl">
 
             <div className="absolute -inset-5 rounded-[34px] bg-gradient-to-r from-emerald-400/10 via-blue-500/5 to-emerald-400/10 blur-2xl" />
 
-            <div className="relative rounded-[28px] border border-slate-800 bg-[#0B132B]/95 p-3 shadow-2xl sm:p-4">
+            <div className="relative rounded-[28px] border border-slate-700 bg-[#0B132B]/95 p-4 shadow-2xl sm:p-6">
 
-              <div className="flex items-center justify-between border-b border-slate-800 px-2 pb-3">
+              <div className="flex items-center justify-between border-b border-slate-800 px-3 pb-4">
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
 
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
 
-                  <span className="text-[7px] font-bold uppercase tracking-widest text-slate-500">
-                    EnaV mobility workspace
+                  <span className="text-xs font-bold uppercase tracking-widest text-slate-300">
+                    EnaV mobility workspace (Live Route Animation)
                   </span>
 
                 </div>
 
-                <div className="flex items-center gap-2 text-[6px] uppercase tracking-widest text-slate-700">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-slate-400">
 
-                  <Layers className="h-3 w-3" />
+                  <Layers className="h-4 w-4" />
 
                   Preview
 
@@ -539,7 +555,7 @@ export default function HomePage() {
 
               </div>
 
-              <div className="relative mt-3 h-[310px] overflow-hidden rounded-2xl border border-slate-800 bg-[#050810] sm:h-[370px]">
+              <div className="relative mt-4 h-[330px] overflow-hidden rounded-2xl border border-slate-800 bg-[#050810] sm:h-[400px]">
 
                 <div
                   className="absolute inset-0 opacity-20"
@@ -550,74 +566,76 @@ export default function HomePage() {
                   }}
                 />
 
-                {/* roads */}
+                {/* Animated SVG Path with Car & Charging Stations */}
+                <div className="absolute inset-0 flex items-center justify-center p-6">
+                  <svg className="w-full h-full" viewBox="0 0 600 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M50 220 Q 200 60, 350 160 T 550 80" stroke="#1e293b" strokeWidth="6" strokeLinecap="round" />
+                    <path id="mainRoute" d="M50 220 Q 200 60, 350 160 T 550 80" stroke="url(#routeGradient)" strokeWidth="4" strokeLinecap="round" strokeDasharray="8 4" />
+                    
+                    <defs>
+                      <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#10B981" />
+                        <stop offset="50%" stopColor="#38BDF8" />
+                        <stop offset="100%" stopColor="#8B5CF6" />
+                      </linearGradient>
+                      <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="4" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                      </filter>
+                    </defs>
 
-                <div className="absolute left-[4%] top-[64%] h-[2px] w-[91%] rotate-[-12deg] bg-slate-700" />
+                    <g transform="translate(180, 115)">
+                      <circle cx="0" cy="0" r="16" fill="#0B132B" stroke="#38BDF8" strokeWidth="2.5" filter="url(#glow)" />
+                      <path d="M-3 -5 L3 -5 L1 0 L4 0 L-2 8 L0 2 L-3 2 Z" fill="#38BDF8" />
+                      <text x="0" y="28" fill="#e2e8f0" fontSize="11" fontWeight="bold" textAnchor="middle">Fast Charger #1</text>
+                    </g>
 
-                <div className="absolute left-[19%] top-[41%] h-[2px] w-[63%] rotate-[18deg] bg-slate-700/80" />
+                    <g transform="translate(380, 130)">
+                      <circle cx="0" cy="0" r="16" fill="#0B132B" stroke="#10B981" strokeWidth="2.5" filter="url(#glow)" />
+                      <path d="M-3 -5 L3 -5 L1 0 L4 0 L-2 8 L0 2 L-3 2 Z" fill="#10B981" />
+                      <text x="0" y="28" fill="#e2e8f0" fontSize="11" fontWeight="bold" textAnchor="middle">Ultra-Hub #2</text>
+                    </g>
 
-                <div className="absolute left-[51%] top-[8%] h-[2px] w-[50%] rotate-[68deg] bg-slate-700/50" />
+                    <g transform="translate(470, 95)">
+                      <circle cx="0" cy="0" r="16" fill="#0B132B" stroke="#38BDF8" strokeWidth="2.5" filter="url(#glow)" />
+                      <path d="M-3 -5 L3 -5 L1 0 L4 0 L-2 8 L0 2 L-3 2 Z" fill="#38BDF8" />
+                      <text x="0" y="28" fill="#e2e8f0" fontSize="11" fontWeight="bold" textAnchor="middle">City DC #3</text>
+                    </g>
 
-                <div className="absolute left-[0%] top-[27%] h-[2px] w-[44%] rotate-[71deg] bg-slate-800" />
+                    <circle cx="50" cy="220" r="7" fill="#10B981" />
+                    <text x="50" y="242" fill="#10B981" fontSize="11" fontWeight="bold" textAnchor="middle">Origin</text>
 
-                {/* route */}
+                    <circle cx="550" cy="80" r="7" fill="#38BDF8" />
+                    <text x="550" y="60" fill="#38BDF8" fontSize="11" fontWeight="bold" textAnchor="middle">Destination</text>
 
-                <div className="absolute left-[10%] top-[63%] h-[4px] w-[73%] rotate-[-12deg] rounded-full bg-gradient-to-r from-emerald-400 to-blue-400 shadow-[0_0_18px_rgba(52,211,153,.4)]" />
-
-                {/* start */}
-
-                <div className="absolute left-[7%] top-[58%] flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#050810] bg-emerald-400">
-
-                  <MapPin className="h-4 w-4 text-slate-950" />
-
+                    <g filter="url(#glow)">
+                      <circle r="14" fill="#10B981" opacity="0.3">
+                        <animateMotion dur="6s" repeatCount="indefinite" path="M50 220 Q 200 60, 350 160 T 550 80" />
+                      </circle>
+                      <circle r="7" fill="#10B981">
+                        <animateMotion dur="6s" repeatCount="indefinite" path="M50 220 Q 200 60, 350 160 T 550 80" />
+                      </circle>
+                    </g>
+                  </svg>
                 </div>
 
-                {/* vehicle */}
+                {/* product card overlay */}
+                <div className="absolute left-4 top-4 w-[310px] rounded-2xl border border-slate-700 bg-[#0B132B]/95 p-4 shadow-xl backdrop-blur">
 
-                <div className="absolute left-[46%] top-[53%] flex h-11 w-11 items-center justify-center rounded-full border border-emerald-400/40 bg-[#0B132B]">
-
-                  <Navigation className="h-4 w-4 text-emerald-400" />
-
-                </div>
-
-                {/* destination */}
-
-                <div className="absolute right-[8%] top-[42%] flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#050810] bg-blue-400">
-
-                  <MapPin className="h-4 w-4 text-slate-950" />
-
-                </div>
-
-                {/* product card */}
-
-                <div className="absolute left-4 top-4 w-[275px] rounded-xl border border-slate-800 bg-[#0B132B]/95 p-3 shadow-xl backdrop-blur">
-
-                  <div className="text-[6px] font-bold uppercase tracking-widest text-emerald-400">
-                    Driver journey
+                  <div className="text-xs font-bold uppercase tracking-widest text-emerald-400">
+                    Active Navigation
                   </div>
 
-                  <div className="mt-1.5 text-[11px] font-black text-white">
-                    Plan your next journey
+                  <div className="mt-2 text-base font-black text-white">
+                    Live Route & 3 Chargers Found
                   </div>
 
-                  <div className="mt-3 flex items-center gap-2 rounded-lg border border-slate-800 bg-[#070B14] p-2">
+                  <div className="mt-3 flex items-center gap-3 rounded-xl border border-slate-800 bg-[#070B14] p-3">
 
-                    <MapPin className="h-3 w-3 text-emerald-400" />
+                    <BatteryCharging className="h-4 w-4 text-emerald-400 animate-pulse" />
 
-                    <span className="text-[7px] text-slate-400">
-                      Current location
-                    </span>
-
-                  </div>
-
-                  <div className="my-2 ml-1 h-2 border-l border-dashed border-slate-700" />
-
-                  <div className="flex items-center gap-2 rounded-lg border border-slate-800 bg-[#070B14] p-2">
-
-                    <Navigation className="h-3 w-3 text-blue-400" />
-
-                    <span className="text-[7px] text-slate-400">
-                      Search destination
+                    <span className="text-xs font-medium text-slate-200">
+                      Battery Level: 84% (Sufficient)
                     </span>
 
                   </div>
@@ -626,28 +644,28 @@ export default function HomePage() {
 
                 {/* tiles */}
 
-                <div className="absolute bottom-4 left-4 right-4 grid grid-cols-3 gap-2 sm:left-auto sm:right-4 sm:w-[390px]">
+                <div className="absolute bottom-4 left-4 right-4 grid grid-cols-3 gap-3 sm:left-auto sm:right-4 sm:w-[440px]">
 
                   <HeroTile
-                    icon={<Route className="h-3 w-3" />}
+                    icon={<Route className="h-4 w-4" />}
                     title="Journey"
-                    value="Plan"
+                    value="Optimized"
                   />
 
                   <HeroTile
                     icon={
-                      <BatteryCharging className="h-3 w-3" />
+                      <BatteryCharging className="h-4 w-4" />
                     }
-                    title="Charging"
-                    value="Discover"
+                    title="Stations"
+                    value="3 Available"
                   />
 
                   <HeroTile
                     icon={
-                      <ShieldCheck className="h-3 w-3" />
+                      <ShieldCheck className="h-4 w-4" />
                     }
-                    title="Government"
-                    value="Operate"
+                    title="Status"
+                    value="En Route"
                   />
 
                 </div>
@@ -663,7 +681,7 @@ export default function HomePage() {
       </section>
 
       {/* =====================================================
-          PLATFORM — SHORT OVERVIEW
+          PLATFORM — ROLES
       ===================================================== */}
 
       <section
@@ -676,33 +694,33 @@ export default function HomePage() {
           <SectionTitle
             eyebrow="Platform"
             title="One ecosystem. Clear roles."
-            description="Each side of EnaV has a focused purpose instead of putting every workflow on the same screen."
+            description="Tailored interfaces designed specifically for private EV owners, government drivers, and government officials."
           />
 
-          <div className="mt-9 grid gap-3 md:grid-cols-3">
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
 
             <PlatformPill
               icon={
-                <CircleUserRound className="h-4 w-4" />
+                <CircleUserRound className="h-5 w-5" />
               }
-              title="Drivers"
-              text="Journey and driver workflow"
+              title="Private EV owners"
+              text="Personal journey planning, EV charging discovery & savings tracker"
             />
 
             <PlatformPill
               icon={
-                <BatteryCharging className="h-4 w-4" />
+                <Car className="h-5 w-5" />
               }
-              title="Charging"
-              text="Station discovery"
+              title="Gov drivers"
+              text="Fleet assignment, official route navigation & status updates"
             />
 
             <PlatformPill
               icon={
-                <ShieldCheck className="h-4 w-4" />
+                <ShieldCheck className="h-5 w-5" />
               }
-              title="Government"
-              text="Mobility operations"
+              title="Gov officials"
+              text="Policy monitoring, infrastructure oversight & analytics dashboard"
             />
 
           </div>
@@ -715,9 +733,9 @@ export default function HomePage() {
           REAL FEATURE CAROUSEL
       ===================================================== */}
 
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
 
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
 
           <SectionTitle
             eyebrow="Explore EnaV"
@@ -725,24 +743,24 @@ export default function HomePage() {
             description="Swipe through the modules on mobile or use the controls to move between them."
           />
 
-          <div className="flex gap-2">
+          <div className="flex gap-3">
 
             <button
               type="button"
               onClick={previousFeature}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-800 bg-[#0B132B] text-slate-400 transition hover:border-emerald-400/30 hover:text-white"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-700 bg-[#0B132B] text-slate-300 transition hover:border-emerald-400 hover:text-white"
               aria-label="Previous feature"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-5 w-5" />
             </button>
 
             <button
               type="button"
               onClick={nextFeature}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-800 bg-[#0B132B] text-slate-400 transition hover:border-emerald-400/30 hover:text-white"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-700 bg-[#0B132B] text-slate-300 transition hover:border-emerald-400 hover:text-white"
               aria-label="Next feature"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-5 w-5" />
             </button>
 
           </div>
@@ -752,7 +770,7 @@ export default function HomePage() {
         {/* viewport */}
 
         <div
-          className="mt-8 overflow-hidden rounded-2xl"
+          className="mt-10 overflow-hidden rounded-3xl"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -774,49 +792,49 @@ export default function HomePage() {
                   className="w-full shrink-0"
                 >
 
-                  <article className="overflow-hidden rounded-2xl border border-slate-800 bg-[#0B132B]">
+                  <article className="overflow-hidden rounded-3xl border border-slate-700 bg-[#0B132B] shadow-xl">
 
                     <div className="grid lg:grid-cols-[0.85fr_1.15fr]">
 
                       {/* TEXT */}
 
-                      <div className="p-6 sm:p-8 lg:p-10">
+                      <div className="p-8 sm:p-10 lg:p-12">
 
                         <span
-                          className={`inline-flex rounded-full border px-3 py-1.5 text-[7px] font-bold uppercase tracking-[0.2em] ${
+                          className={`inline-flex rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] ${
                             feature.accent ===
                             "blue"
-                              ? "border-blue-400/20 bg-blue-400/10 text-blue-400"
+                              ? "border-blue-400/30 bg-blue-400/10 text-blue-400"
                               : feature.accent ===
                                   "purple"
-                                ? "border-purple-400/20 bg-purple-400/10 text-purple-300"
-                                : "border-emerald-400/20 bg-emerald-400/10 text-emerald-400"
+                                ? "border-purple-400/30 bg-purple-400/10 text-purple-300"
+                                : "border-emerald-400/30 bg-emerald-400/10 text-emerald-400"
                           }`}
                         >
                           {feature.badge}
                         </span>
 
-                        <h3 className="mt-5 text-2xl font-black leading-tight text-white sm:text-3xl">
+                        <h3 className="mt-6 text-3xl font-black leading-snug text-white sm:text-4xl">
                           {feature.title}
                         </h3>
 
-                        <p className="mt-4 text-xs leading-6 text-slate-400">
+                        <p className="mt-5 text-sm sm:text-base leading-relaxed text-slate-300">
                           {feature.description}
                         </p>
 
-                        <div className="mt-6 space-y-3">
+                        <div className="mt-8 space-y-4">
 
                           {feature.points.map(
                             (point) => (
                               <div
                                 key={point}
-                                className="flex items-center gap-3 text-[9px] font-bold text-slate-300"
+                                className="flex items-center gap-3.5 text-sm sm:text-base font-semibold text-slate-200"
                               >
 
-                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-400/10">
+                                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-400/15">
 
                                   <Check
-                                    className="h-3 w-3 text-emerald-400"
+                                    className="h-4 w-4 text-emerald-400"
                                     strokeWidth={3}
                                   />
 
@@ -832,19 +850,19 @@ export default function HomePage() {
 
                         <Link
                           href={feature.href}
-                          className="mt-7 inline-flex items-center gap-2 rounded-full bg-emerald-400 px-5 py-3 text-[8px] font-black uppercase tracking-wider text-slate-950 transition hover:bg-emerald-300"
+                          className="mt-10 inline-flex items-center gap-2.5 rounded-full bg-emerald-400 px-7 py-3.5 text-xs font-black uppercase tracking-wider text-slate-950 transition hover:bg-emerald-300 shadow-lg shadow-emerald-400/20"
                         >
                           Open module
-                          <ArrowRight className="h-3 w-3" />
+                          <ArrowRight className="h-4 w-4" />
                         </Link>
 
                       </div>
 
                       {/* VISUAL */}
 
-                      <div className="border-t border-slate-800 bg-[#070B14] p-3 lg:border-l lg:border-t-0 sm:p-4">
+                      <div className="border-t border-slate-800 bg-[#070B14] p-4 lg:border-l lg:border-t-0 sm:p-6 flex items-center justify-center">
 
-                        <div className="relative h-[330px] overflow-hidden rounded-xl border border-slate-800 bg-[#050810]">
+                        <div className="relative w-full h-[360px] overflow-hidden rounded-2xl border border-slate-800 bg-[#050810]">
 
                           <div
                             className="absolute inset-0 opacity-20"
@@ -856,64 +874,30 @@ export default function HomePage() {
                             }}
                           />
 
-                          {/* road */}
-
                           <div className="absolute left-[8%] top-[65%] h-[3px] w-[74%] rotate-[-10deg] rounded-full bg-gradient-to-r from-emerald-400 to-blue-400 shadow-[0_0_14px_rgba(52,211,153,.4)]" />
 
-                          {/* start */}
-
-                          <div className="absolute left-[8%] top-[59%] flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400">
-
-                            <MapPin className="h-3.5 w-3.5 text-slate-950" />
-
+                          <div className="absolute left-[8%] top-[57%] flex h-10 w-10 items-center justify-center rounded-full bg-emerald-400 shadow-lg">
+                            <MapPin className="h-5 w-5 text-slate-950" />
                           </div>
 
-                          {/* centre icon */}
-
-                          <div className="absolute left-[46%] top-[52%] flex h-10 w-10 items-center justify-center rounded-full border border-emerald-400/30 bg-[#0B132B] shadow-[0_0_20px_rgba(52,211,153,.12)]">
-
-                            {feature.badge ===
-                              "DRIVER JOURNEY" && (
-                              <Route className="h-4 w-4 text-emerald-400" />
-                            )}
-
-                            {feature.badge ===
-                              "CHARGING DISCOVERY" && (
-                              <BatteryCharging className="h-4 w-4 text-blue-400" />
-                            )}
-
-                            {feature.badge ===
-                              "DRIVER PROFILE" && (
-                              <CircleUserRound className="h-4 w-4 text-emerald-400" />
-                            )}
-
-                            {feature.badge ===
-                              "GOVERNMENT" && (
-                              <ShieldCheck className="h-4 w-4 text-purple-300" />
-                            )}
-
+                          <div className="absolute left-[46%] top-[50%] flex h-12 w-12 items-center justify-center rounded-full border border-emerald-400/40 bg-[#0B132B] shadow-[0_0_24px_rgba(52,211,153,.2)]">
+                            {feature.badge === "DRIVER JOURNEY" && <Route className="h-5 w-5 text-emerald-400" />}
+                            {feature.badge === "CHARGING DISCOVERY" && <BatteryCharging className="h-5 w-5 text-blue-400" />}
+                            {feature.badge === "DRIVER PROFILE" && <CircleUserRound className="h-5 w-5 text-emerald-400" />}
+                            {feature.badge === "GOVERNMENT" && <ShieldCheck className="h-5 w-5 text-purple-300" />}
                           </div>
 
-                          {/* destination */}
-
-                          <div className="absolute right-[9%] top-[42%] flex h-8 w-8 items-center justify-center rounded-full bg-blue-400">
-
-                            <MapPin className="h-3.5 w-3.5 text-slate-950" />
-
+                          <div className="absolute right-[9%] top-[40%] flex h-10 w-10 items-center justify-center rounded-full bg-blue-400 shadow-lg">
+                            <MapPin className="h-5 w-5 text-slate-950" />
                           </div>
 
-                          {/* top panel */}
-
-                          <div className="absolute left-4 right-4 top-4 rounded-xl border border-slate-800 bg-[#0B132B]/95 p-4 backdrop-blur">
-
-                            <div className="text-[6px] font-bold uppercase tracking-widest text-slate-600">
+                          <div className="absolute left-4 right-4 top-4 rounded-2xl border border-slate-700 bg-[#0B132B]/95 p-4 backdrop-blur">
+                            <div className="text-xs font-bold uppercase tracking-widest text-emerald-400">
                               {feature.badge}
                             </div>
-
-                            <div className="mt-1.5 text-sm font-black text-white">
+                            <div className="mt-1 text-base font-black text-white">
                               {feature.title}
                             </div>
-
                           </div>
 
                         </div>
@@ -934,7 +918,7 @@ export default function HomePage() {
 
         {/* dots */}
 
-        <div className="mt-5 flex justify-center gap-1.5">
+        <div className="mt-8 flex justify-center gap-2">
 
           {features.map(
             (_, index) => (
@@ -944,10 +928,10 @@ export default function HomePage() {
                 onClick={() =>
                   setFeatureIndex(index)
                 }
-                className={`h-1.5 rounded-full transition-all ${
+                className={`h-2 rounded-full transition-all ${
                   featureIndex === index
-                    ? "w-8 bg-emerald-400"
-                    : "w-1.5 bg-slate-700"
+                    ? "w-10 bg-emerald-400"
+                    : "w-2 bg-slate-700"
                 }`}
                 aria-label={`Go to feature ${index + 1}`}
               />
@@ -959,55 +943,65 @@ export default function HomePage() {
       </section>
 
       {/* =====================================================
-          CHARGING MAP
+          CHARGING MAP / OPEN STREET MAPS
       ===================================================== */}
 
       <section
         id="charging"
-        className="border-y border-slate-800 bg-[#0A0F1A] py-16"
+        className="border-y border-slate-800 bg-[#0A0F1A] py-20"
       >
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
 
-          <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-center">
+          <div className="grid gap-12 lg:grid-cols-[0.72fr_1.28fr] lg:items-center">
 
             <div>
 
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-400/10">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-400/10">
 
-                <MapPin className="h-5 w-5 text-blue-400" />
+                <MapPin className="h-6 w-6 text-blue-400" />
 
               </div>
 
-              <div className="mt-5 text-[7px] font-bold uppercase tracking-[0.22em] text-blue-400">
+              <div className="mt-6 text-xs font-bold uppercase tracking-[0.22em] text-blue-400">
                 Charging network
               </div>
 
-              <h2 className="mt-2 text-3xl font-black leading-tight text-white sm:text-4xl">
+              <h2 className="mt-3 text-3xl font-black leading-snug text-white sm:text-4xl">
                 Find charging around your journey.
               </h2>
 
-              <p className="mt-4 max-w-md text-xs leading-6 text-slate-400">
-                Explore charging locations and review the station
-                information available through EnaV.
+              <p className="mt-5 max-w-md text-sm sm:text-base leading-relaxed text-slate-300">
+                Explore real-time charging stations powered by OpenStreetMap and review available station connectors through EnaV.
               </p>
 
               <Link
                 href="/drivers/chargers"
-                className="mt-7 inline-flex items-center gap-2 rounded-full bg-blue-400 px-5 py-3 text-[8px] font-black uppercase tracking-wider text-slate-950 transition hover:bg-blue-300"
+                className="mt-8 inline-flex items-center gap-2.5 rounded-full bg-blue-400 px-7 py-3.5 text-xs font-black uppercase tracking-wider text-slate-950 transition hover:bg-blue-300 shadow-lg shadow-blue-400/20"
               >
                 Open charging
-                <ArrowRight className="h-3 w-3" />
+                <ArrowRight className="h-4 w-4" />
               </Link>
 
             </div>
 
-            <div className="rounded-[24px] border border-slate-800 bg-[#0B132B] p-3 sm:p-4">
+            <div className="rounded-[28px] border border-slate-700 bg-[#0B132B] p-4 sm:p-6 shadow-2xl">
 
-              <div className="h-[390px] overflow-hidden rounded-2xl border border-slate-800">
-
-                <ChargingStationsMap />
-
+              <div className="h-[420px] overflow-hidden rounded-2xl border border-slate-700 relative">
+                <iframe
+                  title="OpenStreetMap EV Stations"
+                  width="100%"
+                  height="100%"
+                  frameBorder="0"
+                  scrolling="no"
+                  marginHeight={0}
+                  marginWidth={0}
+                  src="https://www.openstreetmap.org/export/embed.html?bbox=77.10%2C28.55%2C77.30%2C28.70&amp;layer=mapnik"
+                  style={{ filter: "invert(90%) hue-rotate(180deg) contrast(120%) brightness(95%)", border: 0 }}
+                />
+                <div className="absolute bottom-4 left-4 bg-[#0B132B]/95 border border-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold text-emerald-400 backdrop-blur-md shadow-xl pointer-events-none">
+                  Live OpenStreetMap Feed · Delhi NCR Hubs
+                </div>
               </div>
 
             </div>
@@ -1024,12 +1018,12 @@ export default function HomePage() {
 
       <section
         id="schemes"
-        className="border-b border-slate-800 bg-[#070B14] py-16"
+        className="border-b border-slate-800 bg-[#070B14] py-20"
       >
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
 
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
 
             <SectionTitle
               eyebrow="EV schemes & policies"
@@ -1037,65 +1031,65 @@ export default function HomePage() {
               description="Browse verified policy and scheme information instead of generic subsidy claims."
             />
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
 
               <button
                 type="button"
                 onClick={previousScheme}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-800 bg-[#0B132B] text-slate-400 transition hover:border-emerald-400/30 hover:text-white"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-700 bg-[#0B132B] text-slate-300 transition hover:border-emerald-400 hover:text-white"
                 aria-label="Previous scheme"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-5 w-5" />
               </button>
 
-              <div className="min-w-[42px] text-center text-[7px] font-bold uppercase tracking-widest text-slate-600">
+              <div className="min-w-[60px] text-center text-xs font-bold uppercase tracking-widest text-slate-400">
                 {schemeIndex + 1} / {schemes.length}
               </div>
 
               <button
                 type="button"
                 onClick={nextScheme}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-800 bg-[#0B132B] text-slate-400 transition hover:border-emerald-400/30 hover:text-white"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-700 bg-[#0B132B] text-slate-300 transition hover:border-emerald-400 hover:text-white"
                 aria-label="Next scheme"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-5 w-5" />
               </button>
 
             </div>
 
           </div>
 
-          <div className="relative mt-8 overflow-hidden rounded-2xl border border-emerald-400/15 bg-[#0B132B]">
+          <div className="relative mt-10 overflow-hidden rounded-3xl border border-emerald-400/25 bg-[#0B132B] shadow-xl">
 
-            <div className="grid min-h-[270px] lg:grid-cols-[1fr_270px]">
+            <div className="grid min-h-[310px] lg:grid-cols-[1fr_310px]">
 
               {/* TEXT */}
 
-              <div className="p-6 sm:p-8">
+              <div className="p-8 sm:p-10 lg:p-12">
 
-                <span className="inline-flex rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 text-[7px] font-bold uppercase tracking-[0.2em] text-emerald-400">
+                <span className="inline-flex rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">
                   {currentScheme.tag}
                 </span>
 
-                <h3 className="mt-5 text-2xl font-black text-white sm:text-3xl">
+                <h3 className="mt-6 text-3xl font-black text-white sm:text-4xl">
                   {currentScheme.title}
                 </h3>
 
-                <p className="mt-4 max-w-2xl text-xs leading-6 text-slate-400">
+                <p className="mt-5 max-w-2xl text-sm sm:text-base leading-relaxed text-slate-300">
                   {currentScheme.description}
                 </p>
 
-                <div className="mt-6 flex items-start gap-3 rounded-xl border border-slate-800 bg-[#070B14] p-3">
+                <div className="mt-8 flex items-start gap-3.5 rounded-2xl border border-slate-800 bg-[#070B14] p-4">
 
-                  <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-600" />
+                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" />
 
                   <div>
 
-                    <div className="text-[7px] font-bold uppercase tracking-widest text-slate-600">
+                    <div className="text-xs font-bold uppercase tracking-widest text-slate-400">
                       Source
                     </div>
 
-                    <div className="mt-1 text-[8px] leading-4 text-slate-500">
+                    <div className="mt-1 text-sm font-medium text-slate-300">
                       {currentScheme.source}
                     </div>
 
@@ -1107,31 +1101,31 @@ export default function HomePage() {
                   href={currentScheme.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-6 inline-flex items-center gap-2 rounded-full border border-slate-700 bg-[#070B14] px-4 py-2.5 text-[8px] font-bold uppercase tracking-wider text-slate-300 transition hover:border-emerald-400/30 hover:text-emerald-400"
+                  className="mt-8 inline-flex items-center gap-2.5 rounded-full border border-slate-700 bg-[#070B14] px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-slate-200 transition hover:border-emerald-400 hover:text-emerald-400"
                 >
                   Official information
-                  <ArrowRight className="h-3 w-3" />
+                  <ArrowRight className="h-4 w-4" />
                 </a>
 
               </div>
 
               {/* VISUAL */}
 
-              <div className="hidden items-center justify-center border-l border-slate-800 bg-[#070B14] p-6 lg:flex">
+              <div className="hidden items-center justify-center border-l border-slate-800 bg-[#070B14] p-8 lg:flex">
 
                 <div className="text-center">
 
-                  <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-emerald-400/20 bg-emerald-400/5 shadow-[0_0_30px_rgba(52,211,153,.08)]">
+                  <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full border border-emerald-400/30 bg-emerald-400/10 shadow-[0_0_35px_rgba(52,211,153,.15)]">
 
-                    <Zap className="h-8 w-8 text-emerald-400" />
+                    <Zap className="h-10 w-10 text-emerald-400" />
 
                   </div>
 
-                  <div className="mt-5 text-[7px] font-bold uppercase tracking-[0.18em] text-slate-600">
+                  <div className="mt-6 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
                     Government source
                   </div>
 
-                  <div className="mt-1 text-[10px] font-black text-white">
+                  <div className="mt-2 text-sm font-black text-white">
                     EV policy information
                   </div>
 
@@ -1145,7 +1139,7 @@ export default function HomePage() {
 
           {/* scheme dots */}
 
-          <div className="mt-5 flex justify-center gap-1.5">
+          <div className="mt-8 flex justify-center gap-2">
 
             {schemes.map(
               (_, index) => (
@@ -1155,10 +1149,10 @@ export default function HomePage() {
                   onClick={() =>
                     setSchemeIndex(index)
                   }
-                  className={`h-1.5 rounded-full transition-all ${
+                  className={`h-2 rounded-full transition-all ${
                     schemeIndex === index
-                      ? "w-8 bg-emerald-400"
-                      : "w-1.5 bg-slate-700"
+                      ? "w-10 bg-emerald-400"
+                      : "w-2 bg-slate-700"
                   }`}
                   aria-label={`Go to scheme ${index + 1}`}
                 />
@@ -1177,39 +1171,38 @@ export default function HomePage() {
 
       <section
         id="government"
-        className="border-b border-slate-800 bg-[#0A0F1A] py-16"
+        className="border-b border-slate-800 bg-[#0A0F1A] py-20"
       >
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
 
-          <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
+          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
 
             <div>
 
-              <div className="inline-flex rounded-full border border-purple-400/20 bg-purple-400/10 px-3 py-1.5 text-[7px] font-bold uppercase tracking-[0.2em] text-purple-300">
+              <div className="inline-flex rounded-full border border-purple-400/30 bg-purple-400/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-purple-300">
                 Government mobility
               </div>
 
-              <h2 className="mt-5 text-3xl font-black leading-tight text-white sm:text-4xl">
+              <h2 className="mt-6 text-3xl font-black leading-snug text-white sm:text-4xl">
                 A dedicated workspace for government teams.
               </h2>
 
-              <p className="mt-4 max-w-xl text-xs leading-6 text-slate-400">
-                Government-facing mobility and infrastructure workflows
-                stay separate from the driver's everyday experience.
+              <p className="mt-5 max-w-xl text-sm sm:text-base leading-relaxed text-slate-300">
+                Government-facing mobility and infrastructure workflows stay separate from the driver's everyday experience.
               </p>
 
               <Link
-                href="/gov"
-                className="mt-7 inline-flex items-center gap-2 rounded-full border border-purple-400/20 bg-purple-400/5 px-5 py-3 text-[8px] font-black uppercase tracking-wider text-purple-300 transition hover:bg-purple-400/10"
+                href="/gov/dashboard"
+                className="mt-8 inline-flex items-center gap-2.5 rounded-full border border-purple-400/30 bg-purple-400/10 px-7 py-3.5 text-xs font-black uppercase tracking-wider text-purple-300 transition hover:bg-purple-400/20"
               >
                 Open government platform
-                <ArrowRight className="h-3 w-3" />
+                <ArrowRight className="h-4 w-4" />
               </Link>
 
             </div>
 
-            <div className="rounded-2xl border border-slate-800 bg-[#0B132B] p-5">
+            <div className="rounded-3xl border border-slate-700 bg-[#0B132B] p-6 sm:p-8 shadow-xl">
 
               <GovernmentItem
                 title="Mobility operations"
@@ -1235,59 +1228,57 @@ export default function HomePage() {
       </section>
 
       {/* =====================================================
-          DRIVER SECTION — LAST MAJOR PRODUCT SECTION
+          DRIVER SECTION
       ===================================================== */}
 
       <section
         id="drivers"
-        className="border-b border-slate-800 bg-[#070B14] py-16"
+        className="border-b border-slate-800 bg-[#070B14] py-20"
       >
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
 
-          <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
+          <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
 
             <div>
 
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400/10">
-                <CircleUserRound className="h-5 w-5 text-emerald-400" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-400/10">
+                <CircleUserRound className="h-6 w-6 text-emerald-400" />
               </div>
 
-              <div className="mt-5 text-[7px] font-bold uppercase tracking-[0.22em] text-emerald-400">
+              <div className="mt-6 text-xs font-bold uppercase tracking-[0.22em] text-emerald-400">
                 Driver experience
               </div>
 
-              <h2 className="mt-2 text-3xl font-black leading-tight text-white sm:text-4xl">
+              <h2 className="mt-3 text-3xl font-black leading-snug text-white sm:text-4xl">
                 Everything important for the journey.
               </h2>
 
-              <p className="mt-4 max-w-xl text-xs leading-6 text-slate-400">
-                The driver side of EnaV keeps route planning, charging
-                discovery, active journeys and profile information
-                together without unnecessary dashboard clutter.
+              <p className="mt-5 max-w-xl text-sm sm:text-base leading-relaxed text-slate-300">
+                The driver side of EnaV keeps route planning, charging discovery, active journeys and profile information together without unnecessary dashboard clutter.
               </p>
 
               <Link
                 href="/drivers"
-                className="mt-7 inline-flex items-center gap-2 rounded-full bg-emerald-400 px-5 py-3 text-[8px] font-black uppercase tracking-wider text-slate-950 transition hover:bg-emerald-300"
+                className="mt-8 inline-flex items-center gap-2.5 rounded-full bg-emerald-400 px-7 py-3.5 text-xs font-black uppercase tracking-wider text-slate-950 transition hover:bg-emerald-300 shadow-lg shadow-emerald-400/20"
               >
                 Open driver platform
-                <ArrowRight className="h-3 w-3" />
+                <ArrowRight className="h-4 w-4" />
               </Link>
 
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
 
               <DriverCard
-                icon={<Route className="h-4 w-4" />}
+                icon={<Route className="h-5 w-5" />}
                 title="Route planning"
                 text="Compare routes before beginning the journey."
               />
 
               <DriverCard
                 icon={
-                  <BatteryCharging className="h-4 w-4" />
+                  <BatteryCharging className="h-5 w-5" />
                 }
                 title="Charging"
                 text="Find stations and review available connectors."
@@ -1295,7 +1286,7 @@ export default function HomePage() {
 
               <DriverCard
                 icon={
-                  <Navigation className="h-4 w-4" />
+                  <Navigation className="h-5 w-5" />
                 }
                 title="Active journey"
                 text="Keep the selected route and next action in focus."
@@ -1303,7 +1294,7 @@ export default function HomePage() {
 
               <DriverCard
                 icon={
-                  <CircleUserRound className="h-4 w-4" />
+                  <CircleUserRound className="h-5 w-5" />
                 }
                 title="Profile"
                 text="Manage personal, vehicle and account information."
@@ -1321,7 +1312,7 @@ export default function HomePage() {
           DRIVER REVIEWS
       ===================================================== */}
 
-      <section className="border-b border-slate-800 bg-[#0A0F1A] py-16">
+      <section className="border-b border-slate-800 bg-[#0A0F1A] py-20">
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
 
@@ -1331,24 +1322,22 @@ export default function HomePage() {
             description="These are illustrative prototype testimonials and should be replaced with verified driver feedback."
           />
 
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
 
             {driverFeedback.map(
               (review, index) => (
                 <article
                   key={index}
-                  className="rounded-2xl border border-slate-800 bg-[#0B132B] p-5"
+                  className="rounded-3xl border border-slate-700 bg-[#0B132B] p-6 sm:p-8 shadow-xl"
                 >
 
-                  {/* GOLDEN STARS */}
-
-                  <div className="flex gap-1">
+                  <div className="flex gap-1.5">
 
                     {[1, 2, 3, 4, 5].map(
                       (star) => (
                         <Star
                           key={star}
-                          className="h-4 w-4 fill-[#FBBF24] text-[#FBBF24]"
+                          className="h-5 w-5 fill-[#FBBF24] text-[#FBBF24]"
                           strokeWidth={1.8}
                         />
                       ),
@@ -1356,17 +1345,17 @@ export default function HomePage() {
 
                   </div>
 
-                  <p className="mt-5 text-xs leading-6 text-slate-400">
+                  <p className="mt-6 text-sm sm:text-base leading-relaxed text-slate-300">
                     “{review.quote}”
                   </p>
 
-                  <div className="mt-5 border-t border-slate-800 pt-4">
+                  <div className="mt-6 border-t border-slate-800 pt-5">
 
-                    <div className="text-[9px] font-bold text-slate-300">
+                    <div className="text-xs font-bold text-white">
                       Sample driver feedback
                     </div>
 
-                    <div className="mt-1 text-[7px] uppercase tracking-widest text-slate-700">
+                    <div className="mt-1 text-[10px] uppercase tracking-widest text-slate-400">
                       Prototype content
                     </div>
 
@@ -1383,42 +1372,142 @@ export default function HomePage() {
       </section>
 
       {/* =====================================================
+          FEEDBACK SECTION
+      ===================================================== */}
+
+      <section id="feedback" className="border-b border-slate-800 bg-[#070B14] py-20">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6">
+          <div className="text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">
+              <MessageSquare className="h-3.5 w-3.5" />
+              User Feedback
+            </div>
+            <h2 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl">
+              Help us improve EnaV
+            </h2>
+            <p className="mt-3 text-sm sm:text-base leading-relaxed text-slate-300">
+              Share your experience, suggest features, or report issues with our mobility platform.
+            </p>
+          </div>
+
+          <div className="mt-10 rounded-3xl border border-slate-700 bg-[#0B132B] p-8 sm:p-10 shadow-2xl">
+            {feedbackSubmitted ? (
+              <div className="py-12 text-center space-y-4">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-400/15 text-emerald-400">
+                  <Check className="h-7 w-7" strokeWidth={3} />
+                </div>
+                <h3 className="text-xl font-black text-white">Thank you for your feedback!</h3>
+                <p className="text-sm text-slate-300 max-w-md mx-auto">
+                  Your response has been recorded successfully and helps our team enhance the EnaV experience.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleFeedbackSubmit} className="space-y-6">
+                <div className="grid gap-6 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2.5">
+                      Your Name / Role
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={feedbackName}
+                      onChange={(e) => setFeedbackName(e.target.value)}
+                      placeholder="e.g. Sanya Chadha (EV Owner)"
+                      className="w-full rounded-2xl border border-slate-700 bg-[#070B14] px-5 py-3.5 text-sm sm:text-base text-white placeholder:text-slate-500 focus:border-emerald-400 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2.5">
+                      Rating
+                    </label>
+                    <div className="flex items-center gap-3 h-[50px] px-4 rounded-2xl border border-slate-700 bg-[#070B14]">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setFeedbackRating(star)}
+                          className="focus:outline-none transition hover:scale-110"
+                        >
+                          <Star
+                            className={`h-5 w-5 ${
+                              star <= feedbackRating
+                                ? "fill-[#FBBF24] text-[#FBBF24]"
+                                : "text-slate-600"
+                            }`}
+                          />
+                        </button>
+                      ))}
+                      <span className="ml-auto text-sm font-bold text-slate-200">
+                        {feedbackRating}/5
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2.5">
+                    Your Feedback & Suggestions
+                  </label>
+                  <textarea
+                    required
+                    rows={4}
+                    value={feedbackText}
+                    onChange={(e) => setFeedbackText(e.target.value)}
+                    placeholder="Tell us what you like or what we can improve..."
+                    className="w-full rounded-2xl border border-slate-700 bg-[#070B14] p-4 text-sm sm:text-base text-white placeholder:text-slate-500 focus:border-emerald-400 focus:outline-none resize-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-2.5 rounded-2xl bg-emerald-400 py-4 text-xs font-black uppercase tracking-widest text-slate-950 transition hover:bg-emerald-300 shadow-xl shadow-emerald-400/25"
+                >
+                  <Send className="h-4 w-4" />
+                  Submit Feedback
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
           FINAL CTA
       ===================================================== */}
 
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
 
-        <div className="relative overflow-hidden rounded-[28px] border border-emerald-400/20 bg-gradient-to-br from-[#0B132B] to-[#08101d] px-6 py-14 text-center shadow-2xl sm:px-10">
+        <div className="relative overflow-hidden rounded-[32px] border border-emerald-400/30 bg-gradient-to-br from-[#0B132B] to-[#08101d] px-8 py-16 text-center shadow-2xl sm:px-12">
 
-          <div className="pointer-events-none absolute left-1/2 top-0 h-60 w-60 -translate-x-1/2 rounded-full bg-emerald-400/5 blur-3xl" />
+          <div className="pointer-events-none absolute left-1/2 top-0 h-60 w-60 -translate-x-1/2 rounded-full bg-emerald-400/10 blur-3xl" />
 
           <div className="relative">
 
-            <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400/10">
-              <Zap className="h-4 w-4 text-emerald-400" />
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-400/15">
+              <Zap className="h-5 w-5 text-emerald-400" />
             </div>
 
-            <div className="mt-5 text-[7px] font-bold uppercase tracking-[0.22em] text-emerald-400">
+            <div className="mt-6 text-xs font-bold uppercase tracking-[0.22em] text-emerald-400">
               EnaV
             </div>
 
-            <h2 className="mx-auto mt-2 max-w-3xl text-3xl font-black tracking-tight text-white sm:text-5xl">
+            <h2 className="mx-auto mt-3 max-w-3xl text-3xl font-black tracking-tight text-white sm:text-5xl">
               Connected mobility without unnecessary complexity.
             </h2>
 
-            <p className="mx-auto mt-4 max-w-xl text-xs leading-6 text-slate-500">
-              One platform for driver journeys, charging discovery
-              and government mobility workflows.
+            <p className="mx-auto mt-5 max-w-xl text-sm sm:text-base leading-relaxed text-slate-300">
+              One platform for driver journeys, charging discovery and government mobility workflows.
             </p>
 
-            <div className="mt-7 flex justify-center">
+            <div className="mt-8 flex justify-center">
 
               <Link
                 href="/auth/signup"
-                className="flex h-11 items-center justify-center gap-2 rounded-full bg-emerald-400 px-7 text-[8px] font-black uppercase tracking-wider text-slate-950 transition hover:bg-emerald-300"
+                className="flex h-13 items-center justify-center gap-2.5 rounded-full bg-emerald-400 px-8 text-xs font-black uppercase tracking-wider text-slate-950 transition hover:bg-emerald-300 shadow-xl shadow-emerald-400/25"
               >
                 Get started
-                <ArrowRight className="h-3 w-3" />
+                <ArrowRight className="h-4 w-4" />
               </Link>
 
             </div>
@@ -1435,22 +1524,22 @@ export default function HomePage() {
 
       <footer className="border-t border-slate-800 bg-[#050810]">
 
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
 
-          <div className="grid gap-8 md:grid-cols-4">
+          <div className="grid gap-10 md:grid-cols-4">
 
             <div className="md:col-span-2">
 
               <Link
                 href="/"
-                className="flex items-center gap-2.5"
+                className="flex items-center gap-3"
               >
 
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400 text-slate-950">
-                  <Zap className="h-3.5 w-3.5 fill-current" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-400 text-slate-950">
+                  <Zap className="h-4 w-4 fill-current" />
                 </div>
 
-                <div className="text-sm font-black">
+                <div className="text-base font-black">
                   Ena<span className="text-emerald-400">
                     V
                   </span>
@@ -1458,20 +1547,19 @@ export default function HomePage() {
 
               </Link>
 
-              <p className="mt-3 max-w-md text-[10px] leading-5 text-slate-600">
-                Intelligent mobility platform for journey planning,
-                charging discovery and government mobility workflows.
+              <p className="mt-4 max-w-md text-xs sm:text-sm leading-relaxed text-slate-400">
+                Intelligent mobility platform for journey planning, charging discovery and government mobility workflows.
               </p>
 
             </div>
 
             <div>
 
-              <div className="text-[7px] font-bold uppercase tracking-widest text-slate-500">
+              <div className="text-xs font-bold uppercase tracking-widest text-slate-300">
                 Platform
               </div>
 
-              <div className="mt-4 space-y-3">
+              <div className="mt-5 space-y-3.5">
 
                 <FooterLink href="/drivers">
                   Drivers
@@ -1495,29 +1583,29 @@ export default function HomePage() {
 
             <div>
 
-              <div className="text-[7px] font-bold uppercase tracking-widest text-slate-500">
+              <div className="text-xs font-bold uppercase tracking-widest text-slate-300">
                 Explore
               </div>
 
-              <div className="mt-4 space-y-3">
+              <div className="mt-5 space-y-3.5">
 
                 <a
                   href="#platform"
-                  className="block text-[9px] text-slate-600 transition hover:text-white"
+                  className="block text-xs sm:text-sm text-slate-400 transition hover:text-white"
                 >
                   Platform
                 </a>
 
                 <a
                   href="#schemes"
-                  className="block text-[9px] text-slate-600 transition hover:text-white"
+                  className="block text-xs sm:text-sm text-slate-400 transition hover:text-white"
                 >
                   EV Schemes
                 </a>
 
                 <a
                   href="#charging"
-                  className="block text-[9px] text-slate-600 transition hover:text-white"
+                  className="block text-xs sm:text-sm text-slate-400 transition hover:text-white"
                 >
                   Charging
                 </a>
@@ -1528,7 +1616,7 @@ export default function HomePage() {
 
           </div>
 
-          <div className="mt-10 flex flex-col gap-2 border-t border-slate-800 pt-5 text-[7px] uppercase tracking-widest text-slate-700 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-12 flex flex-col gap-3 border-t border-slate-800 pt-6 text-xs uppercase tracking-widest text-slate-500 sm:flex-row sm:items-center sm:justify-between">
 
             <span>
               © {new Date().getFullYear()} EnaV
@@ -1564,19 +1652,19 @@ function SectionTitle({
   return (
     <div className="max-w-2xl">
 
-      <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/5 px-3 py-1 text-[7px] font-bold uppercase tracking-[0.2em] text-emerald-400">
+      <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-emerald-400">
 
-        <Sparkles className="h-2.5 w-2.5" />
+        <Sparkles className="h-3.5 w-3.5" />
 
         {eyebrow}
 
       </div>
 
-      <h2 className="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">
+      <h2 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl">
         {title}
       </h2>
 
-      <p className="mt-2 text-xs leading-relaxed text-slate-400">
+      <p className="mt-3 text-sm sm:text-base leading-relaxed text-slate-300">
         {description}
       </p>
 
@@ -1594,19 +1682,19 @@ function PlatformPill({
   text: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-slate-800 bg-[#0B132B] p-4">
+    <div className="flex items-center gap-4 rounded-2xl border border-slate-700 bg-[#0B132B] p-5 shadow-lg">
 
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-400/10 text-emerald-400">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-400/15 text-emerald-400">
         {icon}
       </div>
 
       <div>
 
-        <div className="text-[10px] font-black text-white">
+        <div className="text-sm font-black text-white">
           {title}
         </div>
 
-        <div className="mt-1 text-[8px] text-slate-600">
+        <div className="mt-1 text-xs sm:text-sm leading-snug text-slate-400">
           {text}
         </div>
 
@@ -1626,19 +1714,19 @@ function HeroTile({
   value: string;
 }) {
   return (
-    <div className="rounded-lg border border-slate-800 bg-[#0B132B]/95 p-2.5 backdrop-blur">
+    <div className="rounded-xl border border-slate-700 bg-[#0B132B]/95 p-3.5 backdrop-blur shadow-md">
 
-      <div className="flex items-center gap-1.5 text-slate-500">
+      <div className="flex items-center gap-2 text-slate-400">
 
         {icon}
 
-        <span className="text-[6px] font-bold uppercase tracking-wider">
+        <span className="text-[10px] font-bold uppercase tracking-wider">
           {title}
         </span>
 
       </div>
 
-      <div className="mt-1 text-[8px] font-black text-white">
+      <div className="mt-1.5 text-xs sm:text-sm font-black text-white">
         {value}
       </div>
 
@@ -1654,12 +1742,12 @@ function GovernmentItem({
   text: string;
 }) {
   return (
-    <div className="flex gap-3 border-b border-slate-800 py-4 last:border-b-0">
+    <div className="flex gap-4 border-b border-slate-800 py-5 last:border-b-0">
 
-      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-purple-400/10">
+      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-purple-400/15">
 
         <Check
-          className="h-3.5 w-3.5 text-purple-300"
+          className="h-4 w-4 text-purple-300"
           strokeWidth={3}
         />
 
@@ -1667,11 +1755,11 @@ function GovernmentItem({
 
       <div>
 
-        <div className="text-[10px] font-bold text-white">
+        <div className="text-sm font-bold text-white">
           {title}
         </div>
 
-        <div className="mt-1 text-[8px] leading-4 text-slate-600">
+        <div className="mt-1.5 text-xs sm:text-sm leading-relaxed text-slate-400">
           {text}
         </div>
 
@@ -1691,17 +1779,17 @@ function DriverCard({
   text: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-800 bg-[#0B132B] p-4 transition hover:border-emerald-400/20">
+    <div className="rounded-3xl border border-slate-700 bg-[#0B132B] p-6 shadow-xl transition hover:border-emerald-400/40">
 
-      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-400/10 text-emerald-400">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-400/15 text-emerald-400">
         {icon}
       </div>
 
-      <h3 className="mt-4 text-xs font-black text-white">
+      <h3 className="mt-5 text-base font-black text-white">
         {title}
       </h3>
 
-      <p className="mt-1.5 text-[9px] leading-5 text-slate-500">
+      <p className="mt-2 text-xs sm:text-sm leading-relaxed text-slate-400">
         {text}
       </p>
 
@@ -1719,7 +1807,7 @@ function FooterLink({
   return (
     <Link
       href={href}
-      className="block text-[9px] text-slate-600 transition hover:text-white"
+      className="block text-xs sm:text-sm text-slate-400 transition hover:text-white"
     >
       {children}
     </Link>

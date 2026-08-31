@@ -1,19 +1,43 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { api } from "@/lib/api";
 
 export default function LoginPage() {
   const [accountCategory, setAccountCategory] = useState<'user' | 'government'>('user');
   const [userSubType, setUserSubType] = useState<'private' | 'gov_driver'>('private');
   const router = useRouter();
+  
+  // State for form fields
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [driverId, setDriverId] = useState(""); // For gov_driver sub-type
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
 
-    if (accountCategory === 'government') {
-      router.push('/gov/dashboard');
-    } else {
-      router.push('/drivers/dashboard');
+    try {
+      // 1. Call backend login endpoint
+      const response = await api.post("/auth/login", { email, password });
+      
+      // 2. Save the returned JWT access token securely
+      localStorage.setItem("token", response.data.access_token);
+
+      // 3. Route based on account category
+      if (accountCategory === "government") {
+        router.push("/gov/dashboard");
+      } else {
+        router.push("/drivers/");
+      }
+    } catch (err: any) {
+      // Handle error messages coming from FastAPI
+      setError(err.response?.data?.detail || "Failed to log in. Please check your credentials.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -104,7 +128,7 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {/* Secondary Sub-Type Selection (Visible ONLY if USER is selected) */}
+          {/* Secondary Sub-Type Selection */}
           {accountCategory === 'user' && (
             <div className="mb-6 p-3 bg-gray-900/60 border border-gray-800 rounded-xl">
               <label className="text-[10px] text-gray-400 uppercase tracking-wider block mb-2">Select User Type</label>
@@ -135,16 +159,25 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Dynamic Login Form Fields Wrapped with onSubmit */}
+          {/* Error Message Display */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs">
+              {error}
+            </div>
+          )}
+
+          {/* Dynamic Login Form Fields */}
           <form onSubmit={handleSubmit} className="space-y-4">
             
-            {/* 1. GOVERNMENT OFFICIAL: Only Official Email & Password */}
+            {/* 1. GOVERNMENT OFFICIAL */}
             {accountCategory === 'government' && (
               <>
                 <div>
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Official Email Address</label>
                   <input 
                     type="email" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="official@gov.in" 
                     required
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
@@ -154,6 +187,8 @@ export default function LoginPage() {
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Password</label>
                   <input 
                     type="password" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password" 
                     required
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
@@ -162,13 +197,15 @@ export default function LoginPage() {
               </>
             )}
 
-            {/* 2. USER -> GOV DRIVER: Email & Driver ID/Badge, Password */}
+            {/* 2. USER -> GOV DRIVER */}
             {accountCategory === 'user' && userSubType === 'gov_driver' && (
               <>
                 <div>
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Email Address</label>
                   <input 
                     type="email" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com" 
                     required
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
@@ -178,6 +215,8 @@ export default function LoginPage() {
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Driver ID / Badge Number</label>
                   <input 
                     type="text" 
+                    value={driverId}
+                    onChange={(e) => setDriverId(e.target.value)}
                     placeholder="Enter official driver ID" 
                     required
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
@@ -187,6 +226,8 @@ export default function LoginPage() {
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Password</label>
                   <input 
                     type="password" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password" 
                     required
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
@@ -195,13 +236,15 @@ export default function LoginPage() {
               </>
             )}
 
-            {/* 3. USER -> PRIVATE / NORMAL USER: Standard Email & Password */}
+            {/* 3. USER -> PRIVATE / NORMAL USER */}
             {accountCategory === 'user' && userSubType === 'private' && (
               <>
                 <div>
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Email Address</label>
                   <input 
                     type="email" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com" 
                     required
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
@@ -211,6 +254,8 @@ export default function LoginPage() {
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Password</label>
                   <input 
                     type="password" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password" 
                     required
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
@@ -221,13 +266,13 @@ export default function LoginPage() {
 
             <button 
               type="submit" 
-              className="w-full py-3.5 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold rounded-xl transition shadow-lg shadow-cyan-500/20 text-sm mt-2"
+              disabled={loading}
+              className="w-full py-3.5 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold rounded-xl transition shadow-lg shadow-cyan-500/20 text-sm mt-2 disabled:opacity-50"
             >
-              LOGIN →
+              {loading ? "LOGGING IN..." : "LOGIN →"}
             </button>
           </form>
 
-          {/* Conditional rendering: Visible ONLY when 'user' accountCategory is selected */}
           {accountCategory === 'user' && (
             <div className="text-center mt-6 text-xs sm:text-sm text-gray-400">
               Don't have an account? <a href="/auth/signup" className="text-cyan-400 font-medium hover:underline">Create account</a>
