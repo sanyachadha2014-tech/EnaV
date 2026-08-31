@@ -7,7 +7,7 @@ export default function LoginPage() {
   const [accountCategory, setAccountCategory] = useState<'user' | 'government'>('user');
   const [userSubType, setUserSubType] = useState<'private' | 'gov_driver'>('private');
   const router = useRouter();
-  
+
   // State for form fields
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,16 +23,24 @@ export default function LoginPage() {
     try {
       // 1. Call backend login endpoint
       const response = await api.post("/auth/login", { email, password });
-      
+
       // 2. Save the returned JWT access token securely
       localStorage.setItem("token", response.data.access_token);
 
-      // 3. Route based on account category
-      if (accountCategory === "government") {
+      // 3. Fetch user profile to check their actual role from database
+      // (Hum query parameter mein email bhej rahe hain jo abhi humne backend par banaya hai)
+      const profileResponse = await api.get(`/auth/users/me?email=${email}`);
+      const userRole = profileResponse.data.role; // Yeh "user", "gov_driver", ya government role hoga
+
+      // 4. Route based on the role fetched from backend
+      if (userRole === "government" || accountCategory === "government") {
         router.push("/gov/dashboard");
+      } else if (userRole === "gov_driver" || userSubType === "gov_driver") {
+        router.push("/gov/driver-dashboard"); // Ya jo bhi driver ka route ho
       } else {
         router.push("/drivers/");
       }
+
     } catch (err: any) {
       // Handle error messages coming from FastAPI
       setError(err.response?.data?.detail || "Failed to log in. Please check your credentials.");
@@ -43,7 +51,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#070b12] text-white flex flex-col lg:flex-row">
-      
+
       {/* Left Branding Panel */}
       <div className="w-full lg:w-1/2 p-6 sm:p-10 lg:p-16 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-gray-800/60 bg-gradient-to-br from-[#070b12] via-[#0b1326] to-[#070b12]">
         <div>
@@ -94,7 +102,7 @@ export default function LoginPage() {
       {/* Right Form Section */}
       <div className="w-full lg:w-1/2 p-6 sm:p-10 lg:p-16 flex flex-col justify-center overflow-y-auto">
         <div className="max-w-md w-full mx-auto">
-          
+
           <div className="mb-6">
             <h2 className="text-2xl sm:text-3xl font-bold">
               Login to <span className="text-cyan-400">EnaV</span>
@@ -107,22 +115,20 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => setAccountCategory('user')}
-              className={`flex-1 py-3 px-4 rounded-xl border text-xs sm:text-sm font-medium tracking-wide transition ${
-                accountCategory === 'user' 
-                  ? 'border-cyan-500 bg-cyan-500/10 text-white' 
+              className={`flex-1 py-3 px-4 rounded-xl border text-xs sm:text-sm font-medium tracking-wide transition ${accountCategory === 'user'
+                  ? 'border-cyan-500 bg-cyan-500/10 text-white'
                   : 'border-gray-800 bg-gray-900/50 text-gray-400'
-              }`}
+                }`}
             >
               USER / DRIVER
             </button>
             <button
               type="button"
               onClick={() => setAccountCategory('government')}
-              className={`flex-1 py-3 px-4 rounded-xl border text-xs sm:text-sm font-medium tracking-wide transition ${
-                accountCategory === 'government' 
-                  ? 'border-cyan-500 bg-cyan-500/10 text-white' 
+              className={`flex-1 py-3 px-4 rounded-xl border text-xs sm:text-sm font-medium tracking-wide transition ${accountCategory === 'government'
+                  ? 'border-cyan-500 bg-cyan-500/10 text-white'
                   : 'border-gray-800 bg-gray-900/50 text-gray-400'
-              }`}
+                }`}
             >
               GOVERNMENT OFFICIAL
             </button>
@@ -136,22 +142,20 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setUserSubType('private')}
-                  className={`flex-1 py-2 px-3 rounded-lg border text-xs font-medium transition ${
-                    userSubType === 'private'
+                  className={`flex-1 py-2 px-3 rounded-lg border text-xs font-medium transition ${userSubType === 'private'
                       ? 'border-cyan-400 bg-cyan-500/20 text-white'
                       : 'border-gray-800 text-gray-400 bg-gray-900'
-                  }`}
+                    }`}
                 >
                   Private / Normal User
                 </button>
                 <button
                   type="button"
                   onClick={() => setUserSubType('gov_driver')}
-                  className={`flex-1 py-2 px-3 rounded-lg border text-xs font-medium transition ${
-                    userSubType === 'gov_driver'
+                  className={`flex-1 py-2 px-3 rounded-lg border text-xs font-medium transition ${userSubType === 'gov_driver'
                       ? 'border-cyan-400 bg-cyan-500/20 text-white'
                       : 'border-gray-800 text-gray-400 bg-gray-900'
-                  }`}
+                    }`}
                 >
                   Gov Driver / Operator
                 </button>
@@ -168,30 +172,30 @@ export default function LoginPage() {
 
           {/* Dynamic Login Form Fields */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            
+
             {/* 1. GOVERNMENT OFFICIAL */}
             {accountCategory === 'government' && (
               <>
                 <div>
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Official Email Address</label>
-                  <input 
-                    type="email" 
+                  <input
+                    type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="official@gov.in" 
+                    placeholder="official@gov.in"
                     required
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
+                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition"
                   />
                 </div>
                 <div>
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Password</label>
-                  <input 
-                    type="password" 
+                  <input
+                    type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password" 
+                    placeholder="Enter your password"
                     required
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
+                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition"
                   />
                 </div>
               </>
@@ -202,35 +206,35 @@ export default function LoginPage() {
               <>
                 <div>
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Email Address</label>
-                  <input 
-                    type="email" 
+                  <input
+                    type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com" 
+                    placeholder="you@example.com"
                     required
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
+                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition"
                   />
                 </div>
                 <div>
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Driver ID / Badge Number</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={driverId}
                     onChange={(e) => setDriverId(e.target.value)}
-                    placeholder="Enter official driver ID" 
+                    placeholder="Enter official driver ID"
                     required
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
+                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition"
                   />
                 </div>
                 <div>
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Password</label>
-                  <input 
-                    type="password" 
+                  <input
+                    type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password" 
+                    placeholder="Enter your password"
                     required
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
+                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition"
                   />
                 </div>
               </>
@@ -241,31 +245,31 @@ export default function LoginPage() {
               <>
                 <div>
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Email Address</label>
-                  <input 
-                    type="email" 
+                  <input
+                    type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com" 
+                    placeholder="you@example.com"
                     required
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
+                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition"
                   />
                 </div>
                 <div>
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Password</label>
-                  <input 
-                    type="password" 
+                  <input
+                    type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password" 
+                    placeholder="Enter your password"
                     required
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
+                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition"
                   />
                 </div>
               </>
             )}
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={loading}
               className="w-full py-3.5 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold rounded-xl transition shadow-lg shadow-cyan-500/20 text-sm mt-2 disabled:opacity-50"
             >

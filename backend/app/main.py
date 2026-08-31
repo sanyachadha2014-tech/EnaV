@@ -1,16 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
-from app.models import vehicle
-from app.routers import telemetry
-from app.routers import auth
+from app.models import vehicle, ev_station
+from app.routers import telemetry, auth, ev_stations
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="EnaV Backend", version="1.0.0")
-app.include_router(telemetry.router)
-app.include_router(auth.router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -19,6 +16,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(telemetry.router)
+app.include_router(auth.router)
+app.include_router(ev_stations.router)
 
 @app.get("/")
 def read_root():
