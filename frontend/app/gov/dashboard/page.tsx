@@ -127,7 +127,7 @@ export default function GovDashboard() {
         {/* Aligned Top Headers Section */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-emerald-200">
           <div>
-            <h1 className="text-sm font-bold tracking-wide text-slate-800 uppercase">ENA V — CITY MOBILITY COMMAND</h1>
+            <h1 className="text-sm font-bold tracking-wide text-slate-800 uppercase">CITY MOBILITY COMMAND</h1>
             <p className="text-[11px] text-gray-500">Delhi NCR • 27 Aug 2026 | 14:32 IST</p>
           </div>
           <h2 className="text-xl font-black tracking-tight text-slate-900">City Operations Overview</h2>

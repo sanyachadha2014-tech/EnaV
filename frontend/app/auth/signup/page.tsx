@@ -3,16 +3,23 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function SignupPage() {
-  // Main account category: 'user'
-  const [accountCategory, setAccountCategory] = useState<'user'>('user');
-  
-  // Sub-type: 'private' ya 'gov_driver'
-  const [userSubType, setUserSubType] = useState<'private' | 'gov_driver'>('private');
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Main account category: 'user' or 'government'
+  const [accountCategory, setAccountCategory] = useState<'user' | 'government'>('user');
+  
+  // If 'user' is selected, sub-type: 'private' or 'gov_driver'
+  const [userSubType, setUserSubType] = useState<'private' | 'gov_driver'>('private');
+
+  const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push('/drivers/dashboard');
+    
+    // Perform your authentication logic/API call here, then route based on category:
+    if (accountCategory === 'government') {
+      router.push('/gov/dashboard');
+    } else {
+      router.push('/drivers/');
+    }
   };
 
   return (
@@ -26,7 +33,7 @@ export default function SignupPage() {
               ⚡
             </div>
             <span className="text-xl font-bold tracking-wider">EnaV</span>
-            <span className="text-xs text-gray-400 ml-2 hidden sm:inline">SMART MOBILITY INTELLIGENCE</span>
+            <span className="text-xs text-gray-400 ml-2 hidden sm:inline">AI-POWERED MOBILITY INTELLIGENCE</span>
           </div>
 
           <div className="max-w-lg">
@@ -70,7 +77,7 @@ export default function SignupPage() {
         <div className="max-w-md w-full mx-auto">
           
           <div className="mb-6">
-            <a href="/auth/login" className="text-xs text-gray-400 hover:text-white transition flex items-center gap-1 mb-2">
+            <a href="#" className="text-xs text-gray-400 hover:text-white transition flex items-center gap-1 mb-2">
               ← Back to sign in
             </a>
             <h2 className="text-2xl sm:text-3xl font-bold">
@@ -79,47 +86,99 @@ export default function SignupPage() {
             <p className="text-xs sm:text-sm text-gray-400 mt-1">Register to access EnaV mobility services.</p>
           </div>
 
-          {/* Secondary Sub-Type Selection (Visible for User) */}
-          <div className="mb-6 p-3 bg-gray-900/60 border border-gray-800 rounded-xl">
-            <label className="text-[10px] text-gray-400 uppercase tracking-wider block mb-2">Select User Type</label>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setUserSubType('private')}
-                className={`flex-1 py-2 px-3 rounded-lg border text-xs font-medium transition ${
-                  userSubType === 'private'
-                    ? 'border-cyan-400 bg-cyan-500/20 text-white'
-                    : 'border-gray-800 text-gray-400 bg-gray-900'
-                }`}
-              >
-                Private / Normal User
-              </button>
-              <button
-                type="button"
-                onClick={() => setUserSubType('gov_driver')}
-                className={`flex-1 py-2 px-3 rounded-lg border text-xs font-medium transition ${
-                  userSubType === 'gov_driver'
-                    ? 'border-cyan-400 bg-cyan-500/20 text-white'
-                    : 'border-gray-800 text-gray-400 bg-gray-900'
-                }`}
-              >
-                Gov Driver / Operator
-              </button>
-            </div>
+          {/* Primary Account Category Selection */}
+          <div className="flex gap-3 mb-4">
+            <button
+              type="button"
+              onClick={() => setAccountCategory('user')}
+              className={`flex-1 py-3 px-4 rounded-xl border text-xs sm:text-sm font-medium tracking-wide transition ${
+                accountCategory === 'user' 
+                  ? 'border-cyan-500 bg-cyan-500/10 text-white' 
+                  : 'border-gray-800 bg-gray-900/50 text-gray-400'
+              }`}
+            >
+              USER / DRIVER
+            </button>
+            <button
+              type="button"
+              onClick={() => setAccountCategory('government')}
+              className={`flex-1 py-3 px-4 rounded-xl border text-xs sm:text-sm font-medium tracking-wide transition ${
+                accountCategory === 'government' 
+                  ? 'border-cyan-500 bg-cyan-500/10 text-white' 
+                  : 'border-gray-800 bg-gray-900/50 text-gray-400'
+              }`}
+            >
+              GOVERNMENT OFFICIAL
+            </button>
           </div>
 
-          {/* Single Form Wrapper Controlling All Fields & Submission */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Secondary Sub-Type Selection (Visible ONLY if USER is selected) */}
+          {accountCategory === 'user' && (
+            <div className="mb-6 p-3 bg-gray-900/60 border border-gray-800 rounded-xl">
+              <label className="text-[10px] text-gray-400 uppercase tracking-wider block mb-2">Select User Type</label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setUserSubType('private')}
+                  className={`flex-1 py-2 px-3 rounded-lg border text-xs font-medium transition ${
+                    userSubType === 'private'
+                      ? 'border-cyan-400 bg-cyan-500/20 text-white'
+                      : 'border-gray-800 text-gray-400 bg-gray-900'
+                  }`}
+                >
+                  Private / Normal User
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUserSubType('gov_driver')}
+                  className={`flex-1 py-2 px-3 rounded-lg border text-xs font-medium transition ${
+                    userSubType === 'gov_driver'
+                      ? 'border-cyan-400 bg-cyan-500/20 text-white'
+                      : 'border-gray-800 text-gray-400 bg-gray-900'
+                  }`}
+                >
+                  Gov Driver / Operator
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Dynamic Form Fields based on Selections */}
+          <form onSubmit={handleSignup} className="space-y-4">
             
-            {/* 1. USER -> GOV DRIVER: Name, Email, Driver/Badge ID, Department, Password */}
-            {userSubType === 'gov_driver' && (
+            {/* 1. GOVERNMENT OFFICIAL: Only Email ID and Password */}
+            {accountCategory === 'government' && (
+              <>
+                <div>
+                  <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Official Email Address</label>
+                  <input 
+                    type="email" 
+                    required
+                    placeholder="official@gov.in" 
+                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Password</label>
+                  <input 
+                    type="password" 
+                    required
+                    placeholder="Create a password" 
+                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
+                  />
+                </div>
+              </>
+            )}
+
+            {/* 2. USER -> GOV DRIVER: Name, Email, Driver/Badge ID, Department, Password */}
+            {accountCategory === 'user' && userSubType === 'gov_driver' && (
               <>
                 <div>
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Full Name</label>
                   <input 
                     type="text" 
-                    placeholder="Enter your full name" 
                     required
+                    placeholder="Enter your full name" 
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
                   />
                 </div>
@@ -127,8 +186,8 @@ export default function SignupPage() {
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Email Address</label>
                   <input 
                     type="email" 
-                    placeholder="you@example.com" 
                     required
+                    placeholder="you@example.com" 
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
                   />
                 </div>
@@ -136,8 +195,8 @@ export default function SignupPage() {
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Driver ID / Badge Number</label>
                   <input 
                     type="text" 
-                    placeholder="Enter official driver ID" 
                     required
+                    placeholder="Enter official driver ID" 
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
                   />
                 </div>
@@ -145,8 +204,8 @@ export default function SignupPage() {
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Department / Agency</label>
                   <input 
                     type="text" 
-                    placeholder="e.g., Municipal Transport" 
                     required
+                    placeholder="e.g., Municipal Transport" 
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
                   />
                 </div>
@@ -154,23 +213,23 @@ export default function SignupPage() {
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Password</label>
                   <input 
                     type="password" 
-                    placeholder="Create a password" 
                     required
+                    placeholder="Create a password" 
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
                   />
                 </div>
               </>
             )}
 
-            {/* 2. USER -> PRIVATE / NORMAL USER: Standard fields */}
-            {userSubType === 'private' && (
+            {/* 3. USER -> PRIVATE / NORMAL USER: Standard fields */}
+            {accountCategory === 'user' && userSubType === 'private' && (
               <>
                 <div>
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Full Name</label>
                   <input 
                     type="text" 
-                    placeholder="Enter your full name" 
                     required
+                    placeholder="Enter your full name" 
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
                   />
                 </div>
@@ -178,8 +237,8 @@ export default function SignupPage() {
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Email Address</label>
                   <input 
                     type="email" 
-                    placeholder="you@example.com" 
                     required
+                    placeholder="you@example.com" 
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
                   />
                 </div>
@@ -187,8 +246,8 @@ export default function SignupPage() {
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Password</label>
                   <input 
                     type="password" 
-                    placeholder="Create a password" 
                     required
+                    placeholder="Create a password" 
                     className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
                   />
                 </div>
@@ -204,7 +263,7 @@ export default function SignupPage() {
           </form>
 
           <div className="text-center mt-6 text-xs sm:text-sm text-gray-400">
-            Already have an account? <a href="/auth/login" className="text-cyan-400 font-medium hover:underline">Log in</a>
+            Already have an account? <a href="#" className="text-cyan-400 font-medium hover:underline">Sign in</a>
           </div>
 
         </div>
