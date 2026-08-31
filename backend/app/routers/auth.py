@@ -6,7 +6,7 @@ from app.database import get_db
 from app.models.user import User
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
 
 class UserCreate(BaseModel):
     email: str
@@ -22,7 +22,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    hashed_password = pwd_context.hash(user.password)
+    hashed_password = pwd_context.hash(str(user.password)[:72])
     new_user = User(email=user.email, hashed_password=hashed_password)
     db.add(new_user)
     db.commit()

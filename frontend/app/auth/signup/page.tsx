@@ -6,10 +6,10 @@ import { api } from "@/lib/api";
 export default function SignupPage() {
   const router = useRouter();
 
-  // Main account category: 'user' or 'government'
-  const [accountCategory, setAccountCategory] = useState<'user' | 'government'>('user');
+  // Account category is locked to 'user' since Government Official option is removed
+  const [accountCategory] = useState<'user'>('user');
   
-  // If 'user' is selected, sub-type: 'private' or 'gov_driver'
+  // Sub-type: 'private' or 'gov_driver'
   const [userSubType, setUserSubType] = useState<'private' | 'gov_driver'>('private');
 
   // Form field states
@@ -34,26 +34,22 @@ export default function SignupPage() {
       email,
       password,
       account_category: accountCategory,
-      user_sub_type: accountCategory === 'user' ? userSubType : null,
-      driver_id: accountCategory === 'user' && userSubType === 'gov_driver' ? driverId : null,
-      department: accountCategory === 'user' && userSubType === 'gov_driver' ? department : null,
+      user_sub_type: userSubType,
+      driver_id: userSubType === 'gov_driver' ? driverId : null,
+      department: userSubType === 'gov_driver' ? department : null,
     };
 
     try {
       // 1. Call your backend registration endpoint
       const response = await api.post("/auth/register", payload);
 
-      // 2. Automatically save token if returned upon registration, or direct user to login/dashboard
+      // 2. Automatically save token if returned upon registration
       if (response.data?.access_token) {
         localStorage.setItem("token", response.data.access_token);
       }
 
-      // 3. Route based on account category
-      if (accountCategory === 'government') {
-        router.push('/gov/dashboard');
-      } else {
-        router.push('/drivers/');
-      }
+      // 3. Route to drivers dashboard
+      router.push('/drivers/');
     } catch (err: any) {
       setError(err.response?.data?.detail || "Failed to create account. Please try again.");
     } finally {
@@ -125,62 +121,34 @@ export default function SignupPage() {
             <p className="text-xs sm:text-sm text-gray-400 mt-1">Register to access EnaV mobility services.</p>
           </div>
 
-          {/* Primary Account Category Selection */}
-          <div className="flex gap-3 mb-4">
-            <button
-              type="button"
-              onClick={() => setAccountCategory('user')}
-              className={`flex-1 py-3 px-4 rounded-xl border text-xs sm:text-sm font-medium tracking-wide transition ${
-                accountCategory === 'user' 
-                  ? 'border-cyan-500 bg-cyan-500/10 text-white' 
-                  : 'border-gray-800 bg-gray-900/50 text-gray-400'
-              }`}
-            >
-              USER / DRIVER
-            </button>
-            <button
-              type="button"
-              onClick={() => setAccountCategory('government')}
-              className={`flex-1 py-3 px-4 rounded-xl border text-xs sm:text-sm font-medium tracking-wide transition ${
-                accountCategory === 'government' 
-                  ? 'border-cyan-500 bg-cyan-500/10 text-white' 
-                  : 'border-gray-800 bg-gray-900/50 text-gray-400'
-              }`}
-            >
-              GOVERNMENT OFFICIAL
-            </button>
-          </div>
-
-          {/* Secondary Sub-Type Selection (Visible ONLY if USER is selected) */}
-          {accountCategory === 'user' && (
-            <div className="mb-6 p-3 bg-gray-900/60 border border-gray-800 rounded-xl">
-              <label className="text-[10px] text-gray-400 uppercase tracking-wider block mb-2">Select User Type</label>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setUserSubType('private')}
-                  className={`flex-1 py-2 px-3 rounded-lg border text-xs font-medium transition ${
-                    userSubType === 'private'
-                      ? 'border-cyan-400 bg-cyan-500/20 text-white'
-                      : 'border-gray-800 text-gray-400 bg-gray-900'
-                  }`}
-                >
-                  Private / Normal User
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setUserSubType('gov_driver')}
-                  className={`flex-1 py-2 px-3 rounded-lg border text-xs font-medium transition ${
-                    userSubType === 'gov_driver'
-                      ? 'border-cyan-400 bg-cyan-500/20 text-white'
-                      : 'border-gray-800 text-gray-400 bg-gray-900'
-                  }`}
-                >
-                  Gov Driver / Operator
-                </button>
-              </div>
+          {/* User Sub-Type Selection */}
+          <div className="mb-6 p-3 bg-gray-900/60 border border-gray-800 rounded-xl">
+            <label className="text-[10px] text-gray-400 uppercase tracking-wider block mb-2">Select Account Type</label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setUserSubType('private')}
+                className={`flex-1 py-2 px-3 rounded-lg border text-xs font-medium transition ${
+                  userSubType === 'private'
+                    ? 'border-cyan-400 bg-cyan-500/20 text-white'
+                    : 'border-gray-800 text-gray-400 bg-gray-900'
+                }`}
+              >
+                Private / Normal User
+              </button>
+              <button
+                type="button"
+                onClick={() => setUserSubType('gov_driver')}
+                className={`flex-1 py-2 px-3 rounded-lg border text-xs font-medium transition ${
+                  userSubType === 'gov_driver'
+                    ? 'border-cyan-400 bg-cyan-500/20 text-white'
+                    : 'border-gray-800 text-gray-400 bg-gray-900'
+                }`}
+              >
+                Gov Driver / Operator
+              </button>
             </div>
-          )}
+          </div>
 
           {/* Error Message Container */}
           {error && (
@@ -189,39 +157,11 @@ export default function SignupPage() {
             </div>
           )}
 
-          {/* Dynamic Form Fields based on Selections */}
+          {/* Dynamic Form Fields based on Sub-Type Selections */}
           <form onSubmit={handleSignup} className="space-y-4">
             
-            {/* 1. GOVERNMENT OFFICIAL */}
-            {accountCategory === 'government' && (
-              <>
-                <div>
-                  <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Official Email Address</label>
-                  <input 
-                    type="email" 
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="official@gov.in" 
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Password</label>
-                  <input 
-                    type="password" 
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Create a password" 
-                    className="w-full bg-gray-900 border border-gray-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition" 
-                  />
-                </div>
-              </>
-            )}
-
-            {/* 2. USER -> GOV DRIVER */}
-            {accountCategory === 'user' && userSubType === 'gov_driver' && (
+            {/* 1. USER -> GOV DRIVER */}
+            {userSubType === 'gov_driver' && (
               <>
                 <div>
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Full Name</label>
@@ -281,8 +221,8 @@ export default function SignupPage() {
               </>
             )}
 
-            {/* 3. USER -> PRIVATE / NORMAL USER */}
-            {accountCategory === 'user' && userSubType === 'private' && (
+            {/* 2. USER -> PRIVATE / NORMAL USER */}
+            {userSubType === 'private' && (
               <>
                 <div>
                   <label className="text-xs text-gray-400 uppercase tracking-wider block mb-1">Full Name</label>
@@ -323,7 +263,7 @@ export default function SignupPage() {
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full py-3.5 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold rounded-xl transition shadow-lg shadow-cyan-500/20 text-sm mt-2 disabled:opacity-50"
+              className="w-full py-3.5 px-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold rounded-xl transition shadow-lg shadow-cyan-500/20 text-sm mt-2 disabled:opacity-50 cursor-pointer"
             >
               {loading ? "CREATING ACCOUNT..." : "CREATE ACCOUNT →"}
             </button>
