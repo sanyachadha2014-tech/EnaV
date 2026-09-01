@@ -2,7 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
 from app.models import vehicle, ev_station
-from app.routers import telemetry, auth, ev_stations
+# Yahan saare routers import hone chahiye (Purane + Naye)
+from app.routers import telemetry, auth, ev_stations, routes
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -17,9 +18,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Aur yeh sabhi include hone chahiye
 app.include_router(telemetry.router)
 app.include_router(auth.router)
 app.include_router(ev_stations.router)
+app.include_router(routes.router)  # Yeh route optimizer wala hai
 
 @app.get("/")
 def read_root():

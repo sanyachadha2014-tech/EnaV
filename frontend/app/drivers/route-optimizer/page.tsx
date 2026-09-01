@@ -1,1149 +1,504 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import Link from "next/link";
+import React, { useState, useEffect } from "react";
 import {
-    ArrowLeft,
-    BatteryCharging,
-    Check,
-    ChevronRight,
-    Crosshair,
-    LocateFixed,
-    Loader2,
     MapPin,
     Navigation,
-    Route,
-    Search,
-    X,
+    BatteryCharging,
+    Check,
+    Loader2,
+    ChevronRight,
+    Compass,
+    Zap,
+    Play,
+    Square
 } from "lucide-react";
 
-/* =========================================================
-   TYPES
-========================================================= */
+interface Location {
+    label: string;
+    lat: number;
+    lon: number;
+}
 
-type JourneyState =
-    | "planning"
-    | "routes"
-    | "selected"
-    | "active"
-    | "completed";
-
-type LocationMode = "gps" | "manual";
-
-type LocationSuggestion = {
+interface LocationSuggestion {
     place_id: number;
     display_name: string;
     lat: string;
     lon: string;
-};
+}
 
-type SelectedLocation = {
-    label: string;
-    lat: number;
-    lon: number;
-};
-
-type RouteOption = {
-    id: number;
-    type: "Fastest" | "Shortest" | "Alternative";
+interface RouteOption {
+    id: string;
+    type: string;
+    description: string;
     distance: string;
     duration: string;
-    description: string;
     nextAction: string;
-};
-
-/* =========================================================
-   HELPERS
-========================================================= */
-
-function makeRouteOptions(
-    start: SelectedLocation,
-    destination: SelectedLocation,
-): RouteOption[] {
-    const distance = haversineDistance(
-        start.lat,
-        start.lon,
-        destination.lat,
-        destination.lon,
-    );
-
-    const baseMinutes = Math.max(
-        8,
-        Math.round((distance / 32) * 60),
-    );
-
-    const shortestDistance = Math.max(
-        1,
-        Math.round(distance * 10) / 10,
-    );
-
-    return [
-        {
-            id: 1,
-            type: "Fastest",
-            distance: `${Math.max(
-                1,
-                Math.round(shortestDistance * 1.08 * 10) / 10,
-            )} km`,
-            duration: `${Math.max(5, baseMinutes - 4)} min`,
-            description: "Prioritises travel time.",
-            nextAction: "Follow the fastest available route.",
-        },
-        {
-            id: 2,
-            type: "Shortest",
-            distance: `${shortestDistance} km`,
-            duration: `${Math.max(5, baseMinutes + 1)} min`,
-            description: "Prioritises shorter distance.",
-            nextAction: "Follow the shortest available route.",
-        },
-        {
-            id: 3,
-            type: "Alternative",
-            distance: `${Math.max(
-                1,
-                Math.round(shortestDistance * 1.15 * 10) / 10,
-            )} km`,
-            duration: `${Math.max(6, baseMinutes + 6)} min`,
-            description: "Alternative route option.",
-            nextAction: "Follow the alternative route.",
-        },
-    ];
+    co2Saved: string;
+    chargingStops: { name: string; distance: string; kwh: string }[];
 }
-
-function haversineDistance(
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number,
-) {
-    const earthRadius = 6371;
-
-    const dLat = toRadians(lat2 - lat1);
-    const dLon = toRadians(lon2 - lon1);
-
-    const a =
-        Math.sin(dLat / 2) ** 2 +
-        Math.cos(toRadians(lat1)) *
-        Math.cos(toRadians(lat2)) *
-        Math.sin(dLon / 2) ** 2;
-
-    return (
-        earthRadius *
-        2 *
-        Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-    );
-}
-
-function toRadians(value: number) {
-    return (value * Math.PI) / 180;
-}
-
-/* =========================================================
-   PAGE
-========================================================= */
 
 export default function RouteOptimizerPage() {
-    const [journeyState, setJourneyState] =
-        useState<JourneyState>("planning");
-
-    const [startMode, setStartMode] =
-        useState<LocationMode>("gps");
-
-    const [start, setStart] =
-        useState<SelectedLocation | null>(null);
-
-    const [destination, setDestination] =
-        useState<SelectedLocation | null>(null);
-
-    const [destinationQuery, setDestinationQuery] =
-        useState("");
-
-    const [destinationSuggestions, setDestinationSuggestions] =
-        useState<LocationSuggestion[]>([]);
-
-    const [manualStartQuery, setManualStartQuery] =
-        useState("");
-
-    const [manualStartSuggestions, setManualStartSuggestions] =
-        useState<LocationSuggestion[]>([]);
-
-    const [selectedRoute, setSelectedRoute] =
-        useState<RouteOption | null>(null);
-
-    const [routes, setRoutes] =
-        useState<RouteOption[]>([]);
-
-    const [gpsLoading, setGpsLoading] =
-        useState(false);
-
-    const [gpsMessage, setGpsMessage] =
-        useState("");
-
-    const [searchLoading, setSearchLoading] =
-        useState(false);
-
-    const [manualStartLoading, setManualStartLoading] =
-        useState(false);
-
-    const [locationReady, setLocationReady] =
-        useState(false);
-
-    /* =======================================================
-       AUTO DETECT GPS ON FIRST LOAD
-    ======================================================= */
+    const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
-        detectCurrentLocation();
+        setIsMounted(true);
     }, []);
 
-    /* =======================================================
-       GPS
-    ======================================================= */
+    const [startQuery, setStartQuery] = useState("");
+    const [destQuery, setDestQuery] = useState("");
+    const [start, setStart] = useState<Location | null>(null);
+    const [destination, setDestination] = useState<Location | null>(null);
 
-    function detectCurrentLocation() {
-        if (!navigator.geolocation) {
-            setStartMode("manual");
-            setGpsMessage(
-                "GPS is not supported. Enter your location manually.",
-            );
-            return;
-        }
+    const [startSuggestions, setStartSuggestions] = useState<LocationSuggestion[]>([]);
+    const [destSuggestions, setDestSuggestions] = useState<LocationSuggestion[]>([]);
 
-        setGpsLoading(true);
-        setGpsMessage("");
+    const [startLoading, setStartLoading] = useState(false);
+    const [destLoading, setDestLoading] = useState(false);
+    const [isOptimizing, setIsOptimizing] = useState(false);
 
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
+    const [routes, setRoutes] = useState<RouteOption[]>([]);
+    const [selectedRoute, setSelectedRoute] = useState<RouteOption | null>(null);
 
-                try {
-                    const response = await fetch(
-                        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`,
-                        {
-                            headers: {
-                                "Accept-Language": "en",
-                            },
-                        },
-                    );
+    const [isActive, setIsActive] = useState(false);
+    const [isCompleted, setIsCompleted] = useState(false);
+    const [startTime, setStartTime] = useState<string | null>(null);
+    const [endTime, setEndTime] = useState<string | null>(null);
 
-                    if (!response.ok) {
-                        throw new Error("Reverse geocoding failed");
-                    }
-
-                    const data = await response.json();
-
-                    const readableLocation =
-                        data.display_name ||
-                        "Current location";
-
-                    setStart({
-                        label: readableLocation,
-                        lat,
-                        lon,
-                    });
-
-                    setLocationReady(true);
-                    setGpsMessage(
-                        "Your current location has been detected.",
-                    );
-                } catch {
-                    /*
-                      GPS itself worked, but readable address lookup failed.
-                      We keep the coordinates internally and display a neutral
-                      readable label instead of exposing raw coordinates.
-                    */
-
-                    setStart({
-                        label: "Current location",
-                        lat,
-                        lon,
-                    });
-
-                    setLocationReady(true);
-                    setGpsMessage(
-                        "Current location detected.",
-                    );
-                } finally {
-                    setGpsLoading(false);
-                }
-            },
-            (error) => {
-                setGpsLoading(false);
-                setLocationReady(false);
-
-                if (error.code === 1) {
-                    setGpsMessage(
-                        "Location permission was denied. Enter your location manually.",
-                    );
-                } else if (error.code === 2) {
-                    setGpsMessage(
-                        "Your location could not be detected. Enter it manually.",
-                    );
-                } else {
-                    setGpsMessage(
-                        "Location detection timed out. Enter it manually.",
-                    );
-                }
-
-                setStartMode("manual");
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 30000,
-            },
-        );
-    }
-
-    /* =======================================================
-       SEARCH HELPER
-    ======================================================= */
-
-    async function searchPlaces(
-        query: string,
-        type: "destination" | "start",
-    ) {
-        if (!query.trim()) {
-            if (type === "destination") {
-                setDestinationSuggestions([]);
-            } else {
-                setManualStartSuggestions([]);
+    // Real-time address autocomplete using Nominatim API with English accept-language header
+    useEffect(() => {
+        const fetchSuggestions = async (query: string, type: 'start' | 'dest') => {
+            if (query.length < 3) {
+                if (type === 'start') setStartSuggestions([]);
+                else setDestSuggestions([]);
+                return;
             }
 
-            return;
-        }
+            if (type === 'start') setStartLoading(true);
+            else setDestLoading(true);
 
-        if (type === "destination") {
-            setSearchLoading(true);
-        } else {
-            setManualStartLoading(true);
-        }
-
-        try {
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=5&q=${encodeURIComponent(
-                    query,
-                )}`,
-                {
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&accept-language=en`, {
                     headers: {
-                        "Accept-Language": "en",
-                    },
-                },
-            );
+                        'Accept-Language': 'en'
+                    }
+                });
+                const data = await res.json();
+                const formatted = data.map((item: any) => ({
+                    place_id: item.place_id,
+                    display_name: item.display_name,
+                    lat: item.lat,
+                    lon: item.lon,
+                }));
 
-            if (!response.ok) {
-                throw new Error("Search failed");
+                if (type === 'start') setStartSuggestions(formatted);
+                else setDestSuggestions(formatted);
+            } catch (err) {
+                console.error("Failed to fetch address suggestions", err);
+            } finally {
+                if (type === 'start') setStartLoading(false);
+                else setDestLoading(false);
             }
+        };
 
-            const data: LocationSuggestion[] =
-                await response.json();
+        const timer = setTimeout(() => {
+            if (startQuery && !start) fetchSuggestions(startQuery, 'start');
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [startQuery, start]);
 
-            if (type === "destination") {
-                setDestinationSuggestions(data);
-            } else {
-                setManualStartSuggestions(data);
+    useEffect(() => {
+        const fetchSuggestions = async (query: string) => {
+            if (query.length < 3) {
+                setDestSuggestions([]);
+                return;
             }
-        } catch {
-            if (type === "destination") {
-                setDestinationSuggestions([]);
-            } else {
-                setManualStartSuggestions([]);
+            setDestLoading(true);
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&accept-language=en`, {
+                    headers: {
+                        'Accept-Language': 'en'
+                    }
+                });
+                const data = await res.json();
+                const formatted = data.map((item: any) => ({
+                    place_id: item.place_id,
+                    display_name: item.display_name,
+                    lat: item.lat,
+                    lon: item.lon,
+                }));
+                setDestSuggestions(formatted);
+            } catch (err) {
+                console.error("Failed to fetch address suggestions", err);
+            } finally {
+                setDestLoading(false);
             }
-        } finally {
-            if (type === "destination") {
-                setSearchLoading(false);
-            } else {
-                setManualStartLoading(false);
-            }
+        };
+
+        const timer = setTimeout(() => {
+            if (destQuery && !destination) fetchSuggestions(destQuery);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [destQuery, destination]);
+
+    const handleSelectLocation = (type: 'start' | 'dest', item: LocationSuggestion) => {
+        const loc: Location = { label: item.display_name, lat: parseFloat(item.lat), lon: parseFloat(item.lon) };
+        if (type === 'start') {
+            setStart(loc);
+            setStartQuery(item.display_name);
+            setStartSuggestions([]);
+        } else {
+            setDestination(loc);
+            setDestQuery(item.display_name);
+            setDestSuggestions([]);
         }
-    }
+    };
 
-    /* =======================================================
-       DESTINATION SELECT
-    ======================================================= */
-
-    function selectDestination(
-        suggestion: LocationSuggestion,
-    ) {
-        setDestination({
-            label: suggestion.display_name,
-            lat: Number(suggestion.lat),
-            lon: Number(suggestion.lon),
-        });
-
-        setDestinationQuery("");
-        setDestinationSuggestions([]);
-    }
-
-    /* =======================================================
-       MANUAL START SELECT
-    ======================================================= */
-
-    function selectManualStart(
-        suggestion: LocationSuggestion,
-    ) {
-        setStart({
-            label: suggestion.display_name,
-            lat: Number(suggestion.lat),
-            lon: Number(suggestion.lon),
-        });
-
-        setLocationReady(true);
-        setManualStartQuery("");
-        setManualStartSuggestions([]);
-    }
-
-    /* =======================================================
-       OPTIMIZE
-    ======================================================= */
-
-    function optimizeRoute() {
+    const findBestRoutes = async () => {
         if (!start || !destination) return;
 
-        const options = makeRouteOptions(
-            start,
-            destination,
-        );
+        setIsOptimizing(true);
+        try {
+            const response = await fetch("http://127.0.0.1:8000/route/optimize", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    source: {
+                        lat: start.lat,
+                        lng: start.lon
+                    },
+                    destination: {
+                        lat: destination.lat,
+                        lng: destination.lon
+                    },
+                    vehicle: {
+                        vehicle_id: "EV-2048",
+                        vehicle_type: "Standard",
+                        battery_capacity_kwh: 75.0,
+                        battery_percentage: 85.0,
+                        current_battery_soc: 85.0,
+                        max_range_km: 400.0,
+                        consumption_kwh_per_km: 0.15,
+                        energy_consumption_rate_kwh_per_km: 0.15
+                    }
+                }),
+            });
 
-        setRoutes(options);
-        setSelectedRoute(null);
-        setJourneyState("routes");
-    }
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error("Backend Error Response:", errorText);
+                throw new Error(`Failed to fetch: ${errorText}`);
+            }
 
-    /* =======================================================
-       SELECT ROUTE
-    ======================================================= */
+            const data = await response.json();
+            console.log("Real-time Backend Data Received:", data);
 
-    function selectRoute(route: RouteOption) {
-        setSelectedRoute(route);
-        setJourneyState("selected");
-    }
+            // Backend se aane wale real charging stations ko map karna (agar backend bhej raha ho)
+            const liveChargingStops = data.charging_stops && data.charging_stops.length > 0
+                ? data.charging_stops.map((station: any) => ({
+                    name: station.name || "Charging Station",
+                    distance: `${station.distance_km || 0} km away`,
+                    kwh: station.power_kw ? `${station.power_kw} kW` : "Fast Charger"
+                }))
+                : [
+                    { name: "EcoCharge Station Alpha", distance: "12.5 km away", kwh: "50 kW Fast" }
+                ];
 
-    /* =======================================================
-       START JOURNEY
-    ======================================================= */
+            const fetchedRoute: RouteOption = {
+                id: data.recommended_route_id || "1",
+                type: data.evaluated_routes?.[0]?.name || "Optimal Direct Route",
+                description: data.reason || "Optimized path calculated via real-time backend metrics.",
+                distance: `${data.distance_km ? data.distance_km.toFixed(2) : "0"} km`,
+                duration: `${data.eta_minutes ? Math.round(data.eta_minutes) : "0"} mins`,
+                nextAction: "Head toward main boulevard and merge.",
+                co2Saved: "4.2 kg",
+                chargingStops: data.charging_required && data.recommended_charger 
+                    ? [{ name: data.recommended_charger.name || "Charging Station", distance: "On Route", kwh: "Fast Charger" }]
+                    : []
+            };
 
-    function startJourney() {
-        if (!selectedRoute) return;
+            setRoutes([fetchedRoute]);
+            setSelectedRoute(fetchedRoute);
+        } catch (error) {
+            console.error("Backend offline, falling back to default:", error);
+            const fallbackRoute: RouteOption = {
+                id: "1",
+                type: "Direct Navigational Route (Fallback)",
+                description: "Standard routing (Backend connection failed).",
+                distance: "28.4 km",
+                duration: "38 mins",
+                nextAction: "Proceed straight on primary route corridor.",
+                co2Saved: "4.2 kg",
+                chargingStops: [
+                    { name: "Metro EV Powerpoint", distance: "10.2 km away", kwh: "60 kW" }
+                ]
+            };
+            setRoutes([fallbackRoute]);
+            setSelectedRoute(fallbackRoute);
+        } finally {
+            setIsOptimizing(false);
+        }
+    };
 
-        setJourneyState("active");
-    }
+    const startDriving = () => {
+        setIsActive(true);
+        setStartTime(new Date().toLocaleString());
+    };
 
-    /* =======================================================
-       COMPLETE JOURNEY
-    ======================================================= */
+    const completeJourney = () => {
+        setIsActive(false);
+        setIsCompleted(true);
+        setEndTime(new Date().toLocaleString());
+    };
 
-    function completeJourney() {
-        setJourneyState("completed");
-    }
-
-    /* =======================================================
-       RESET
-    ======================================================= */
-
-    function resetJourney() {
-        setStartMode("gps");
+    const resetJourney = () => {
         setStart(null);
         setDestination(null);
-        setDestinationQuery("");
-        setManualStartQuery("");
-        setDestinationSuggestions([]);
-        setManualStartSuggestions([]);
-        setSelectedRoute(null);
+        setStartQuery("");
+        setDestQuery("");
         setRoutes([]);
-        setLocationReady(false);
-        setGpsMessage("");
-        setJourneyState("planning");
+        setSelectedRoute(null);
+        setIsActive(false);
+        setIsCompleted(false);
+        setStartTime(null);
+        setEndTime(null);
+    };
 
-        detectCurrentLocation();
+    if (!isMounted) {
+        return null;
     }
 
-    /* =======================================================
-       STEP-BY-STEP BACK
-    ======================================================= */
-
-    function handleBack() {
-        switch (journeyState) {
-            case "completed":
-                setJourneyState("active");
-                break;
-
-            case "active":
-                setJourneyState("selected");
-                break;
-
-            case "selected":
-                setJourneyState("routes");
-                break;
-
-            case "routes":
-                setJourneyState("planning");
-                break;
-
-            case "planning":
-                window.location.href = "/drivers";
-                break;
-        }
-    }
-
-    const isPlanning =
-        journeyState === "planning";
-
-    const isRoutes =
-        journeyState === "routes";
-
-    const isSelected =
-        journeyState === "selected";
-
-    const isActive =
-        journeyState === "active";
-
-    const isCompleted =
-        journeyState === "completed";
+    const isReadyToOptimize = Boolean(start && destination);
 
     return (
-        <div className="space-y-6">
+        <div className="flex h-[calc(100vh-65px)] w-full overflow-hidden bg-[#030712] text-slate-100 font-sans">
 
-            {/* =====================================================
-          HEADER
-      ===================================================== */}
+            {/* LEFT SIDEBAR PANEL */}
+            <div className="w-[440px] shrink-0 border-r border-slate-800/80 bg-[#060a14] flex flex-col z-10 shadow-2xl">
 
-            <section className="flex items-start justify-between gap-4">
-
-                <div>
-                    <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-400">
-                        Journey
+                {/* Panel Header */}
+                <div className="p-5 border-b border-slate-800/60 flex items-center justify-between">
+                    <div>
+                        <h1 className="text-sm font-black tracking-wider uppercase text-white flex items-center gap-2">
+                            <Zap className="h-4 w-4 text-cyan-400 fill-cyan-400/20" />
+                            Route Planner
+                        </h1>
+                        <p className="text-xs text-slate-400 mt-0.5">Select locations to compute optimal paths</p>
                     </div>
-
-                    <h1 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">
-                        Route Optimization
-                    </h1>
-
-                    <p className="mt-1 max-w-xl text-[10px] leading-5 text-slate-500">
-                        Choose your starting point, destination and route.
-                    </p>
                 </div>
 
-                <button
-                    type="button"
-                    onClick={handleBack}
-                    className="flex shrink-0 items-center gap-1 rounded-lg border border-slate-800 px-3 py-2 text-[8px] font-bold text-slate-500 transition hover:text-white"
-                >
-                    <ArrowLeft className="h-3 w-3" />
+                {/* Scrollable Form & Content Area */}
+                <div className="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
 
-                    {isPlanning ? "Dashboard" : "Back"}
-                </button>
+                    {/* INPUT SECTION WITH REAL-TIME ADDRESS FILLING */}
+                    <div className="space-y-3 bg-slate-900/40 p-4 rounded-2xl border border-slate-800/60">
+                        <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Locations</div>
 
-            </section>
-
-            {/* =====================================================
-          PLANNING
-      ===================================================== */}
-
-            {isPlanning && (
-                <section className="rounded-2xl border border-slate-800 bg-[#07101d] p-5 sm:p-6">
-
-                    <div className="flex items-center gap-3">
-
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-400/10">
-                            <Route className="h-5 w-5 text-blue-400" />
-                        </div>
-
-                        <div>
-                            <h2 className="text-sm font-black text-white">
-                                Plan your journey
-                            </h2>
-
-                            <p className="mt-1 text-[9px] text-slate-600">
-                                Choose a start point and destination.
-                            </p>
-                        </div>
-
-                    </div>
-
-                    {/* =================================================
-              START LOCATION
-          ================================================= */}
-
-                    <div className="mt-6">
-
-                        <div className="mb-2 text-[8px] font-bold uppercase tracking-widest text-slate-600">
-                            Start location
-                        </div>
-
-                        <div className="grid gap-2 sm:grid-cols-2">
-
-                            {/* GPS OPTION */}
-
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setStartMode("gps");
-                                    detectCurrentLocation();
-                                }}
-                                className={`rounded-xl border p-4 text-left transition ${startMode === "gps"
-                                    ? "border-emerald-400/30 bg-emerald-400/5"
-                                    : "border-slate-800 bg-[#050A13] hover:border-slate-700"
-                                    }`}
-                            >
-
-                                <div className="flex items-center gap-3">
-
-                                    <div
-                                        className={`flex h-9 w-9 items-center justify-center rounded-lg ${startMode === "gps"
-                                            ? "bg-emerald-400/10 text-emerald-400"
-                                            : "bg-slate-800 text-slate-500"
-                                            }`}
-                                    >
-                                        {gpsLoading ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                        ) : (
-                                            <LocateFixed className="h-4 w-4" />
-                                        )}
-                                    </div>
-
-                                    <div>
-
-                                        <div className="text-[10px] font-black text-white">
-                                            Use current location
-                                        </div>
-
-                                        <div className="mt-1 text-[8px] text-slate-600">
-                                            Detect using GPS
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                            </button>
-
-                            {/* MANUAL OPTION */}
-
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setStartMode("manual");
-                                    setGpsMessage("");
-                                }}
-                                className={`rounded-xl border p-4 text-left transition ${startMode === "manual"
-                                    ? "border-blue-400/30 bg-blue-400/5"
-                                    : "border-slate-800 bg-[#050A13] hover:border-slate-700"
-                                    }`}
-                            >
-
-                                <div className="flex items-center gap-3">
-
-                                    <div
-                                        className={`flex h-9 w-9 items-center justify-center rounded-lg ${startMode === "manual"
-                                            ? "bg-blue-400/10 text-blue-400"
-                                            : "bg-slate-800 text-slate-500"
-                                            }`}
-                                    >
-                                        <Search className="h-4 w-4" />
-                                    </div>
-
-                                    <div>
-
-                                        <div className="text-[10px] font-black text-white">
-                                            Enter manually
-                                        </div>
-
-                                        <div className="mt-1 text-[8px] text-slate-600">
-                                            Search address or place
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                    {/* =================================================
-              GPS START
-          ================================================= */}
-
-                    {startMode === "gps" && (
-                        <div className="mt-4 rounded-xl border border-slate-800 bg-[#050A13] p-4">
-
-                            <div className="flex items-center gap-3">
-
-                                <MapPin className="h-4 w-4 shrink-0 text-emerald-400" />
-
-                                <div className="min-w-0">
-
-                                    <div className="text-[7px] font-bold uppercase tracking-widest text-slate-700">
-                                        Current location
-                                    </div>
-
-                                    <div className="mt-1 truncate text-[10px] font-bold text-white">
-                                        {start?.label ||
-                                            "Detecting your location..."}
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            {gpsMessage && (
-                                <div className="mt-2 text-[8px] text-slate-600">
-                                    {gpsMessage}
-                                </div>
-                            )}
-
-                            {!gpsLoading && !locationReady && (
-                                <button
-                                    type="button"
-                                    onClick={detectCurrentLocation}
-                                    className="mt-3 text-[8px] font-bold text-emerald-400 hover:text-emerald-300"
-                                >
-                                    Try again
-                                </button>
-                            )}
-
-                        </div>
-                    )}
-
-                    {/* =================================================
-              MANUAL START
-          ================================================= */}
-
-                    {startMode === "manual" && (
-                        <div className="relative mt-4">
-
+                        <div className="relative">
                             <LocationSearch
-                                label="Starting point"
-                                value={manualStartQuery}
-                                placeholder="Search starting location"
-                                icon={
-                                    <MapPin className="h-4 w-4 text-emerald-400" />
-                                }
-                                onChange={(value) => {
-                                    setManualStartQuery(value);
-
-                                    window.clearTimeout(
-                                        (window as any).__startSearchTimer,
-                                    );
-
-                                    (window as any).__startSearchTimer =
-                                        window.setTimeout(() => {
-                                            searchPlaces(value, "start");
-                                        }, 350);
+                                label="Starting Point"
+                                value={startQuery}
+                                placeholder="Enter starting address..."
+                                icon={<Navigation className="h-4 w-4 text-emerald-400" />}
+                                onChange={(val) => {
+                                    setStartQuery(val);
+                                    if (start) setStart(null);
                                 }}
-                                loading={manualStartLoading}
+                                loading={startLoading}
                             />
-
-                            {manualStartSuggestions.length > 0 && (
+                            {startSuggestions.length > 0 && !start && (
                                 <SuggestionBox
-                                    suggestions={manualStartSuggestions}
-                                    onSelect={selectManualStart}
+                                    suggestions={startSuggestions}
+                                    onSelect={(item) => handleSelectLocation('start', item)}
                                 />
                             )}
-
                         </div>
-                    )}
 
-                    {/* =================================================
-              DESTINATION
-          ================================================= */}
-
-                    <div className="relative mt-3">
-
-                        <LocationSearch
-                            label="Destination"
-                            value={destinationQuery}
-                            placeholder={
-                                destination
-                                    ? destination.label
-                                    : "Search destination"
-                            }
-                            icon={
-                                <Navigation className="h-4 w-4 text-blue-400" />
-                            }
-                            onChange={(value) => {
-                                setDestinationQuery(value);
-
-                                setDestination(null);
-
-                                window.clearTimeout(
-                                    (window as any).__destinationSearchTimer,
-                                );
-
-                                (window as any).__destinationSearchTimer =
-                                    window.setTimeout(() => {
-                                        searchPlaces(
-                                            value,
-                                            "destination",
-                                        );
-                                    }, 350);
-                            }}
-                            loading={searchLoading}
-                        />
-
-                        {destination && !destinationQuery && (
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setDestination(null);
-                                    setDestinationQuery("");
+                        <div className="relative">
+                            <LocationSearch
+                                label="Destination"
+                                value={destQuery}
+                                placeholder="Enter destination address..."
+                                icon={<MapPin className="h-4 w-4 text-cyan-400" />}
+                                onChange={(val) => {
+                                    setDestQuery(val);
+                                    if (destination) setDestination(null);
                                 }}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-white"
-                                aria-label="Clear destination"
-                            >
-                                <X className="h-4 w-4" />
-                            </button>
-                        )}
-
-                        {destinationSuggestions.length > 0 && (
-                            <SuggestionBox
-                                suggestions={destinationSuggestions}
-                                onSelect={selectDestination}
+                                loading={destLoading}
                             />
-                        )}
-
-                    </div>
-
-                    {/* =================================================
-              SELECTED LOCATIONS
-          ================================================= */}
-
-                    {(start || destination) && (
-                        <div className="mt-4 rounded-xl border border-slate-800 bg-[#050A13] p-4">
-
-                            <div className="grid gap-3 sm:grid-cols-2">
-
-                                <SelectedLocationRow
-                                    label="From"
-                                    value={
-                                        start?.label ||
-                                        "Starting point not selected"
-                                    }
-                                    selected={!!start}
-                                />
-
-                                <SelectedLocationRow
-                                    label="To"
-                                    value={
-                                        destination?.label ||
-                                        "Destination not selected"
-                                    }
-                                    selected={!!destination}
-                                />
-
-                            </div>
-
-                        </div>
-                    )}
-
-                    {/* =================================================
-              FIND ROUTES
-          ================================================= */}
-
-                    <button
-                        type="button"
-                        onClick={optimizeRoute}
-                        disabled={!start || !destination}
-                        className="mt-5 h-11 w-full rounded-lg bg-gradient-to-r from-emerald-400 to-blue-500 text-[9px] font-black uppercase tracking-wider text-[#020712] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                        Find Routes
-                    </button>
-
-                </section>
-            )}
-
-            {/* =====================================================
-          ROUTE OPTIONS
-      ===================================================== */}
-
-            {isRoutes && (
-                <section>
-
-                    <div className="rounded-xl border border-slate-800 bg-[#07101d] p-4">
-
-                        <div className="text-[7px] font-bold uppercase tracking-widest text-slate-600">
-                            Journey
-                        </div>
-
-                        <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] font-black text-white">
-
-                            <span className="max-w-[250px] truncate">
-                                {start?.label}
-                            </span>
-
-                            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-700" />
-
-                            <span className="max-w-[250px] truncate">
-                                {destination?.label}
-                            </span>
-
-                        </div>
-
-                    </div>
-
-                    <div className="mt-6">
-
-                        <h2 className="text-sm font-black text-white">
-                            Choose your route
-                        </h2>
-
-                        <p className="mt-1 text-[9px] text-slate-600">
-                            Compare available route options before starting.
-                        </p>
-
-                    </div>
-
-                    <div className="mt-4 flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory lg:grid lg:grid-cols-3 lg:overflow-visible">
-
-                        {routes.map((route) => (
-                            <RouteCard
-                                key={route.id}
-                                route={route}
-                                onSelect={selectRoute}
-                            />
-                        ))}
-
-                    </div>
-
-                </section>
-            )}
-
-            {/* =====================================================
-          SELECTED / ACTIVE JOURNEY
-      ===================================================== */}
-
-            {(isSelected || isActive) &&
-                selectedRoute && (
-                    <section>
-
-                        {/* ROUTE VIEW EMBEDDED OPENSTREETMAP */}
-
-                        <div className="relative h-[290px] overflow-hidden rounded-2xl border border-slate-800 bg-[#08111e] sm:h-[380px]">
-                            {start && destination ? (
-                                <iframe
-                                    title="OpenStreetMap Route View"
-                                    width="100%"
-                                    height="100%"
-                                    frameBorder="0"
-                                    scrolling="no"
-                                    marginHeight={0}
-                                    marginWidth={0}
-                                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${Math.min(start.lon, destination.lon) - 0.05}%2C${Math.min(start.lat, destination.lat) - 0.05}%2C${Math.max(start.lon, destination.lon) + 0.05}%2C${Math.max(start.lat, destination.lat) + 0.05}&layer=mapnik&marker=${start.lat}%2C${start.lon}`}
-                                    className="w-full h-full filter contrast-125 invert opacity-80"
-                                />
-                            ) : (
-                                <div
-                                    className="absolute inset-0 opacity-30"
-                                    style={{
-                                        backgroundImage:
-                                            "linear-gradient(rgba(100,116,139,.15) 1px, transparent 1px), linear-gradient(90deg, rgba(100,116,139,.15) 1px, transparent 1px)",
-                                        backgroundSize: "36px 36px",
-                                    }}
+                            {destSuggestions.length > 0 && !destination && (
+                                <SuggestionBox
+                                    suggestions={destSuggestions}
+                                    onSelect={(item) => handleSelectLocation('dest', item)}
                                 />
                             )}
-
-                            {/* selected route */}
-
-                            <div className="absolute left-4 top-4 rounded-lg border border-slate-700 bg-[#050A13]/90 px-3 py-2 backdrop-blur">
-
-                                <div className="text-[7px] uppercase tracking-widest text-slate-600">
-                                    Selected route
-                                </div>
-
-                                <div className="mt-1 text-[10px] font-black text-white">
-                                    {selectedRoute.type}
-                                </div>
-
-                            </div>
-
-                            {isActive && (
-                                <div className="absolute right-4 top-4 flex items-center gap-2 rounded-full border border-emerald-400/20 bg-[#050A13]/90 px-3 py-1.5">
-
-                                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
-
-                                    <span className="text-[8px] font-black uppercase tracking-wider text-emerald-400">
-                                        Active
-                                    </span>
-
-                                </div>
-                            )}
-
                         </div>
 
-                        {/* NEXT ACTION */}
-
-                        <section className="mt-4 rounded-2xl border border-slate-800 bg-[#07101d] p-5">
-
-                            <div className="text-[8px] font-bold uppercase tracking-widest text-slate-600">
-                                {isActive
-                                    ? "Next action"
-                                    : "Route selected"}
-                            </div>
-
-                            <div className="mt-2 text-sm font-black text-white">
-                                {isActive
-                                    ? selectedRoute.nextAction
-                                    : "Ready to start your journey"}
-                            </div>
-
-                        </section>
-
-                        {/* JOURNEY DATA */}
-
-                        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-
-                            <InfoValue
-                                label="Distance"
-                                value={selectedRoute.distance}
-                            />
-
-                            <InfoValue
-                                label="ETA"
-                                value={selectedRoute.duration}
-                            />
-
-                            <InfoValue
-                                label="Battery"
-                                value="84%"
-                            />
-
-                            <InfoValue
-                                label="Range"
-                                value="240 km"
-                            />
-
-                        </div>
-
-                        {/* CHARGING NOTE */}
-
-                        <div className="mt-4 rounded-xl border border-slate-800 bg-[#07101d] p-4">
-
-                            <div className="flex items-start gap-3">
-
-                                <BatteryCharging className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
-
-                                <div>
-                                    <div className="text-[8px] font-bold uppercase tracking-widest text-slate-600">
-                                        Charging
-                                    </div>
-
-                                    <div className="mt-1 text-[10px] font-bold text-white">
-                                        No intermediate charging stop 
-                                    </div>
-
-                                    <p className="mt-1 text-[8px] leading-4 text-slate-600">
-                                        Battery status is optimal (84%). You can complete this trip on current charge.
-                                    </p>
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        {/* CONTROL */}
-
+                        {/* FIND BEST ROUTES BUTTON */}
                         <button
                             type="button"
-                            onClick={
-                                isActive
-                                    ? completeJourney
-                                    : startJourney
-                            }
-                            className="mt-4 h-11 w-full rounded-lg bg-gradient-to-r from-emerald-400 to-blue-500 text-[9px] font-black uppercase tracking-wider text-[#020712] transition hover:brightness-110"
+                            onClick={findBestRoutes}
+                            disabled={!isReadyToOptimize || isOptimizing}
+                            className={`w-full h-12 mt-2 font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${isReadyToOptimize
+                                ? "bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-cyan-500/20 cursor-pointer opacity-100"
+                                : "bg-slate-800 text-slate-500 cursor-not-allowed opacity-40 shadow-none"
+                                }`}
                         >
-                            {isActive
-                                ? "Complete Journey"
-                                : "Start Journey"}
+                            {isOptimizing ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Find Best Routes <ChevronRight className="h-4 w-4" /></>}
                         </button>
+                    </div>
 
-                    </section>
-                )}
+                    {/* ROUTE RESULTS & ACTIONS */}
+                    {selectedRoute && !isCompleted && (
+                        <div className="space-y-4 animate-fadeIn">
+                            <div className="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] uppercase font-bold tracking-wider text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/50">Optimal Route Selected</span>
+                                    {isActive && <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" /> Driving Active</span>}
+                                </div>
+                                <h3 className="text-base font-black text-white">{selectedRoute.type}</h3>
+                                <p className="text-xs text-slate-400 leading-relaxed">{selectedRoute.description}</p>
 
-            {/* =====================================================
-          COMPLETED SUMMARY
-      ===================================================== */}
-
-            {isCompleted && selectedRoute && (
-                <section className="rounded-2xl border border-emerald-400/20 bg-[#07101d] p-6 sm:p-8">
-
-                    <div className="flex items-center gap-3">
-
-                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-400/10">
-                            <Check className="h-5 w-5 text-emerald-400" />
-                        </div>
-
-                        <div>
-
-                            <div className="text-sm font-black text-white">
-                                Journey completed
+                                <div className="grid grid-cols-2 gap-3 pt-2">
+                                    <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/40">
+                                        <div className="text-[10px] text-slate-400 uppercase">Distance Covered</div>
+                                        <div className="text-sm font-black text-white mt-0.5">{selectedRoute.distance}</div>
+                                    </div>
+                                    <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/40">
+                                        <div className="text-[10px] text-slate-400 uppercase">Estimated ETA</div>
+                                        <div className="text-sm font-black text-white mt-0.5">{selectedRoute.duration}</div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="mt-1 text-[9px] text-slate-600">
-                                {start?.label} → {destination?.label}
+                            {/* NEARBY CHARGING STATIONS ALONG JOURNEY */}
+                            <div className="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl space-y-2.5">
+                                <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+                                    <BatteryCharging className="h-3.5 w-3.5 text-emerald-400" /> Nearby Charging Stations in Journey
+                                </div>
+                                <div className="space-y-2">
+                                    {selectedRoute.chargingStops.map((station, idx) => (
+                                        <div key={idx} className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/50 flex items-center justify-between text-xs">
+                                            <div>
+                                                <div className="font-bold text-white">{station.name}</div>
+                                                <div className="text-[10px] text-slate-400">{station.distance}</div>
+                                            </div>
+                                            <span className="bg-emerald-950/60 text-emerald-400 border border-emerald-800/50 text-[10px] px-2 py-0.5 rounded font-semibold">
+                                                {station.kwh}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
 
+                            {/* NEXT TURN BANNER */}
+                            <div className="bg-gradient-to-r from-blue-950/40 to-slate-900/60 border border-blue-500/30 p-4 rounded-2xl">
+                                <div className="text-[10px] uppercase tracking-wider text-blue-400 font-bold">Guidance Action</div>
+                                <div className="text-sm font-bold text-white mt-1">{selectedRoute.nextAction}</div>
+                            </div>
+
+                            {/* START DRIVING / COMPLETE BUTTON */}
+                            <button
+                                type="button"
+                                onClick={isActive ? completeJourney : startDriving}
+                                className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
+                            >
+                                {isActive ? <><Square className="h-4 w-4 fill-current" /> Complete Journey</> : <><Play className="h-4 w-4 fill-current" /> Start Driving</>}
+                            </button>
                         </div>
+                    )}
 
-                    </div>
+                    {/* JOURNEY SUMMARY CARD */}
+                    {isCompleted && selectedRoute && start && destination && (
+                        <div className="bg-slate-900 border border-emerald-500/40 p-5 rounded-2xl space-y-4 shadow-2xl animate-fadeIn">
+                            <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
+                                <div className="h-10 w-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                                    <Check className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-black text-white">Journey Summary</h3>
+                                    <p className="text-xs text-slate-400">Trip successfully completed</p>
+                                </div>
+                            </div>
 
-                    <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                            <div className="space-y-2.5 text-xs">
+                                <div className="flex justify-between py-1 border-b border-slate-800/60">
+                                    <span className="text-slate-400">From:</span>
+                                    <span className="font-bold text-white text-right max-w-[220px] truncate">{start.label}</span>
+                                </div>
+                                <div className="flex justify-between py-1 border-b border-slate-800/60">
+                                    <span className="text-slate-400">To:</span>
+                                    <span className="font-bold text-white text-right max-w-[220px] truncate">{destination.label}</span>
+                                </div>
+                                <div className="flex justify-between py-1 border-b border-slate-800/60">
+                                    <span className="text-slate-400">Distance Covered:</span>
+                                    <span className="font-bold text-white">{selectedRoute.distance}</span>
+                                </div>
+                                <div className="flex justify-between py-1 border-b border-slate-800/60">
+                                    <span className="text-slate-400">Equivalent CO2 Saved:</span>
+                                    <span className="font-bold text-emerald-400">{selectedRoute.co2Saved}</span>
+                                </div>
+                                <div className="flex justify-between py-1 border-b border-slate-800/60">
+                                    <span className="text-slate-400">Date & Time Taken:</span>
+                                    <span className="font-bold text-white text-right">{startTime} - {endTime}</span>
+                                </div>
+                            </div>
 
-                        <InfoValue
-                            label="Distance travelled"
-                            value={selectedRoute.distance}
-                        />
-
-                        <InfoValue
-                            label="Journey time"
-                            value={selectedRoute.duration}
-                        />
-
-                        <InfoValue
-                            label="Energy consumed"
-                            value="3.2 kWh"
-                        />
-
-                        <InfoValue
-                            label="Charging used"
-                            value="Not needed"
-                        />
-
-                    </div>
-
-                    <div className="mt-5 rounded-xl border border-slate-800 bg-[#050A13] p-4">
-
-                        <div className="text-[8px] font-bold uppercase tracking-widest text-slate-600">
-                            Route followed
+                            <button
+                                type="button"
+                                onClick={resetJourney}
+                                className="w-full h-11 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all mt-2"
+                            >
+                                Plan New Journey
+                            </button>
                         </div>
+                    )}
+                </div>
+            </div>
 
-                        <div className="mt-2 text-[10px] font-black text-white">
-                            {selectedRoute.type}
+            {/* RIGHT MAP CANVAS AREA */}
+            <div className="flex-1 relative bg-slate-100 flex flex-col">
+                <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-white/90 backdrop-blur border border-slate-200 px-3 py-2 rounded-xl shadow-xl">
+                    <span className="text-xs text-slate-600 font-medium">Map View:</span>
+                    <span className="text-xs font-bold text-slate-900 bg-slate-100 px-2.5 py-1 rounded-lg">OpenStreetMap Light</span>
+                </div>
+
+                <div className="flex-1 w-full h-full relative">
+                    {start && destination ? (
+                        <iframe
+                            title="Interactive Route Map"
+                            width="100%"
+                            height="100%"
+                            src={`https://www.openstreetmap.org/export/embed.html?bbox=${Math.min(start.lon, destination.lon) - 0.05}%2C${Math.min(start.lat, destination.lat) - 0.05}%2C${Math.max(start.lon, destination.lon) + 0.05}%2C${Math.max(start.lat, destination.lat) + 0.05}&layer=mapnik&marker=${start.lat}%2C${start.lon}&marker=${destination.lat}%2C${destination.lon}`}
+                            className="w-full h-full border-0"
+                        />
+                    ) : start ? (
+                        <iframe
+                            title="Start Point Map"
+                            width="100%"
+                            height="100%"
+                            src={`https://www.openstreetmap.org/export/embed.html?bbox=${parseFloat(start.lon.toString()) - 0.02}%2C${parseFloat(start.lat.toString()) - 0.02}%2C${parseFloat(start.lon.toString()) + 0.02}%2C${parseFloat(start.lat.toString()) + 0.02}&layer=mapnik&marker=${start.lat}%2C${start.lon}`}
+                            className="w-full h-full border-0"
+                        />
+                    ) : (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-200 via-slate-100 to-slate-100">
+                            <div className="h-16 w-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-600 mb-4 shadow-xl shadow-cyan-500/5">
+                                <Compass className="h-8 w-8 animate-pulse" />
+                            </div>
+                            <h2 className="text-lg font-black text-slate-900 tracking-wide">Enter Locations to Pinpoint on Map</h2>
+                            <p className="text-xs text-slate-600 max-w-sm mt-1">Select your starting point and destination addresses to visualize routes and nearby charging stations.</p>
                         </div>
-
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={resetJourney}
-                        className="mt-6 h-11 w-full rounded-lg bg-gradient-to-r from-emerald-400 to-blue-500 text-[9px] font-black uppercase tracking-wider text-[#020712]"
-                    >
-                        Plan Another Journey
-                    </button>
-
-                </section>
-            )}
-
+                    )}
+                </div>
+            </div>
         </div>
     );
 }
 
 /* =========================================================
-   LOCATION SEARCH
+   SUB-COMPONENTS
 ========================================================= */
 
 function LocationSearch({
@@ -1163,35 +518,17 @@ function LocationSearch({
 }) {
     return (
         <div className="relative">
-
-            <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                {icon}
-            </div>
-
-            <div className="absolute left-10 top-2 text-[6px] font-bold uppercase tracking-widest text-slate-700">
-                {label}
-            </div>
-
+            <div className="absolute left-3.5 top-1/2 -translate-y-1/2">{icon}</div>
             <input
                 value={value}
-                onChange={(event) =>
-                    onChange(event.target.value)
-                }
+                onChange={(event) => onChange(event.target.value)}
                 placeholder={placeholder}
-                className="h-14 w-full rounded-xl border border-slate-800 bg-[#050A13] pl-10 pr-10 pt-4 text-[10px] font-bold text-white outline-none placeholder:text-slate-700 focus:border-blue-400/40"
+                className="h-12 w-full rounded-xl border border-slate-800 bg-slate-950 pl-10 pr-10 text-xs font-semibold text-white outline-none placeholder:text-slate-600 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
             />
-
-            {loading && (
-                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-slate-500" />
-            )}
-
+            {loading && <Loader2 className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-slate-500" />}
         </div>
     );
 }
-
-/* =========================================================
-   SUGGESTIONS
-========================================================= */
 
 function SuggestionBox({
     suggestions,
@@ -1201,147 +538,18 @@ function SuggestionBox({
     onSelect: (suggestion: LocationSuggestion) => void;
 }) {
     return (
-        <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-30 overflow-hidden rounded-xl border border-slate-800 bg-[#07101d] shadow-2xl">
-
+        <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-30 overflow-hidden rounded-xl border border-slate-800 bg-slate-900 shadow-2xl backdrop-blur-md max-h-48 overflow-y-auto">
             {suggestions.map((suggestion) => (
                 <button
                     key={suggestion.place_id}
                     type="button"
                     onClick={() => onSelect(suggestion)}
-                    className="flex w-full items-start gap-3 border-b border-slate-800/70 px-4 py-3 text-left last:border-b-0 hover:bg-slate-900"
+                    className="flex w-full items-center gap-3 border-b border-slate-800/60 px-4 py-3 text-left last:border-b-0 hover:bg-slate-800/80 transition-colors"
                 >
-
-                    <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
-
-                    <span className="text-[9px] leading-4 text-slate-300">
-                        {suggestion.display_name}
-                    </span>
-
+                    <MapPin className="h-4 w-4 shrink-0 text-cyan-400" />
+                    <span className="text-xs font-medium text-slate-200">{suggestion.display_name}</span>
                 </button>
             ))}
-
-        </div>
-    );
-}
-
-/* =========================================================
-   SELECTED LOCATION
-========================================================= */
-
-function SelectedLocationRow({
-    label,
-    value,
-    selected,
-}: {
-    label: string;
-    value: string;
-    selected: boolean;
-}) {
-    return (
-        <div className="min-w-0">
-
-            <div className="text-[7px] font-bold uppercase tracking-widest text-slate-700">
-                {label}
-            </div>
-
-            <div className="mt-1 flex items-center gap-2">
-
-                <span
-                    className={`h-1.5 w-1.5 shrink-0 rounded-full ${selected
-                        ? "bg-emerald-400"
-                        : "bg-slate-700"
-                        }`}
-                />
-
-                <span className="truncate text-[9px] font-bold text-slate-300">
-                    {value}
-                </span>
-
-            </div>
-
-        </div>
-    );
-}
-
-/* =========================================================
-   ROUTE CARD
-========================================================= */
-
-function RouteCard({
-    route,
-    onSelect,
-}: {
-    route: RouteOption;
-    onSelect: (route: RouteOption) => void;
-}) {
-    return (
-        <article className="min-w-[285px] snap-start rounded-2xl border border-slate-800 bg-[#07101d] p-5 lg:min-w-0">
-
-            <div className="flex items-center justify-between gap-3">
-
-                <h3 className="text-sm font-black text-white">
-                    {route.type}
-                </h3>
-
-                <span className="rounded-full border border-slate-800 bg-[#050A13] px-2 py-1 text-[7px] font-bold uppercase tracking-wider text-slate-600">
-                    Option {route.id}
-                </span>
-
-            </div>
-
-            <p className="mt-2 text-[9px] leading-4 text-slate-600">
-                {route.description}
-            </p>
-
-            <div className="mt-5 grid grid-cols-2 gap-2">
-
-                <InfoValue
-                    label="Distance"
-                    value={route.distance}
-                />
-
-                <InfoValue
-                    label="ETA"
-                    value={route.duration}
-                />
-
-            </div>
-
-            <button
-                type="button"
-                onClick={() => onSelect(route)}
-                className="mt-5 flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-emerald-400/20 bg-emerald-400/5 text-[9px] font-black uppercase tracking-wider text-emerald-400 transition hover:bg-emerald-400/10"
-            >
-                Select Route
-                <ChevronRight className="h-3.5 w-3.5" />
-            </button>
-
-        </article>
-    );
-}
-
-/* =========================================================
-   INFO VALUE
-========================================================= */
-
-function InfoValue({
-    label,
-    value,
-}: {
-    label: string;
-    value: string;
-}) {
-    return (
-        <div className="rounded-xl border border-slate-800 bg-[#050A13] p-3">
-
-            <div className="text-[7px] uppercase tracking-widest text-slate-600">
-                {label}
-            </div>
-
-            <div className="mt-1.5 truncate text-[10px] font-black text-white">
-                {value}
-            </div>
-
         </div>
     );
 }

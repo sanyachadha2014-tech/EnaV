@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Administrative Boundaries</name>
+    <Placemark>
+      <name>Central Zone</name>
+      <description>ZONE-A</description>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              77.200,28.610,0 77.220,28.610,0 77.220,28.625,0 77.200,28.625,0 77.200,28.610,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>East Zone</name>
+      <description>ZONE-B</description>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              77.220,28.605,0 77.240,28.605,0 77.240,28.620,0 77.220,28.620,0 77.220,28.605,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+    <Placemark>
+      <name>South Zone</name>
+      <description>ZONE-C</description>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              77.200,28.590,0 77.220,28.590,0 77.220,28.610,0 77.200,28.610,0 77.200,28.590,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+  </Document>
+</kml>
