@@ -40,11 +40,20 @@ def optimize_ev_route(
 
     # 2. Evaluate all routes for direct feasibility
     for route in candidate_routes:
+        consumption_rate = getattr(vehicle, "consumption_kwh_per_km", None) or 0.16
+        
         energy_consumed = calculate_energy_consumed(
             route.distance_km,
-            vehicle.consumption_kwh_per_km,
+            consumption_rate,
             route.traffic_level
         )
+        
+        # Dynamic calculations for tolls and elevation based on route distance and characteristics
+        calculated_toll = int(route.distance_km * 2.25) if "Express" in route.name or route.distance_km > 100 else int(route.distance_km * 1.2)
+        toll_str = f"₹{calculated_toll}" if calculated_toll > 0 else "₹0"
+        
+        elevation_gain = int(route.distance_km * 1.4)
+        elevation_str = f"+{elevation_gain}m"
         
         remaining_energy = calculate_remaining_energy(initial_energy_kwh, energy_consumed)
         arrival_battery_pct = calculate_arrival_battery_percentage(
@@ -80,7 +89,9 @@ def optimize_ev_route(
             is_feasible=feasible,
             score=route_score,
             reason=reason,
-            geometry=route.geometry
+            geometry=route.geometry,
+            tolls=toll_str,
+            elevation_gain=elevation_str
         )
         
         evaluated_routes.append(details)

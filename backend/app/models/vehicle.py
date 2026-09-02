@@ -13,3 +13,6 @@ class VehicleTelemetry(Base):
     speed = Column(Float)
     motor_temperature = Column(Float)
     timestamp = Column(DateTime, default=datetime.utcnow)
+
+# Alias to satisfy imports looking for 'Vehicle'
+Vehicle = VehicleTelemetry

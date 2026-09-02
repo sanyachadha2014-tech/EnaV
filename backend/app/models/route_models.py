@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Any
 from pydantic import BaseModel, Field, field_validator
 
 class Coordinate(BaseModel):
@@ -83,7 +83,9 @@ class EvaluatedRouteDetails(BaseModel):
     is_feasible: bool
     score: Optional[float] = None
     reason: str
-    geometry: List[Coordinate] = Field(default_factory=list)
+    geometry: List[Any] = Field(default_factory=list)
+    tolls: str = "₹0"
+    elevation_gain: str = "+0m"
 
 class RecommendedChargerDetails(BaseModel):
     station_id: str = Field(..., description="ID of the recommended charging station")

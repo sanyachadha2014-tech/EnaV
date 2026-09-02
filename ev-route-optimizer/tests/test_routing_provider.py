@@ -13,8 +13,8 @@ from app.services.routing_provider import (
 def test_mock_routing_provider():
     provider = MockRoutingProvider()
     routes = provider.get_candidate_routes(
-        Coordinate(lat=28.6139, lng=77.2090),
-        Coordinate(lat=28.6129, lng=77.2295)
+        Coordinate(latitude=28.6139, longitude=77.2090),
+        Coordinate(latitude=28.6129, longitude=77.2295)
     )
     assert len(routes) > 0
     assert routes[0].route_id.startswith("ROUTE-")
@@ -42,8 +42,8 @@ def test_osrm_routing_provider_success(mock_get):
 
     provider = OSRMQueryRoutingProvider()
     routes = provider.get_candidate_routes(
-        Coordinate(lat=28.6139, lng=77.2090),
-        Coordinate(lat=28.6129, lng=77.2295)
+        Coordinate(latitude=28.6139, longitude=77.2090),
+        Coordinate(latitude=28.6129, longitude=77.2295)
     )
 
     assert len(routes) == 1
@@ -51,10 +51,10 @@ def test_osrm_routing_provider_success(mock_get):
     assert routes[0].distance_km == 3.98
     assert routes[0].duration_seconds == 400.0
     assert len(routes[0].geometry) == 2
-    assert routes[0].geometry[0].lat == 28.6139
-    assert routes[0].geometry[0].lng == 77.2090
-    assert routes[0].geometry[1].lat == 28.6129
-    assert routes[0].geometry[1].lng == 77.2295
+    assert routes[0].geometry[0].latitude == 28.6139
+    assert routes[0].geometry[0].longitude == 77.2090
+    assert routes[0].geometry[1].latitude == 28.6129
+    assert routes[0].geometry[1].longitude == 77.2295
 
 @patch("httpx.Client.get")
 def test_osrm_routing_provider_network_error(mock_get):
@@ -64,8 +64,8 @@ def test_osrm_routing_provider_network_error(mock_get):
     provider = OSRMQueryRoutingProvider()
     with pytest.raises(RoutingAPIError) as exc_info:
         provider.get_candidate_routes(
-            Coordinate(lat=0.0, lng=0.0),
-            Coordinate(lat=1.0, lng=1.0)
+            Coordinate(latitude=0.0, longitude=0.0),
+            Coordinate(latitude=1.0, longitude=1.0)
         )
     assert "Failed to connect to public OSRM API" in str(exc_info.value)
 
@@ -93,8 +93,8 @@ def test_mapbox_routing_provider_traffic_detection(mock_get):
 
     provider = MapboxRoutingProvider(access_token="fake-token")
     routes = provider.get_candidate_routes(
-        Coordinate(lat=28.6139, lng=77.2090),
-        Coordinate(lat=28.6129, lng=77.2295)
+        Coordinate(latitude=28.6139, longitude=77.2090),
+        Coordinate(latitude=28.6129, longitude=77.2295)
     )
 
     assert len(routes) == 1

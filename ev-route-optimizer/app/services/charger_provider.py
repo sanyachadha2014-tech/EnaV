@@ -1,7 +1,7 @@
 import os
 import logging
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Dict, Any
 
 from app.data.mock_chargers import ChargingStation
 
@@ -20,6 +20,29 @@ class BaseChargerProvider(ABC):
         Retrieves all charging stations that fall inside the bounding box.
         """
         pass
+
+    def get_all_chargers(self) -> List[Dict[str, Any]]:
+        """
+        Retrieves all available electric vehicle charging stations across the coverage zone.
+        Provides a fallback collection or maps bounding box-based results into dictionary format.
+        """
+        # Default implementation covering a standard regional bounding box (e.g., Delhi NCR region)
+        try:
+            stations = self.get_chargers_in_bbox(28.40, 76.80, 28.90, 77.40)
+            return [
+                {
+                    "station_id": getattr(s, "station_id", str(i)),
+                    "name": getattr(s, "name", f"Charging Station {i}"),
+                    "latitude": getattr(s, "latitude", 28.6139),
+                    "longitude": getattr(s, "longitude", 77.2090),
+                    "power_kw": getattr(s, "power_kw", 50.0),
+                    "status": getattr(s, "status", "available")
+                }
+                for i, s in enumerate(stations)
+            ]
+        except Exception as e:
+            logger.error(f"Failed to fetch all chargers from provider: {e}")
+            return []
 
 def get_charger_provider() -> BaseChargerProvider:
     """
@@ -46,7 +69,6 @@ def get_charger_provider_diagnostics() -> dict:
     Returns diagnostic information about the configured charger provider.
     Bypasses real network pings in unit testing mode.
     """
-    import os
     provider_name = os.getenv("CHARGER_PROVIDER", "ocm").lower()
     api_key = os.getenv("OPENCHARGEMAP_API_KEY", "").strip()
     
@@ -64,7 +86,6 @@ def get_charger_provider_diagnostics() -> dict:
             try:
                 import httpx
                 headers = {"User-Agent": "EVRouteOptimizer/1.0", "X-API-Key": api_key}
-                # Quick reachability check with minimal result payload
                 response = httpx.get("https://api.openchargemap.io/v3/poi/?maxresults=1", headers=headers, timeout=2.0)
                 if response.status_code == 200:
                     ocm_reachable = True

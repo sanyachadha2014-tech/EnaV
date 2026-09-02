@@ -2,26 +2,24 @@
 
 import { useState } from "react";
 import {
-  User,
   Shield,
   Award,
-  FileText,
   CheckCircle,
   MapPin,
   Phone,
   Mail,
   Truck,
-  AlertCircle,
-  Clock,
   Navigation,
   FileCheck,
+  Settings,
+  Zap,
 } from "lucide-react";
 
 /* -------------------------------------------------------------------------- */
-/* GOV DRIVER DATA                                                            */
+/* GOV DRIVER DATA & EDITABLE PARAMETERS CONFIGURATION                        */
 /* -------------------------------------------------------------------------- */
 
-const driverData = {
+const initialDriverData = {
   name: "Rajesh Kumar",
   id: "GOV-DL-88241",
   department: "Delhi Transport Infrastructure Development Corporation (DTIDC)",
@@ -58,12 +56,73 @@ const driverData = {
   ],
 };
 
-/* -------------------------------------------------------------------------- */
-/* PAGE COMPONENT                                                             */
-/* -------------------------------------------------------------------------- */
-
 export default function GovDriverProfilePage() {
-  const [activeTab, setActiveTab] = useState<"overview" | "vehicle" | "logs">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "vehicle" | "logs" | "parameters">("overview");
+
+  // Editable routing parameters state requested for the driver profile
+  const [routingParams, setRoutingParams] = useState({
+    batteryCapacityKwh: 75.0,
+    currentSocPct: 84.0,
+    consumptionRateKwhPerKm: 0.15,
+    minReservePct: 15.0,
+  });
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+
+  // Validation check: ensure all parameters are filled and valid numbers
+  const isFormComplete = Boolean(
+    routingParams.currentSocPct !== undefined &&
+    routingParams.batteryCapacityKwh !== undefined &&
+    routingParams.consumptionRateKwhPerKm !== undefined &&
+    routingParams.minReservePct !== undefined
+  );
+
+  const handleOptimizeRoute = async () => {
+    setIsLoading(true);
+    setSuccessMessage("");
+    try {
+      // Retrieve stored source/destination or use defaults
+      const storedSource = JSON.parse(localStorage.getItem("optimizer_source") || '{"lat": 28.6139, "lng": 77.2090}');
+      const storedDest = JSON.parse(localStorage.getItem("optimizer_destination") || '{"lat": 28.6562, "lng": 77.2410}');
+
+      const response = await fetch("http://localhost:8000/route/optimize", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          source: storedSource,
+          destination: storedDest,
+          vehicle: {
+            vehicle_id: "EV-GOV-01",
+            vehicle_type: "citizen",
+            battery_percentage: routingParams.currentSocPct,
+            battery_capacity_kwh: routingParams.batteryCapacityKwh,
+            consumption_kwh_per_km: routingParams.consumptionRateKwhPerKm,
+            minimum_reserve_pct: routingParams.minReservePct,
+          },
+          emergency: false,
+        }),
+      });
+      const data = await response.json();
+      
+      // Store result globally so ss1 handles display without rendering any summary cards here
+      localStorage.setItem("latest_route_evaluation", JSON.stringify(data));
+      setSuccessMessage("Parameters synced successfully! Check your main routing view for updated paths.");
+    } catch (error) {
+      console.error("Failed to optimize route:", error);
+    } finally {
+      setIsLoading(false);
+    }	
+  };
+
+  const handleParamChange = (field: string, value: number) => {
+    setRoutingParams((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
 
   return (
     <div className="min-h-screen w-full bg-[#030712] text-slate-100 font-sans selection:bg-emerald-500 selection:text-slate-950">
@@ -82,7 +141,7 @@ export default function GovDriverProfilePage() {
                 GOVERNMENT FLEET PORTAL
               </span>
               <span className="text-[10px] tracking-wider uppercase text-emerald-400 font-semibold">
-                Official Driver Profile
+                Official Driver Profile & Optimizer Inputs
               </span>
             </div>
           </div>
@@ -90,7 +149,7 @@ export default function GovDriverProfilePage() {
           <div className="flex items-center gap-3">
             <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-400 flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              {driverData.status}
+              {initialDriverData.status}
             </span>
           </div>
         </div>
@@ -124,27 +183,27 @@ export default function GovDriverProfilePage() {
               <div className="space-y-1.5">
                 <div className="flex flex-wrap items-center gap-3">
                   <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-                    {driverData.name}
+                    {initialDriverData.name}
                   </h1>
                   <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-0.5 text-xs font-bold text-emerald-400">
-                    ID: {driverData.id}
+                    ID: {initialDriverData.id}
                   </span>
                 </div>
                 <p className="text-sm font-medium text-emerald-300/80">
-                  {driverData.designation} • <span className="text-slate-300">{driverData.department}</span>
+                  {initialDriverData.designation} • <span className="text-slate-300">{initialDriverData.department}</span>
                 </p>
                 <div className="flex flex-wrap items-center gap-4 pt-1 text-xs text-slate-400">
                   <span className="flex items-center gap-1.5">
                     <MapPin className="h-3.5 w-3.5 text-emerald-400" />
-                    {driverData.zone}
+                    {initialDriverData.zone}
                   </span>
                   <span className="flex items-center gap-1.5">
                     <Phone className="h-3.5 w-3.5 text-emerald-400" />
-                    {driverData.phone}
+                    {initialDriverData.phone}
                   </span>
                   <span className="flex items-center gap-1.5">
                     <Mail className="h-3.5 w-3.5 text-emerald-400" />
-                    {driverData.email}
+                    {initialDriverData.email}
                   </span>
                 </div>
               </div>
@@ -159,25 +218,25 @@ export default function GovDriverProfilePage() {
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 backdrop-blur-sm">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Total Missions</span>
-            <p className="mt-3 text-3xl font-black text-white">{driverData.metrics.totalTrips}</p>
+            <p className="mt-3 text-3xl font-black text-white">{initialDriverData.metrics.totalTrips}</p>
             <p className="mt-1 text-[11px] text-emerald-400 font-medium">Zero security incidents</p>
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 backdrop-blur-sm">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Safety Score</span>
-            <p className="mt-3 text-3xl font-black text-white">{driverData.metrics.safetyScore}</p>
+            <p className="mt-3 text-3xl font-black text-white">{initialDriverData.metrics.safetyScore}</p>
             <p className="mt-1 text-[11px] text-emerald-400 font-medium">Top tier rating</p>
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 backdrop-blur-sm">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Punctuality</span>
-            <p className="mt-3 text-3xl font-black text-white">{driverData.metrics.punctuality}</p>
+            <p className="mt-3 text-3xl font-black text-white">{initialDriverData.metrics.punctuality}</p>
             <p className="mt-1 text-[11px] text-emerald-400 font-medium">Verified logs</p>
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 backdrop-blur-sm">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Incidents</span>
-            <p className="mt-3 text-3xl font-black text-emerald-400">{driverData.metrics.accidents}</p>
+            <p className="mt-3 text-3xl font-black text-emerald-400">{initialDriverData.metrics.accidents}</p>
             <p className="mt-1 text-[11px] text-slate-400 font-medium">Flawless record</p>
           </div>
         </div>
@@ -187,10 +246,10 @@ export default function GovDriverProfilePage() {
         {/* ================================================================ */}
 
         <div className="space-y-6">
-          <div className="flex items-center gap-2 border-b border-slate-800 pb-px">
+          <div className="flex items-center gap-2 border-b border-slate-800 pb-px overflow-x-auto">
             <button
               onClick={() => setActiveTab("overview")}
-              className={`border-b-2 px-4 py-3 text-xs font-bold uppercase tracking-wider transition ${
+              className={`border-b-2 px-4 py-3 text-xs font-bold uppercase tracking-wider transition whitespace-nowrap ${
                 activeTab === "overview"
                   ? "border-emerald-400 text-emerald-400"
                   : "border-transparent text-slate-400 hover:text-slate-200"
@@ -200,7 +259,7 @@ export default function GovDriverProfilePage() {
             </button>
             <button
               onClick={() => setActiveTab("vehicle")}
-              className={`border-b-2 px-4 py-3 text-xs font-bold uppercase tracking-wider transition ${
+              className={`border-b-2 px-4 py-3 text-xs font-bold uppercase tracking-wider transition whitespace-nowrap ${
                 activeTab === "vehicle"
                   ? "border-emerald-400 text-emerald-400"
                   : "border-transparent text-slate-400 hover:text-slate-200"
@@ -209,8 +268,19 @@ export default function GovDriverProfilePage() {
               Assigned Vehicle
             </button>
             <button
+              onClick={() => setActiveTab("parameters")}
+              className={`border-b-2 px-4 py-3 text-xs font-bold uppercase tracking-wider transition whitespace-nowrap flex items-center gap-1.5 ${
+                activeTab === "parameters"
+                  ? "border-emerald-400 text-emerald-400"
+                  : "border-transparent text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Settings className="h-3.5 w-3.5" />
+              Optimizer Inputs & Telemetry
+            </button>
+            <button
               onClick={() => setActiveTab("logs")}
-              className={`border-b-2 px-4 py-3 text-xs font-bold uppercase tracking-wider transition ${
+              className={`border-b-2 px-4 py-3 text-xs font-bold uppercase tracking-wider transition whitespace-nowrap ${
                 activeTab === "logs"
                   ? "border-emerald-400 text-emerald-400"
                   : "border-transparent text-slate-400 hover:text-slate-200"
@@ -228,7 +298,7 @@ export default function GovDriverProfilePage() {
                   Official Certifications & Training
                 </h3>
                 <div className="space-y-3">
-                  {driverData.certifications.map((cert, idx) => (
+                  {initialDriverData.certifications.map((cert, idx) => (
                     <div key={idx} className="flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-950/50 p-4">
                       <Award className="h-5 w-5 text-emerald-400 shrink-0" />
                       <span className="text-xs font-semibold text-slate-200">{cert}</span>
@@ -241,7 +311,7 @@ export default function GovDriverProfilePage() {
                     Medical & Fitness Clearance
                   </h3>
                   <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 flex items-center justify-between">
-                    <span className="text-xs font-medium text-emerald-300">{driverData.medicalFitness}</span>
+                    <span className="text-xs font-medium text-emerald-300">{initialDriverData.medicalFitness}</span>
                     <FileCheck className="h-5 w-5 text-emerald-400" />
                   </div>
                 </div>
@@ -254,15 +324,15 @@ export default function GovDriverProfilePage() {
                 <div className="space-y-3 text-xs">
                   <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3.5">
                     <p className="text-slate-400">License Number</p>
-                    <p className="font-bold text-white mt-0.5">{driverData.licenseNo}</p>
+                    <p className="font-bold text-white mt-0.5">{initialDriverData.licenseNo}</p>
                   </div>
                   <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3.5">
                     <p className="text-slate-400">Valid Till</p>
-                    <p className="font-bold text-emerald-400 mt-0.5">{driverData.licenseValidTill}</p>
+                    <p className="font-bold text-emerald-400 mt-0.5">{initialDriverData.licenseValidTill}</p>
                   </div>
                   <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3.5">
                     <p className="text-slate-400">Official Badge</p>
-                    <p className="font-bold text-white mt-0.5">{driverData.badgeNumber}</p>
+                    <p className="font-bold text-white mt-0.5">{initialDriverData.badgeNumber}</p>
                   </div>
                 </div>
               </div>
@@ -280,33 +350,159 @@ export default function GovDriverProfilePage() {
                 <div className="space-y-3 text-xs pt-2">
                   <div className="flex justify-between rounded-xl border border-slate-800 bg-slate-950/50 p-4">
                     <span className="text-slate-400">Vehicle Model</span>
-                    <span className="font-bold text-white">{driverData.assignedVehicle.model}</span>
+                    <span className="font-bold text-white">{initialDriverData.assignedVehicle.model}</span>
                   </div>
                   <div className="flex justify-between rounded-xl border border-slate-800 bg-slate-950/50 p-4">
                     <span className="text-slate-400">Registration No.</span>
-                    <span className="font-bold text-emerald-400">{driverData.assignedVehicle.regNo}</span>
+                    <span className="font-bold text-emerald-400">{initialDriverData.assignedVehicle.regNo}</span>
                   </div>
                   <div className="flex justify-between rounded-xl border border-slate-800 bg-slate-950/50 p-4">
                     <span className="text-slate-400">Battery / Fuel Status</span>
-                    <span className="font-bold text-emerald-400">{driverData.assignedVehicle.batteryStatus}</span>
+                    <span className="font-bold text-emerald-400">{initialDriverData.assignedVehicle.batteryStatus}</span>
                   </div>
                   <div className="flex justify-between rounded-xl border border-slate-800 bg-slate-950/50 p-4">
                     <span className="text-slate-400">Last Inspection</span>
-                    <span className="font-bold text-white">{driverData.assignedVehicle.lastInspection}</span>
+                    <span className="font-bold text-white">{initialDriverData.assignedVehicle.lastInspection}</span>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* TAB 3: LOGS */}
+          {/* TAB 3: ROUTING & OPTIMIZER PARAMETERS INPUTS */}
+          {activeTab === "parameters" && (
+            <div className="rounded-3xl border border-emerald-500/30 bg-slate-900/40 p-6 space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-emerald-400" />
+                    Route Optimizer Profile Inputs
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Configure your EV specifications and battery thresholds. These parameters feed directly into the backend optimizer payload for calculating feasible route metrics.
+                  </p>
+                </div>
+                <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold text-emerald-400">
+                  Live Synced to Optimizer
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Parameter 1: Battery Capacity */}
+                <div className="space-y-2 rounded-2xl border border-slate-800 bg-slate-950/50 p-5">
+                  <div className="flex justify-between items-center">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                      Battery Capacity (kWh)
+                    </label>
+                    <span className="font-mono font-bold text-emerald-400 text-sm">
+                      {routingParams.batteryCapacityKwh} kWh
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400">Total energy storage capacity of your assigned vehicle's pack.</p>
+                  <input
+                    type="number"
+                    step="1"
+                    value={routingParams.batteryCapacityKwh}
+                    onChange={(e) => handleParamChange("batteryCapacityKwh", parseFloat(e.target.value) || 0)}
+                    className="w-full mt-2 h-11 px-4 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-sm focus:border-emerald-500 focus:outline-none transition"
+                  />
+                </div>
+
+                {/* Parameter 2: Current State of Charge (SOC) */}
+                <div className="space-y-2 rounded-2xl border border-slate-800 bg-slate-950/50 p-5">
+                  <div className="flex justify-between items-center">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                      Current State of Charge (SOC %)
+                    </label>
+                    <span className="font-mono font-bold text-emerald-400 text-sm">
+                      {routingParams.currentSocPct}%
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400">The current live battery percentage at trip initiation.</p>
+                  <input
+                    type="number"
+                    step="1"
+                    max="100"
+                    min="0"
+                    value={routingParams.currentSocPct}
+                    onChange={(e) => handleParamChange("currentSocPct", parseFloat(e.target.value) || 0)}
+                    className="w-full mt-2 h-11 px-4 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-sm focus:border-emerald-500 focus:outline-none transition"
+                  />
+                </div>
+
+                {/* Parameter 3: Energy Consumption Rate */}
+                <div className="space-y-2 rounded-2xl border border-slate-800 bg-slate-950/50 p-5">
+                  <div className="flex justify-between items-center">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                      Consumption Rate (kWh/km)
+                    </label>
+                    <span className="font-mono font-bold text-emerald-400 text-sm">
+                      {routingParams.consumptionRateKwhPerKm} kWh/km
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400">Average energy drain rate per kilometer driven.</p>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={routingParams.consumptionRateKwhPerKm}
+                    onChange={(e) => handleParamChange("consumptionRateKwhPerKm", parseFloat(e.target.value) || 0)}
+                    className="w-full mt-2 h-11 px-4 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-sm focus:border-emerald-500 focus:outline-none transition"
+                  />
+                </div>
+
+                {/* Parameter 4: Minimum Reserve Threshold */}
+                <div className="space-y-2 rounded-2xl border border-slate-800 bg-slate-950/50 p-5">
+                  <div className="flex justify-between items-center">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                      Minimum Reserve Floor (%)
+                    </label>
+                    <span className="font-mono font-bold text-emerald-400 text-sm">
+                      {routingParams.minReservePct}%
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400">Strict safety floor percentage that arrival SOC must never cross.</p>
+                  <input
+                    type="number"
+                    step="1"
+                    max="50"
+                    min="0"
+                    value={routingParams.minReservePct}
+                    onChange={(e) => handleParamChange("minReservePct", parseFloat(e.target.value) || 0)}
+                    className="w-full mt-2 h-11 px-4 bg-slate-900 border border-slate-800 rounded-xl text-white font-mono text-sm focus:border-emerald-500 focus:outline-none transition"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-slate-800 flex flex-col gap-4">
+                <button
+                  onClick={handleOptimizeRoute}
+                  disabled={isLoading || !isFormComplete}
+                  className={`w-full h-12 rounded-xl font-bold transition flex items-center justify-center gap-2 shadow-lg ${
+                    isFormComplete && !isLoading
+                      ? "bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-950 cursor-pointer"
+                      : "bg-slate-800 text-slate-500 cursor-not-allowed"
+                  }`}
+                >
+                  {isLoading ? "Syncing Parameters & Evaluating..." : "Evaluate Routes with Current Parameters"}
+                </button>
+
+                {successMessage && (
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs font-semibold text-emerald-400 text-center">
+                    {successMessage}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: LOGS */}
           {activeTab === "logs" && (
             <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6 space-y-4">
               <h3 className="text-sm font-bold uppercase tracking-wider text-white">
                 Recent Duty Logs
               </h3>
               <div className="space-y-3">
-                {driverData.recentLogs.map((log, idx) => (
+                {initialDriverData.recentLogs.map((log, idx) => (
                   <div key={idx} className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
                     <div className="flex items-center gap-3">
                       <Navigation className="h-4 w-4 text-emerald-400 shrink-0" />

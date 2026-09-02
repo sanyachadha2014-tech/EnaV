@@ -1,9 +1,46 @@
-from typing import List, Optional
-from pydantic import BaseModel, Field, field_validator
+from typing import List, Optional, Literal, Any
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 class Coordinate(BaseModel):
     lat: float = Field(..., description="Latitude of the coordinate")
     lng: float = Field(..., description="Longitude of the coordinate")
+
+    @model_validator(mode="before")
+    @classmethod
+    def parse_coordinate_aliases(cls, values: Any) -> Any:
+        # Handle list/tuple formats like [lat, lng]
+        if isinstance(values, (list, tuple)) and len(values) >= 2:
+            return {"lat": values[0], "lng": values[1]}
+        # Handle dictionary inputs using alternative key names like latitude/longitude or lon/long
+        if isinstance(values, dict):
+            lat = values.get("lat") if values.get("lat") is not None else values.get("latitude")
+            lng = (
+                values.get("lng") 
+                if values.get("lng") is not None 
+                else values.get("longitude") 
+                if values.get("longitude") is not None 
+                else values.get("lon")
+                if values.get("lon") is not None
+                else values.get("long")
+            )
+            return {"lat": lat, "lng": lng}
+        return values
+
+    @property
+    def latitude(self) -> float:
+        return self.lat
+
+    @latitude.setter
+    def latitude(self, v: float):
+        self.lat = v
+
+    @property
+    def longitude(self) -> float:
+        return self.lng
+
+    @longitude.setter
+    def longitude(self, v: float):
+        self.lng = v
 
     @field_validator("lat")
     @classmethod
@@ -21,13 +58,15 @@ class Coordinate(BaseModel):
 
 class VehicleInfo(BaseModel):
     vehicle_id: str = Field(..., description="Unique identifier for the vehicle")
-    vehicle_type: str = Field(..., description="Type of vehicle (e.g., citizen, police, fire, ambulance)")
+    vehicle_type: str = Field(..., description="Type of vehicle (e.g., citizen, private, police, fire, ambulance)")
     battery_percentage: float = Field(..., description="Current battery state of charge (0-100)")
     battery_capacity_kwh: float = Field(..., description="Total battery capacity in kWh")
     consumption_kwh_per_km: float = Field(..., description="Base energy consumption rate in kWh/km")
     minimum_reserve_pct: float = Field(15.0, description="Minimum battery reserve percentage required (0-100)")
     is_emergency: bool = Field(False, description="Whether the vehicle is currently on an emergency mission")
-    target_soc_pct: Optional[float] = Field(None, description="Target battery percentage to charge to (e.g., 80.0)")
+    target_soc_pct: Optional[float] = Field(80.0, description="Target battery percentage to charge to (e.g., 80.0)")
+    max_charging_power_kw: float = Field(default=50.0, description="Max fast-charging acceptance rate in kW")
+    plug_type: str = Field(default="CCS2", description="Compatible charging plug type (e.g., CCS2, Type 2, CHAdeMO)")
 
     @field_validator("battery_percentage", "minimum_reserve_pct", "target_soc_pct")
     @classmethod
@@ -36,11 +75,11 @@ class VehicleInfo(BaseModel):
             raise ValueError("Percentage values must be between 0.0 and 100.0")
         return v
 
-    @field_validator("battery_capacity_kwh", "consumption_kwh_per_km")
+    @field_validator("battery_capacity_kwh", "consumption_kwh_per_km", "max_charging_power_kw")
     @classmethod
     def validate_positive(cls, v: float) -> float:
         if v <= 0.0:
-            raise ValueError("Battery capacity and consumption rate must be greater than zero")
+            raise ValueError("Battery capacity, consumption rate, and charging power must be greater than zero")
         return v
 
 class RouteInfo(BaseModel):
@@ -71,6 +110,12 @@ class RouteOptimizationRequest(BaseModel):
     destination: Coordinate = Field(..., description="Destination coordinate")
     vehicle: VehicleInfo = Field(..., description="Vehicle specifications and current status")
     emergency: bool = Field(False, description="Whether the request is for emergency dispatch routing")
+    optimization_objective: Literal["fastest", "energy_efficient", "fewest_chargers"] = Field(
+        "fastest", description="Routing preference objective for private/citizen users"
+    )
+    traffic_condition: Literal["low", "moderate", "heavy"] = Field(
+        "moderate", description="Global traffic constraint for the route evaluation"
+    )
 
 class EvaluatedRouteDetails(BaseModel):
     route_id: str

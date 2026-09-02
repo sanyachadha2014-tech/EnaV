@@ -35,9 +35,9 @@ def base_route():
         duration_seconds=600.0,
         traffic_level="low",
         geometry=[
-            Coordinate(lat=28.6139, lng=77.2090),
-            Coordinate(lat=28.6150, lng=77.2180),
-            Coordinate(lat=28.6129, lng=77.2295)
+            Coordinate(latitude=28.6139, longitude=77.2090),
+            Coordinate(latitude=28.6150, longitude=77.2180),
+            Coordinate(latitude=28.6129, longitude=77.2295)
         ]
     )
 
@@ -142,7 +142,7 @@ def test_final_destination_battery_feasibility(base_vehicle, base_route):
     # We stub distance_from_charger_to_dest to be 300 km inside the calculation
     with patch("app.services.charger_selector.find_closest_point_on_route") as mock_find:
         # Return closest point with large distance to end
-        mock_find.return_value = (Coordinate(lat=28.6150, lng=77.2180), 1, 0.0)
+        mock_find.return_value = (Coordinate(latitude=28.6150, longitude=77.2180), 1, 0.0)
         # Modify route to have 310 km distance
         base_route.distance_km = 310.0
         options = evaluate_charging_options(base_vehicle, base_route, chargers)
@@ -217,8 +217,8 @@ def test_api_response_with_charging():
     client = TestClient(app)
     # Use mock provider to return candidates, but query with low battery to trigger charging detour
     payload = {
-        "source": {"lat": 28.6139, "lng": 77.2090},
-        "destination": {"lat": 28.6129, "lng": 77.2295},
+        "source": {"latitude": 28.6139, "longitude": 77.2090},
+        "destination": {"latitude": 28.6129, "longitude": 77.2295},
         "vehicle": {
             "vehicle_id": "CITIZEN-101",
             "vehicle_type": "citizen",
@@ -264,7 +264,7 @@ class MockedOSRMDetourProvider(BaseRoutingProvider):
 
     def get_candidate_routes(self, source, destination):
         self.call_count += 1
-        key = (source.lat, source.lng, destination.lat, destination.lng)
+        key = (source.latitude, source.longitude, destination.latitude, destination.longitude)
         if key in self.routes_map:
             val = self.routes_map[key]
             if val is None:
@@ -304,7 +304,7 @@ def test_successful_road_based_detour():
         name="Main Route",
         distance_km=10.0,
         duration_seconds=600.0,
-        geometry=[Coordinate(lat=28.6139, lng=77.2090), Coordinate(lat=28.6129, lng=77.2295)]
+        geometry=[Coordinate(latitude=28.6139, longitude=77.2090), Coordinate(latitude=28.6129, longitude=77.2295)]
     )
     chargers = [
         ChargingStation(
@@ -345,7 +345,7 @@ def test_unreachable_charger_skipped():
         name="Main Route",
         distance_km=10.0,
         duration_seconds=600.0,
-        geometry=[Coordinate(lat=28.6139, lng=77.2090), Coordinate(lat=28.6129, lng=77.2295)]
+        geometry=[Coordinate(latitude=28.6139, longitude=77.2090), Coordinate(latitude=28.6129, longitude=77.2295)]
     )
     chargers = [
         ChargingStation(
@@ -383,7 +383,7 @@ def test_routing_provider_failure_skipped():
         name="Main Route",
         distance_km=10.0,
         duration_seconds=600.0,
-        geometry=[Coordinate(lat=28.6139, lng=77.2090), Coordinate(lat=28.6129, lng=77.2295)]
+        geometry=[Coordinate(latitude=28.6139, longitude=77.2090), Coordinate(latitude=28.6129, longitude=77.2295)]
     )
     chargers = [
         ChargingStation(
@@ -417,7 +417,7 @@ def test_haversine_prefilter_behavior():
         name="Main Route",
         distance_km=10.0,
         duration_seconds=600.0,
-        geometry=[Coordinate(lat=28.6139, lng=77.2090), Coordinate(lat=28.6129, lng=77.2295)]
+        geometry=[Coordinate(latitude=28.6139, longitude=77.2090), Coordinate(latitude=28.6129, longitude=77.2295)]
     )
     chargers = [
         ChargingStation(
@@ -451,7 +451,7 @@ def test_missing_osm_attributes_behavior():
         name="Route 1",
         distance_km=10.0,
         duration_seconds=600.0,
-        geometry=[Coordinate(lat=28.6139, lng=77.2090), Coordinate(lat=28.6129, lng=77.2295)]
+        geometry=[Coordinate(latitude=28.6139, longitude=77.2090), Coordinate(latitude=28.6129, longitude=77.2295)]
     )
     null_charger = ChargingStation(
         station_id="OSM-12345",
@@ -478,4 +478,3 @@ def test_missing_osm_attributes_behavior():
     assert opt.score > 0.0
     assert opt.total_journey_minutes > 0.0
     assert opt.final_arrival_battery_pct > 0.0
-

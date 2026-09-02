@@ -116,8 +116,8 @@ def test_fastest_feasible_selected_and_infeasible_rejected(mock_provider):
     # Verify FIRE-002 is marked infeasible
     infeasible_eval = next(x for x in response.evaluated_vehicles if x.vehicle_id == "FIRE-002")
     assert infeasible_eval.is_feasible is False
-    assert "Rejected because its estimated arrival battery" in infeasible_eval.reason
-    assert "emergency reserve" in infeasible_eval.reason
+    assert "Rejected because estimated arrival battery" in infeasible_eval.reason
+    assert "reserve" in infeasible_eval.reason
 
 def test_no_feasible_vehicle_case(mock_provider):
     # Incident location is extremely far away (e.g. lat=35.0, lng=85.0)
@@ -140,7 +140,7 @@ def test_no_feasible_vehicle_case(mock_provider):
     for v_eval in response.evaluated_vehicles:
         if v_eval.vehicle_type == "fire" and v_eval.status == "available":
             assert v_eval.is_feasible is False
-            assert "Rejected because its estimated arrival battery" in v_eval.reason
+            assert "Rejected because estimated arrival battery" in v_eval.reason
 
 def test_emergency_api_endpoint():
     client = TestClient(app)

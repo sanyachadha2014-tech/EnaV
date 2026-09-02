@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import 'leaflet/dist/leaflet.css';
 import { usePathname } from "next/navigation";
 import {
   BatteryCharging,

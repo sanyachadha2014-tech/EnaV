@@ -30,15 +30,13 @@ def optimize_ev_route(
     most optimal charging detour option.
     """
     evaluated_routes: List[EvaluatedRouteDetails] = []
-    feasible_direct_routes: List[Tuple[RouteInfo, EvaluatedRouteDetails, float]] = [] # (route, details, score)
+    feasible_direct_routes: List[Tuple[RouteInfo, EvaluatedRouteDetails, float]] = []
     
-    # 1. Calculate initial battery energy
     initial_energy_kwh = calculate_initial_battery_energy(
         vehicle.battery_capacity_kwh,
         vehicle.battery_percentage
     )
 
-    # 2. Evaluate all routes for direct feasibility
     for route in candidate_routes:
         energy_consumed = calculate_energy_consumed(
             route.distance_km,
@@ -87,7 +85,6 @@ def optimize_ev_route(
         if feasible:
             feasible_direct_routes.append((route, details, route_score))
 
-    # 3. If direct routes are feasible, choose the best direct route
     if feasible_direct_routes:
         feasible_direct_routes.sort(key=lambda x: x[2])
         best_route, best_details, best_score = feasible_direct_routes[0]
@@ -126,7 +123,6 @@ def optimize_ev_route(
             evaluated_routes=evaluated_routes
         )
     
-    # 4. If no direct routes are feasible, evaluate charging detours
     logger.info("Direct routing is infeasible. Initiating charging-aware routing.")
     charging_options = []
     
@@ -136,7 +132,6 @@ def optimize_ev_route(
             charging_options.append((route, charger_option))
             
     if charging_options:
-        # Sort charging options by score ascending (lowest score is best)
         charging_options.sort(key=lambda x: x[1].score)
         selected_route, selected_option = charging_options[0]
         
@@ -169,7 +164,6 @@ def optimize_ev_route(
             operator=selected_option.charger.operator
         )
         
-        # Update evaluated routes details to show feasibility with charging
         for route_details in evaluated_routes:
             if route_details.route_id == selected_route.route_id:
                 route_details.is_feasible = True
@@ -188,9 +182,6 @@ def optimize_ev_route(
             recommended_charger=charger_details,
             evaluated_routes=evaluated_routes
         )
-    
-    # 5. Handle the case where no route is feasible even with charging stops
-    closest_route = max(evaluated_routes, key=lambda x: x.arrival_battery_percentage)
     
     reason = (
         f"No feasible routes found. All candidate routes violate the vehicle's "

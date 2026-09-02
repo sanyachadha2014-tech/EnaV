@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from app.models.route_models import EmergencyVehicle, Coordinate
@@ -69,7 +69,7 @@ class SQLEmergencyVehicleRepository(BaseEmergencyVehicleRepository):
             model.consumption_kwh_per_km = vehicle.consumption_kwh_per_km
             model.minimum_reserve_pct = vehicle.minimum_reserve_pct
             model.availability_status = vehicle.availability_status
-            model.updated_at = datetime.utcnow()
+            model.updated_at = datetime.now(timezone.utc)
         else:
             model = EmergencyVehicleModel(
                 vehicle_id=vehicle.vehicle_id,

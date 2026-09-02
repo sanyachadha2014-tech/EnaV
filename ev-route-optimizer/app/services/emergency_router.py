@@ -1,9 +1,10 @@
 import logging
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict, Any
 
 from app.models.route_models import (
     Coordinate, EmergencyIncident, EmergencyVehicle, SelectedVehicleDetails,
-    EmergencyRouteDetails, EvaluatedVehicleDetails, EmergencyOptimizeResponse, DistrictInfo
+    EmergencyRouteDetails, EvaluatedVehicleDetails, EmergencyOptimizeResponse, DistrictInfo,
+    RecommendedChargerDetails
 )
 from app.services.gis_service import GISService
 from app.data.mock_vehicles import get_mock_vehicles
@@ -13,7 +14,9 @@ from app.services.battery_model import (
     calculate_energy_consumed,
     calculate_remaining_energy,
     calculate_arrival_battery_percentage,
-    is_route_feasible
+    is_route_feasible,
+    calculate_charging_time_minutes,
+    ChargingRouteEngine
 )
 
 logger = logging.getLogger(__name__)
@@ -21,14 +24,17 @@ logger = logging.getLogger(__name__)
 def optimize_emergency_dispatch(
     incident: EmergencyIncident,
     routing_provider = None,
-    vehicle_repository = None
+    vehicle_repository = None,
+    available_chargers: Optional[List[Dict[str, Any]]] = None
 ) -> EmergencyOptimizeResponse:
     """
     Ranks available emergency vehicles for a dispatch incident, prioritizing the shortest response
-    time (ETA) while guaranteeing battery reserve feasibility. Reuses the core routing and battery logic.
+    time (ETA) while integrating battery reserve feasibility and optional multi-stop charging routing.
     """
     if routing_provider is None:
         routing_provider = get_routing_provider()
+
+    available_chargers = available_chargers or []
 
     # Look up administrative district of the incident
     gis_service = GISService()
@@ -56,7 +62,7 @@ def optimize_emergency_dispatch(
         )
 
     evaluated_vehicles: List[EvaluatedVehicleDetails] = []
-    feasible_candidates: List[Tuple[EmergencyVehicle, float, float, float, any]] = [] # (vehicle, distance_km, eta_min, arrival_pct, route)
+    feasible_candidates: List[Tuple[EmergencyVehicle, float, float, float, Any, Optional[RecommendedChargerDetails]]] = []
 
     for vehicle in vehicles:
         is_type_match = vehicle.vehicle_type == incident.required_vehicle_type
@@ -115,7 +121,6 @@ def optimize_emergency_dispatch(
             )
             continue
 
-        # Evaluate routes for this vehicle to find the fastest feasible one
         initial_energy = calculate_initial_battery_energy(
             vehicle.battery_capacity_kwh,
             vehicle.battery_percentage
@@ -133,19 +138,46 @@ def optimize_emergency_dispatch(
             
             feasible = is_route_feasible(arrival_pct, vehicle.minimum_reserve_pct)
             if feasible:
-                feasible_routes.append((route, arrival_pct))
+                feasible_routes.append((route, arrival_pct, False, None))
+
+        # If direct routes fail, check if a multi-stop charging route is viable
+        selected_charger_details = None
+        if not feasible_routes and available_chargers:
+            best_route = min(routes, key=lambda r: r.distance_km)
+            optimal_stop = ChargingRouteEngine.find_optimal_charging_stop(
+                vehicle.current_location,
+                incident.location,
+                vehicle,
+                available_chargers
+            )
+            if optimal_stop:
+                charging_mins = calculate_charging_time_minutes(
+                    vehicle.battery_percentage,
+                    vehicle.target_soc_pct if hasattr(vehicle, 'target_soc_pct') else 80.0,
+                    vehicle.battery_capacity_kwh,
+                    vehicle.max_charging_power_kw if hasattr(vehicle, 'max_charging_power_kw') else 50.0
+                )
+                # Adjust duration to include charging time overhead
+                best_route.duration_seconds += (charging_mins * 60.0)
+                arrival_pct = vehicle.target_soc_pct if hasattr(vehicle, 'target_soc_pct') else 80.0
+                
+                selected_charger_details = RecommendedChargerDetails(
+                    station_id=optimal_stop.get("station_id", "CHG-EMG"),
+                    name=optimal_stop.get("name", "Emergency Enroute Charger"),
+                    charging_minutes=charging_mins,
+                    charging_power_kw=vehicle.max_charging_power_kw if hasattr(vehicle, 'max_charging_power_kw') else 50.0
+                )
+                feasible_routes.append((best_route, arrival_pct, True, selected_charger_details))
 
         if not feasible_routes:
-            # All routes are infeasible (violates reserve limits)
-            # Find the best attempt for logging
             best_route = min(routes, key=lambda r: r.distance_km)
             consumed = calculate_energy_consumed(best_route.distance_km, vehicle.consumption_kwh_per_km, best_route.traffic_level)
             remaining = calculate_remaining_energy(initial_energy, consumed)
             arrival_pct = calculate_arrival_battery_percentage(remaining, vehicle.battery_capacity_kwh)
             
             reason = (
-                f"Rejected because its estimated arrival battery ({arrival_pct:.1f}%) "
-                f"would fall below the emergency reserve of {vehicle.minimum_reserve_pct:.1f}%."
+                f"Rejected because estimated arrival battery ({arrival_pct:.1f}%) "
+                f"falls below reserve ({vehicle.minimum_reserve_pct:.1f}%) and no charging stops available."
             )
             evaluated_vehicles.append(
                 EvaluatedVehicleDetails(
@@ -159,14 +191,14 @@ def optimize_emergency_dispatch(
                 )
             )
         else:
-            # Sort routes by duration to select the fastest feasible route
             feasible_routes.sort(key=lambda x: x[0].duration_seconds)
-            fastest_route, arrival_pct = feasible_routes[0]
+            fastest_route, arrival_pct, charging_required, charger_info = feasible_routes[0]
             
             distance_km = fastest_route.distance_km
             eta_min = fastest_route.duration_seconds / 60.0
             
-            reason = f"Available and feasible (ETA: {eta_min:.1f} min, Arrival Battery: {arrival_pct:.1f}%)."
+            status_text = "feasible with charging stop" if charging_required else "directly feasible"
+            reason = f"Available and {status_text} (ETA: {eta_min:.1f} min, Arrival Battery: {arrival_pct:.1f}%)."
             
             evaluated_vehicles.append(
                 EvaluatedVehicleDetails(
@@ -183,14 +215,12 @@ def optimize_emergency_dispatch(
             )
             
             feasible_candidates.append(
-                (vehicle, distance_km, eta_min, arrival_pct, fastest_route)
+                (vehicle, distance_km, eta_min, arrival_pct, fastest_route, charger_info)
             )
 
-    # 5. Select the best vehicle based on shortest ETA
     if feasible_candidates:
-        # Sort candidates by ETA ascending (lowest travel duration is best)
         feasible_candidates.sort(key=lambda x: x[2])
-        best_vehicle, dist_km, eta_min, arrival_pct, best_route = feasible_candidates[0]
+        best_vehicle, dist_km, eta_min, arrival_pct, best_route, charger_info = feasible_candidates[0]
         
         selected_details = SelectedVehicleDetails(
             vehicle_id=best_vehicle.vehicle_id,
@@ -207,8 +237,8 @@ def optimize_emergency_dispatch(
         )
         
         reason = (
-            f"'{best_vehicle.vehicle_id}' selected because it provides the fastest feasible "
-            f"response among available {best_vehicle.vehicle_type} vehicles (ETA: {eta_min:.1f} min)."
+            f"'{best_vehicle.vehicle_id}' selected for providing the fastest response "
+            f"among available {best_vehicle.vehicle_type} vehicles (ETA: {eta_min:.1f} min)."
         )
         
         return EmergencyOptimizeResponse(
@@ -217,13 +247,13 @@ def optimize_emergency_dispatch(
             selected_vehicle=selected_details,
             route=route_details,
             reason=reason,
-            evaluated_vehicles=evaluated_vehicles
+            evaluated_vehicles=evaluated_vehicles,
+            recommended_charger=charger_info
         )
 
-    # 6. No feasible candidates
     reason = (
         f"No feasible available '{incident.required_vehicle_type}' vehicles could reach the "
-        f"incident location while maintaining their required minimum battery reserve."
+        f"incident location within required battery reserves."
     )
     return EmergencyOptimizeResponse(
         incident_id=incident.incident_id,

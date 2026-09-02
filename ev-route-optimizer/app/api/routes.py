@@ -32,7 +32,6 @@ def optimize_route(
     runs the deterministic route optimization engine, and responds with results.
     """
     try:
-        # Fetch candidate routes from the injected provider
         candidate_routes = provider.get_candidate_routes(request.source, request.destination)
         
         if not candidate_routes:
@@ -41,7 +40,6 @@ def optimize_route(
                 detail="No candidate routes available for evaluation."
             )
             
-        # Execute optimization
         response = optimize_ev_route(request.vehicle, candidate_routes, provider, charger_provider)
         return response
         
@@ -71,14 +69,21 @@ def optimize_route(
 def emergency_optimize(
     request: EmergencyOptimizeRequest,
     provider: BaseRoutingProvider = Depends(get_routing_provider),
-    vehicle_repository: BaseEmergencyVehicleRepository = Depends(get_vehicle_repository)
+    vehicle_repository: BaseEmergencyVehicleRepository = Depends(get_vehicle_repository),
+    charger_provider: BaseChargerProvider = Depends(get_charger_provider)
 ) -> EmergencyOptimizeResponse:
     """
     Evaluates available emergency vehicles against the incident's required type,
     calculates road route feasibilities, and selects the vehicle with the fastest ETA.
     """
     try:
-        response = optimize_emergency_dispatch(request.incident, provider, vehicle_repository)
+        available_chargers = charger_provider.get_all_chargers() if charger_provider else []
+        response = optimize_emergency_dispatch(
+            incident=request.incident,
+            routing_provider=provider,
+            vehicle_repository=vehicle_repository,
+            available_chargers=available_chargers
+        )
         return response
     except Exception as err:
         raise HTTPException(
@@ -123,14 +128,14 @@ def gis_locate(request: GisLocateRequest) -> GisLocateResponse:
 def dispatch_112(
     request: EmergencyDispatchEvent,
     provider: BaseRoutingProvider = Depends(get_routing_provider),
-    vehicle_repository: BaseEmergencyVehicleRepository = Depends(get_vehicle_repository)
+    vehicle_repository: BaseEmergencyVehicleRepository = Depends(get_vehicle_repository),
+    charger_provider: BaseChargerProvider = Depends(get_charger_provider)
 ) -> EmergencyDispatchResponse:
     """
     HTTP POST endpoint that processes an emergency event from 112, resolves the district,
     determines the fastest available matching vehicle, and optimizes the dispatch route.
     """
     try:
-        # Translate to internal EmergencyIncident structure
         incident = EmergencyIncident(
             incident_id=request.incident_id,
             incident_type=request.incident_type,
@@ -139,10 +144,14 @@ def dispatch_112(
             required_vehicle_type=request.required_vehicle_type
         )
         
-        # Invoke our existing modular emergency optimizer
-        opt_res = optimize_emergency_dispatch(incident, provider, vehicle_repository)
+        available_chargers = charger_provider.get_all_chargers() if charger_provider else []
+        opt_res = optimize_emergency_dispatch(
+            incident=incident,
+            routing_provider=provider,
+            vehicle_repository=vehicle_repository,
+            available_chargers=available_chargers
+        )
         
-        # Determine dispatch status based on recommendation result
         dispatch_status = "recommended" if opt_res.selected_vehicle is not None else "no_feasible_vehicle"
         
         return EmergencyDispatchResponse(
@@ -171,7 +180,6 @@ def ingest_vehicles(
 ):
     """
     Ingests or updates multiple emergency vehicles in the database.
-    Pydantic automatically validates coordinate ranges and status formats.
     """
     try:
         upserted_count = 0
