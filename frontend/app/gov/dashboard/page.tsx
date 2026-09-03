@@ -1,12 +1,38 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
+import { api } from "@/lib/api";
+
+const CommandMap = dynamic(() => import("@/components/CommandMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full min-h-[400px] flex items-center justify-center bg-slate-100 text-xs font-mono text-slate-500">
+      Loading Live Map...
+    </div>
+  ),
+});
 
 export default function GovDashboard() {
   const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
+  const [alerts, setAlerts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        const res = await api.get("/emergency/alerts");
+        setAlerts(res.data || []);
+      } catch (err) {
+        console.warn("Failed to fetch emergency alerts:", err);
+      }
+    };
+    fetchAlerts();
+    const interval = setInterval(fetchAlerts, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col relative">
@@ -221,61 +247,86 @@ export default function GovDashboard() {
           </div>
 
         </div>
-
-        {/* Map & Live Priorities Grid */}
+        
+        {/* Map & Live Priorities / View Alerts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          {/* OpenStreetMap Integration */}
+          {/* Live Incident Map Integration */}
           <div className="lg:col-span-2 bg-slate-100 rounded-2xl border border-emerald-200 overflow-hidden flex flex-col h-[450px]">
             <div className="bg-white px-4 py-3 border-b border-emerald-200 flex justify-between items-center">
-              <span className="text-xs font-bold text-slate-700">DELHI NCR LIVE MAP</span>
-              <span className="text-[10px] bg-emerald-700 text-white px-2 py-0.5 rounded font-medium">Live Feed</span>
+              <span className="text-xs font-bold text-slate-700">DELHI NCR LIVE INCIDENT MAP</span>
+              <span className="text-[10px] bg-emerald-700 text-white px-2 py-0.5 rounded font-medium">
+                {alerts.length} Incidents Active
+              </span>
             </div>
             <div className="flex-1 w-full relative">
-              <iframe
-                title="Delhi OpenStreetMap"
-                className="w-full h-full border-0 filter contrast-125"
-                src="https://www.openstreetmap.org/export/embed.html?bbox=76.84%2C28.40%2C77.35%2C28.88&layer=mapnik"
-                loading="lazy"
-              />
+              <CommandMap incidents={alerts} />
             </div>
           </div>
 
-          {/* Live Priorities Panel with Emergency Symbols */}
+          {/* Live Priorities / View Alerts Panel */}
           <div className="bg-emerald-50/30 rounded-2xl border border-emerald-200 p-5 flex flex-col justify-between">
             <div>
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-sm text-slate-900">LIVE PRIORITIES</h3>
-                <span className="text-[10px] bg-emerald-700 text-white px-2 py-0.5 rounded font-bold">ACTIVE</span>
+              <div className="flex justify-between items-center mb-3">
+                <div>
+                  <h3 className="font-bold text-sm text-slate-900">VIEW ALERTS</h3>
+                  <span className="text-[10px] text-emerald-800">112 Live Incident Feed</span>
+                </div>
+                <span className="text-[10px] bg-red-600 text-white px-2 py-0.5 rounded font-bold uppercase animate-pulse">
+                  {alerts.length} ACTIVE
+                </span>
               </div>
               
-              <div className="space-y-3">
-                <div className="p-3 bg-white rounded-xl border border-emerald-200 flex items-start gap-3">
-                  <span className="text-xl">🏥</span>
-                  <div>
-                    <span className="text-xs font-bold text-slate-800 block">Emergency #E102</span>
-                    <span className="text-[11px] text-gray-500">Ambulance required</span>
-                  </div>
-                </div>
-                <div className="p-3 bg-white rounded-xl border border-emerald-200 flex items-start gap-3">
-                  <span className="text-xl">⚡</span>
-                  <div>
-                    <span className="text-xs font-bold text-slate-800 block">Station #C-47</span>
-                    <span className="text-[11px] text-gray-500">High congestion predicted</span>
-                  </div>
-                </div>
-                <div className="p-3 bg-white rounded-xl border border-emerald-200 flex items-start gap-3">
-                  <span className="text-xl">🛡️</span>
-                  <div>
-                    <span className="text-xs font-bold text-slate-800 block">Emergency #E088</span>
-                    <span className="text-[11px] text-gray-500">Police dispatched</span>
-                  </div>
-                </div>
+              <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
+                {alerts.length === 0 ? (
+                  <p className="text-xs text-gray-500 py-6 text-center">No active emergency alerts.</p>
+                ) : (
+                  alerts.slice(0, 4).map((alt) => {
+                    const isFire = (alt.incident_type || "").toLowerCase().includes("fire");
+                    const isPolice = (alt.incident_type || "").toLowerCase().includes("police");
+                    const emoji = isFire ? "🔥" : isPolice ? "🚔" : "🚑";
+
+                    return (
+                      <div
+                        key={alt.incident_id}
+                        onClick={() => router.push("/gov/dispatch")}
+                        className="p-3 bg-white rounded-xl border border-emerald-200 space-y-1 shadow-sm hover:border-emerald-400 cursor-pointer transition"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-900 flex items-center gap-1 font-mono">
+                            <span>{emoji}</span> #{alt.incident_id}
+                          </span>
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
+                            alt.status === "DISPATCHED" || (alt.status || "").toLowerCase().includes("route")
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                              : "bg-amber-100 text-amber-800 border border-amber-300"
+                          }`}>
+                            {alt.status}
+                          </span>
+                        </div>
+
+                        <p className="text-[11px] text-slate-700 font-medium leading-snug line-clamp-2">
+                          {alt.summary || "Citizen emergency reported."}
+                        </p>
+
+                        <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-100 font-mono">
+                          <span className="truncate max-w-[140px]" title={alt.address}>
+                            📍 {alt.address || alt.district || "Delhi NCR"}
+                          </span>
+                          <span>ETA: <strong className="text-emerald-700">{alt.eta_minutes ? `${alt.eta_minutes.toFixed(1)}m` : "--"}</strong></span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
 
-            <button className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-semibold text-xs transition shadow-md shadow-emerald-700/20 mt-4">
-              View All Alerts
+            <button
+              onClick={() => router.push("/gov/dispatch")}
+              className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-semibold text-xs transition shadow-md shadow-emerald-700/20 mt-3 flex items-center justify-center gap-1.5"
+            >
+              <span>View All Emergency Incidents ({alerts.length})</span> →
             </button>
           </div>
 

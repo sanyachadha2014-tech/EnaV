@@ -371,15 +371,25 @@ export default function HomePage() {
 
             </div>
 
-            {/* ONLY CTA */}
+            {/* ACTIONS */}
 
-            <Link
-              href="/auth/signup"
-              className="hidden items-center gap-2 rounded-full bg-emerald-400 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-slate-950 shadow-[0_0_20px_rgba(16,185,129,0.3)] transition hover:bg-emerald-300 sm:flex"
-            >
-              Get started
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
+            <div className="hidden items-center gap-3 sm:flex">
+              <Link
+                href="/emergency"
+                className="flex items-center gap-1.5 rounded-full bg-rose-600/20 border border-rose-500/50 px-3.5 py-2 text-xs font-mono font-bold text-rose-300 transition hover:bg-rose-600/30 shadow-md shadow-rose-950"
+              >
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                112 Emergency
+              </Link>
+
+              <Link
+                href="/auth/signup"
+                className="flex items-center gap-2 rounded-full bg-emerald-400 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-slate-950 shadow-[0_0_20px_rgba(16,185,129,0.3)] transition hover:bg-emerald-300"
+              >
+                Get started
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
 
             {/* MOBILE */}
 

@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { api } from "@/lib/api";
 import {
   Globe,
   Siren,
@@ -30,6 +31,24 @@ const CommandMap = dynamic(() => import("@/components/CommandMap"), {
 });
 
 export default function GovernmentDashboardPage() {
+  const [alerts, setAlerts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      try {
+        const res = await api.get("/emergency/alerts");
+        setAlerts(res.data || []);
+      } catch (err) {
+        console.warn("Could not fetch alerts:", err);
+      }
+    };
+    fetchAlerts();
+    const interval = setInterval(fetchAlerts, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const latestAlert = alerts.length > 0 ? alerts[0] : null;
+
   // Layer Toggles
   const [layers, setLayers] = useState({
     emergency: true,
@@ -298,13 +317,15 @@ export default function GovernmentDashboardPage() {
 
           {/* DYNAMIC LEAFLET MAP VIEWPORT & OVERLAYS */}
           <div className="relative w-full flex-1 rounded-xl overflow-hidden border border-slate-800 bg-[#040812] min-h-[420px]">
-            <CommandMap />
+            <CommandMap incidents={alerts} />
 
             {/* FLOATING INCIDENT BADGES */}
             <div className="absolute bottom-4 left-4 z-[400] flex flex-col gap-2 pointer-events-none text-xs">
               <div className="bg-red-950/90 border border-red-500/50 text-red-400 px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-2 backdrop-blur pointer-events-auto">
                 <AlertTriangle className="w-4 h-4 animate-pulse" />
-                <span>INCIDENT #INC-8921: Low Battery Dispatch Priority (Janakpuri)</span>
+                <span>
+                  {latestAlert ? `INCIDENT #${latestAlert.incident_id}: ${latestAlert.summary || latestAlert.incident_type}` : "INCIDENT #INC-8921: Low Battery Dispatch Priority (Janakpuri)"}
+                </span>
               </div>
 
               <div className="bg-[#070B14]/90 border border-slate-800 text-slate-300 px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-2 backdrop-blur pointer-events-auto">
@@ -354,20 +375,22 @@ export default function GovernmentDashboardPage() {
 
             <div>
               <h4 className="text-white text-xs font-bold">
-                Incident #112-9842 (Medical Response)
+                Incident #{latestAlert?.incident_id || "112-9842"} ({latestAlert?.incident_type?.toUpperCase() || "Response"})
               </h4>
               <p className="text-slate-400 text-[11px] mt-0.5">
-                Location: Sector 14, Dwarka (3.2 km)
+                Location: {latestAlert?.address || latestAlert?.district || "Sector 14, Dwarka, New Delhi"}
               </p>
             </div>
 
             <div className="bg-[#0B132B] border border-slate-800 rounded-xl p-3 space-y-1">
               <div className="text-emerald-400 text-xs font-bold flex items-center gap-1">
                 <Zap className="w-3.5 h-3.5 fill-current" />
-                Best Feasible EV: EV-Ambu-04
+                Assigned EV: {latestAlert?.selected_vehicle || "EV-Ambu-04"}
               </div>
-              <p className="text-slate-400 text-[10px]">
-                Feasibility Score: <span className="text-white font-bold">98.4%</span> (Batt: 84%, ETA: 6m)
+              <p className="text-slate-400 text-[10px] flex items-center gap-2">
+                <span>Status: <strong className="text-white uppercase">{latestAlert?.status || "Dispatched"}</strong></span>
+                <span>•</span>
+                <span>Est. ETA: <strong className="text-emerald-400">{latestAlert?.eta_minutes ? `${latestAlert.eta_minutes.toFixed(1)} mins` : "6.0 mins"}</strong></span>
               </p>
             </div>
 

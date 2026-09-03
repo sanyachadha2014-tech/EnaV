@@ -1,7 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { api } from "@/lib/api";
 import {
   Siren,
   MapPin,
@@ -14,6 +15,8 @@ import {
   Route,
   Activity,
   Car,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react";
 
 const CommandMap = dynamic(() => import("@/components/CommandMap"), {
@@ -29,69 +32,99 @@ const CommandMap = dynamic(() => import("@/components/CommandMap"), {
 });
 
 /* -------------------------------------------------------------------------- */
+/* INCIDENT STATUS & CLASSIFICATION LOGIC                                     */
+/* -------------------------------------------------------------------------- */
+
+export const isAwaitedStatus = (status?: string | null) => {
+  const s = (status || "").toLowerCase();
+  return s === "awaited" || s.includes("pending") || s === "new";
+};
+
+export const isAssignedStatus = (status?: string | null) => {
+  const s = (status || "").toLowerCase();
+  return s === "assigned" || s === "dispatched" || s.includes("route");
+};
+
+export const isCompletedStatus = (status?: string | null) => {
+  const s = (status || "").toLowerCase();
+  return s === "completed" || s === "resolved" || s === "closed";
+};
+
+export const isActiveIncident = (status?: string | null) => !isCompletedStatus(status);
+
+/* -------------------------------------------------------------------------- */
 /* INCIDENT DATA                                                              */
 /* -------------------------------------------------------------------------- */
 
-const incidents = [
+const initialIncidents = [
   {
-    id: "E102",
+    id: "INC-112-4590",
+    incident_id: "INC-112-4590",
     type: "Medical Emergency",
-    location: "Janakpuri Sector 7",
+    incident_type: "medical",
+    location: "Janakpuri District Centre, West Delhi",
+    address: "Janakpuri District Centre, West Delhi",
+    district: "West Delhi",
+    distance: "2.8 km",
+    received: "14:32 IST",
+    priority: "HIGH",
+    source: "112 Emergency Network",
+    status: "PENDING_RESOURCES",
+    selected_vehicle: null,
+    vehicle_type: null,
+    eta_minutes: null,
+    distance_km: null,
+    latitude: 28.6290,
+    longitude: 77.0780,
+    assigned_vehicle_location: null,
+    route_geometry: null,
+    summary: "Two-vehicle collision with passenger injury at Janakpuri District Centre.",
+  },
+  {
+    id: "INC-112-9842",
+    incident_id: "INC-112-9842",
+    type: "Fire Hazard",
+    incident_type: "fire",
+    location: "Outer Ring Road, Janakpuri, West Delhi",
+    address: "Outer Ring Road, Janakpuri, West Delhi",
+    district: "West Delhi",
     distance: "3.2 km",
     received: "14:28 IST",
     priority: "CRITICAL",
     source: "112 Emergency Network",
-    status: "awaited",
+    status: "DISPATCHED",
+    selected_vehicle: "FIRE-001",
+    vehicle_type: "Electric Fire Engine",
+    eta_minutes: 6.8,
+    distance_km: 3.2,
+    latitude: 28.6328,
+    longitude: 77.0854,
+    assigned_vehicle_location: { lat: 28.6450, lng: 77.0980 },
+    route_geometry: [[28.6450, 77.0980], [28.6390, 77.0920], [28.6328, 77.0854]],
+    summary: "Electrical transformer flare-up reported near Outer Ring Road.",
   },
   {
-    id: "E104",
-    type: "Fire Hazard",
-    location: "Connaught Place",
-    distance: "7.8 km",
-    received: "14:30 IST",
-    priority: "HIGH",
-    source: "112 Emergency Network",
-    status: "awaited",
-  },
-  {
-    id: "E098",
-    type: "Traffic Collision",
-    location: "Ring Road / AIIMS",
+    id: "INC-112-9811",
+    incident_id: "INC-112-9811",
+    type: "Medical Emergency",
+    incident_type: "medical",
+    location: "Connaught Place Central, New Delhi",
+    address: "Connaught Place Central, New Delhi",
+    district: "New Delhi",
     distance: "5.1 km",
     received: "14:21 IST",
     priority: "HIGH",
-    source: "Traffic Control",
-    status: "assigned",
-  },
-  {
-    id: "E091",
-    type: "Public Safety Support",
-    location: "Dwarka Sector 14",
-    distance: "9.4 km",
-    received: "14:16 IST",
-    priority: "MEDIUM",
     source: "112 Emergency Network",
-    status: "assigned",
-  },
-  {
-    id: "E087",
-    type: "Medical Assistance",
-    location: "Rohini Sector 11",
-    distance: "11.2 km",
-    received: "14:11 IST",
-    priority: "HIGH",
-    source: "112 Emergency Network",
-    status: "awaited",
-  },
-  {
-    id: "E081",
-    type: "Road Obstruction",
-    location: "Outer Ring Road",
-    distance: "13.6 km",
-    received: "14:05 IST",
-    priority: "MEDIUM",
-    source: "Traffic Control",
-    status: "completed",
+    status: "DISPATCHED",
+    selected_vehicle: "AMB-001",
+    vehicle_type: "Advanced Life Support",
+    eta_minutes: 4.5,
+    distance_km: 2.1,
+    latitude: 28.6139,
+    longitude: 77.2090,
+    assigned_vehicle_location: { lat: 28.6230, lng: 77.2180 },
+    route_geometry: [[28.6230, 77.2180], [28.6180, 77.2130], [28.6139, 77.2090]],
+    summary: "Pedestrian heat exhaustion near transit junction.",
   },
 ];
 
@@ -99,15 +132,14 @@ const incidents = [
 /* VEHICLE DATA                                                               */
 /* -------------------------------------------------------------------------- */
 
-const vehicles = [
+const initialVehicles = [
   {
     id: "EV-AMB-21",
     type: "Advanced Life Support",
     distance: "3.2 km",
     battery: 74,
-    eta: "14 min",
+    eta: "6 min",
     traffic: "Moderate",
-    score: 98.4,
     recommended: true,
     status: "AVAILABLE",
   },
@@ -118,7 +150,6 @@ const vehicles = [
     battery: 8,
     eta: "14 min",
     traffic: "Low",
-    score: 71.2,
     recommended: false,
     status: "LOW BATTERY",
   },
@@ -127,9 +158,8 @@ const vehicles = [
     type: "Advanced Life Support",
     distance: "5.1 km",
     battery: 91,
-    eta: "14 min",
+    eta: "11 min",
     traffic: "Moderate",
-    score: 89.6,
     recommended: false,
     status: "AVAILABLE",
   },
@@ -138,9 +168,8 @@ const vehicles = [
     type: "Rapid Response Unit",
     distance: "5.8 km",
     battery: 67,
-    eta: "14 min",
+    eta: "9 min",
     traffic: "Low",
-    score: 82.4,
     recommended: false,
     status: "AVAILABLE",
   },
@@ -149,9 +178,8 @@ const vehicles = [
     type: "Advanced Life Support",
     distance: "7.2 km",
     battery: 81,
-    eta: "14 min",
+    eta: "16 min",
     traffic: "High",
-    score: 78.8,
     recommended: false,
     status: "AVAILABLE",
   },
@@ -160,9 +188,8 @@ const vehicles = [
     type: "Rapid Response Unit",
     distance: "8.4 km",
     battery: 56,
-    eta: "14 min",
+    eta: "18 min",
     traffic: "Moderate",
-    score: 74.5,
     recommended: false,
     status: "AVAILABLE",
   },
@@ -173,14 +200,87 @@ const vehicles = [
 /* -------------------------------------------------------------------------- */
 
 export default function EmergencyPage() {
-  const [selectedIncidentId, setSelectedIncidentId] = useState("E102");
-  const [selectedVehicleId, setSelectedVehicleId] =
-    useState("EV-AMB-21");
+  const [incidentsList, setIncidentsList] = useState<any[]>([]);
+  const [vehiclesList, setVehiclesList] = useState<any[]>(initialVehicles);
+  const [selectedIncidentId, setSelectedIncidentId] = useState<string>("INC-112-4590");
+  const [selectedVehicleId, setSelectedVehicleId] = useState("EV-AMB-21");
+
+  const [isDispatching, setIsDispatching] = useState(false);
+  const [dispatchToast, setDispatchToast] = useState<{
+    vehicleId: string;
+    incidentId: string;
+    eta: string;
+    vehicleType: string;
+  } | null>(null);
+  const [dispatchError, setDispatchError] = useState<string | null>(null);
+
+  const fetchIncidentsAndVehicles = async () => {
+    try {
+      const [alertsRes, vehiclesRes] = await Promise.allSettled([
+        api.get("/emergency/alerts"),
+        api.get("/emergency/vehicles"),
+      ]);
+
+      if (alertsRes.status === "fulfilled" && alertsRes.value.data && alertsRes.value.data.length > 0) {
+        const mapped = alertsRes.value.data.map((item: any) => {
+          const isFire = (item.incident_type || "").toLowerCase().includes("fire");
+          const isPolice = (item.incident_type || "").toLowerCase().includes("police");
+          const typeLabel = isFire ? "Fire Hazard" : isPolice ? "Police Assistance" : "Medical Emergency";
+
+          return {
+            id: item.incident_id,
+            incident_id: item.incident_id,
+            type: typeLabel,
+            incident_type: item.incident_type,
+            location: item.address || item.district || "Delhi NCR",
+            address: item.address || item.district || "Delhi NCR",
+            district: item.district || "Delhi NCR",
+            distance: item.distance_km
+              ? `${item.distance_km.toFixed(1)} km`
+              : `${(item.latitude ? Math.abs(item.latitude - 28.6) * 40 + 2.5 : 3.8).toFixed(1)} km`,
+            received: new Date(item.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + " IST",
+            priority: isFire ? "CRITICAL" : "HIGH",
+            source: "112 Emergency Network",
+            status: item.status || "AWAITED",
+            selected_vehicle: item.selected_vehicle || null,
+            vehicle_type: item.vehicle_type || null,
+            eta_minutes: item.eta_minutes || null,
+            distance_km: item.distance_km || null,
+            assigned_vehicle_location: item.assigned_vehicle_location || null,
+            route_geometry: item.route_geometry || null,
+            latitude: item.latitude || 28.6139,
+            longitude: item.longitude || 77.2090,
+            summary: item.summary || "Citizen emergency reported.",
+          };
+        });
+        setIncidentsList(mapped);
+      }
+
+      if (vehiclesRes.status === "fulfilled" && vehiclesRes.value.data && vehiclesRes.value.data.length > 0) {
+        setVehiclesList(vehiclesRes.value.data);
+      }
+    } catch (err) {
+      console.warn("Error synchronizing emergency data:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchIncidentsAndVehicles();
+    const interval = setInterval(fetchIncidentsAndVehicles, 8000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const incidents = incidentsList.length > 0 ? incidentsList : initialIncidents;
+  const vehicles = vehiclesList.length > 0 ? vehiclesList : initialVehicles;
+
+  useEffect(() => {
+    if (incidents.length > 0 && (!selectedIncidentId || !incidents.find((i) => i.id === selectedIncidentId))) {
+      setSelectedIncidentId(incidents[0].id);
+    }
+  }, [incidents, selectedIncidentId]);
 
   const selectedIncident =
-    incidents.find(
-      (incident) => incident.id === selectedIncidentId,
-    ) ?? incidents[0];
+    incidents.find((incident) => incident.id === selectedIncidentId) ?? incidents[0];
 
   const selectedVehicle =
     vehicles.find(
@@ -192,16 +292,79 @@ export default function EmergencyPage() {
       vehicles.filter(
         (vehicle) => vehicle.status === "AVAILABLE",
       ),
-    [],
+    [vehicles],
   );
 
-  const openIncidents = incidents.filter(
-    (incident) => incident.status !== "completed",
-  ).length;
+  // Status Counts dynamically calculated from the single source of truth
+  const openIncidents = incidents.filter((incident) => isActiveIncident(incident.status)).length;
+  const awaitedCount = incidents.filter((i) => isAwaitedStatus(i.status)).length;
+  const assignedCount = incidents.filter((i) => isAssignedStatus(i.status)).length;
+  const completedCount = incidents.filter((i) => isCompletedStatus(i.status)).length;
 
-  const awaitedCount = incidents.filter(i => i.status === "awaited").length;
-  const assignedCount = incidents.filter(i => i.status === "assigned").length;
-  const completedCount = incidents.filter(i => i.status === "completed").length;
+  // Actual EV Dispatch Assignment Action
+  const handleDispatch = async () => {
+    if (!selectedIncident || !selectedVehicle || selectedVehicle.status !== "AVAILABLE" || isDispatching) {
+      return;
+    }
+
+    setIsDispatching(true);
+    setDispatchError(null);
+
+    try {
+      const res = await api.post("/emergency/dispatch", {
+        incident_id: selectedIncident.id,
+        vehicle_id: selectedVehicle.id,
+        vehicle_type: selectedVehicle.type,
+        eta_minutes: parseFloat(selectedVehicle.eta) || 6.2,
+        distance_km: parseFloat(selectedVehicle.distance) || 3.2,
+      });
+
+      const updatedEta = res.data.eta_minutes ? `${res.data.eta_minutes.toFixed(1)} min` : selectedVehicle.eta;
+
+      // Update incident state locally immediately
+      setIncidentsList((prev) =>
+        (prev.length > 0 ? prev : initialIncidents).map((inc) =>
+          inc.id === selectedIncident.id
+            ? {
+                ...inc,
+                status: "DISPATCHED",
+                selected_vehicle: selectedVehicle.id,
+                vehicle_type: selectedVehicle.type,
+                eta_minutes: res.data.eta_minutes,
+                distance_km: res.data.distance_km,
+                assigned_vehicle_location: res.data.assigned_vehicle_location,
+                route_geometry: res.data.route_geometry,
+              }
+            : inc
+        )
+      );
+
+      // Update vehicles state locally immediately
+      setVehiclesList((prev) =>
+        prev.map((veh) =>
+          veh.id === selectedVehicle.id
+            ? { ...veh, status: "EN ROUTE", eta: updatedEta }
+            : veh
+        )
+      );
+
+      // Show confirmation toast
+      setDispatchToast({
+        vehicleId: selectedVehicle.id,
+        incidentId: selectedIncident.id,
+        eta: updatedEta,
+        vehicleType: selectedVehicle.type,
+      });
+
+      // Refetch from backend to guarantee complete sync
+      fetchIncidentsAndVehicles();
+    } catch (err: any) {
+      console.error("Dispatch assignment failure:", err);
+      setDispatchError("Unable to dispatch vehicle. Please try again or select another available unit.");
+    } finally {
+      setIsDispatching(false);
+    }
+  };
 
   return (
     <div className="h-screen min-h-0 w-full overflow-hidden bg-white text-emerald-950">
@@ -254,11 +417,57 @@ export default function EmergencyPage() {
       {/* MAIN                                                               */}
       {/* ================================================================== */}
 
-      <main className="h-[calc(100vh-68px)] min-h-0 w-full overflow-hidden p-3">
+      <main className="h-[calc(100vh-68px)] min-h-0 w-full overflow-hidden p-3 flex flex-col">
+        {/* SUCCESS DISPATCH BANNER */}
+        {dispatchToast && (
+          <div className="mb-2 shrink-0 rounded-xl border border-emerald-500 bg-emerald-950 p-3 text-white shadow-xl flex items-center justify-between z-50">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg text-lg font-bold">
+                🚑
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-sm text-emerald-300">
+                    {dispatchToast.vehicleId} DISPATCHED
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold uppercase border border-emerald-500/40">
+                    EN ROUTE
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  Unit is now en route to Incident <strong>#{dispatchToast.incidentId}</strong> • Type: {dispatchToast.vehicleType} • ETA: <strong className="text-emerald-300">{dispatchToast.eta}</strong>
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setDispatchToast(null)}
+              className="text-xs text-slate-400 hover:text-white px-2 py-1 font-mono"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* ERROR BANNER */}
+        {dispatchError && (
+          <div className="mb-2 shrink-0 rounded-xl border border-red-500/50 bg-red-950/90 p-3 text-red-200 text-xs flex items-center justify-between z-50">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-red-400 shrink-0" />
+              <span>{dispatchError}</span>
+            </div>
+            <button
+              onClick={() => setDispatchError(null)}
+              className="text-red-400 hover:text-white font-mono px-2 py-0.5"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         <div
           className="
             grid
-            h-full
+            flex-1
             min-h-0
             w-full
             min-w-0
@@ -360,13 +569,13 @@ export default function EmergencyPage() {
                         </span>
 
                         <span
-                          className={
-                            incident.status === "assigned"
-                              ? "font-semibold text-amber-700"
-                              : incident.status === "completed"
-                              ? "font-semibold text-emerald-700"
-                              : "font-semibold text-red-600"
-                          }
+                          className={`font-bold uppercase px-1.5 py-0.5 rounded text-[9px] ${
+                            isAssignedStatus(incident.status)
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                              : isCompletedStatus(incident.status)
+                              ? "bg-slate-100 text-slate-600 border border-slate-200"
+                              : "bg-amber-100 text-amber-800 border border-amber-300"
+                          }`}
                         >
                           {incident.status}
                         </span>
@@ -446,47 +655,65 @@ export default function EmergencyPage() {
             </div>
 
             <div className="relative min-h-0 flex-1 overflow-hidden">
-              <iframe
-                title="Delhi OpenStreetMap"
-                className="w-full h-full border-0 filter contrast-125"
-                src="https://www.openstreetmap.org/export/embed.html?bbox=76.84%2C28.40%2C77.35%2C28.88&layer=mapnik"
-                loading="lazy"
+              <CommandMap
+                incidents={incidents.map((i) => ({
+                  incident_id: i.id,
+                  incident_type: i.incident_type || (i.type.toLowerCase().includes("fire") ? "fire" : i.type.toLowerCase().includes("police") ? "police" : "medical"),
+                  address: i.address || i.location,
+                  district: i.district,
+                  latitude: i.latitude || 28.6139,
+                  longitude: i.longitude || 77.2090,
+                  status: i.status,
+                  selected_vehicle: i.selected_vehicle,
+                  vehicle_type: i.vehicle_type,
+                  eta_minutes: i.eta_minutes,
+                  summary: i.summary,
+                  assigned_vehicle_location: i.assigned_vehicle_location,
+                  route_geometry: i.route_geometry,
+                }))}
+                selectedIncidentId={selectedIncident?.id}
+                onSelectIncident={(id) => setSelectedIncidentId(id)}
               />
 
               {/* INCIDENT MAP CARD */}
-
               <div className="absolute left-3 top-3 z-[400] max-w-[calc(100%-24px)] rounded-lg border border-red-200 bg-white/95 px-3.5 py-2.5 shadow-xl backdrop-blur">
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-red-500" />
-
-                  <span className="text-[12px] font-bold text-red-600">
-                    INCIDENT #{selectedIncident.id}
+                  <span className="text-[12px] font-bold text-red-600 font-mono">
+                    INCIDENT #{selectedIncident?.id}
+                  </span>
+                  <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-red-100 text-red-700">
+                    {selectedIncident?.status}
                   </span>
                 </div>
 
-                <p className="mt-1 truncate text-[11px] text-emerald-700">
-                  {selectedIncident.location} ·{" "}
-                  {selectedIncident.type}
+                <p className="mt-1 truncate text-[11px] text-emerald-800 font-medium">
+                  📍 {selectedIncident?.address || selectedIncident?.location}
+                </p>
+                <p className="text-[10px] text-slate-500 font-mono">
+                  District: {selectedIncident?.district} · Type: {selectedIncident?.type}
                 </p>
               </div>
 
               {/* RESPONSE CORRIDOR */}
-
               <div className="absolute bottom-3 left-3 right-3 z-[400] rounded-lg border border-emerald-200 bg-white/95 p-3.5 shadow-xl backdrop-blur">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-2">
                     <Navigation className="h-4 w-4 shrink-0 text-emerald-700" />
 
                     <div className="min-w-0">
+                      <p className="text-[11px] font-bold text-slate-900">
+                        Assigned Unit: <span className="text-emerald-700 font-mono">{selectedIncident?.selected_vehicle || selectedVehicle?.id}</span>
+                      </p>
                       <p className="mt-0.5 truncate text-[10px] text-emerald-800 font-medium">
-                        Optimized for emergency priority and vehicle battery
+                        Optimized for emergency priority and vehicle battery reserve
                       </p>
                     </div>
                   </div>
 
                   <div className="shrink-0 text-right">
-                    <p className="text-[15px] font-bold text-emerald-700">
-                      14 min
+                    <p className="text-[15px] font-bold text-emerald-700 font-mono">
+                      {selectedIncident?.eta_minutes ? `${selectedIncident.eta_minutes.toFixed(1)} min` : selectedVehicle?.eta || "6 min"}
                     </p>
 
                     <p className="text-[9px] uppercase tracking-wide text-emerald-600">
@@ -589,24 +816,47 @@ export default function EmergencyPage() {
               </div>
 
               <button
+                type="button"
+                onClick={handleDispatch}
                 disabled={
-                  selectedVehicle.status !== "AVAILABLE"
+                  isDispatching ||
+                  selectedVehicle?.status !== "AVAILABLE" ||
+                  isAssignedStatus(selectedIncident?.status)
                 }
-                className={`flex w-full items-center justify-center gap-2 rounded-lg px-3 py-3 text-[12px] font-bold transition ${
-                  selectedVehicle.status === "AVAILABLE"
-                    ? "bg-emerald-700 text-white shadow-lg shadow-emerald-700/10 hover:bg-emerald-800"
+                className={`flex w-full items-center justify-center gap-2 rounded-lg px-3 py-3 text-[12px] font-bold transition shadow-lg ${
+                  isDispatching
+                    ? "bg-emerald-600 text-white cursor-wait opacity-80"
+                    : isAssignedStatus(selectedIncident?.status)
+                    ? "bg-slate-100 text-slate-500 border border-slate-300 cursor-not-allowed"
+                    : selectedVehicle?.status === "AVAILABLE"
+                    ? "bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white shadow-emerald-700/20 active:scale-[0.98] cursor-pointer"
                     : "cursor-not-allowed bg-emerald-100 text-emerald-400"
                 }`}
               >
-                <Siren className="h-4 w-4" />
-
-                {selectedVehicle.status === "AVAILABLE"
-                  ? `ASSIGN ${selectedVehicle.id}`
-                  : "UNIT NOT DISPATCHABLE"}
+                {isDispatching ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>DISPATCHING UNIT...</span>
+                  </>
+                ) : isAssignedStatus(selectedIncident?.status) ? (
+                  <>
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    <span>✓ UNIT DISPATCHED ({selectedIncident?.selected_vehicle || selectedVehicle?.id})</span>
+                  </>
+                ) : selectedVehicle?.status === "AVAILABLE" ? (
+                  <>
+                    <Siren className="h-4 w-4" />
+                    <span>ASSIGN {selectedVehicle?.id}</span>
+                  </>
+                ) : (
+                  <span>UNIT NOT DISPATCHABLE ({selectedVehicle?.status})</span>
+                )}
               </button>
 
               <p className="mt-2 text-center text-[10px] text-emerald-600">
-                Dispatch creates an emergency route for the selected unit.
+                {isAssignedStatus(selectedIncident?.status)
+                  ? `Unit is active on emergency call #${selectedIncident?.id}.`
+                  : "Dispatch creates an emergency route for the selected unit."}
               </p>
             </div>
           </section>
@@ -771,8 +1021,8 @@ function VehicleCard({
               </h3>
 
               {vehicle.recommended && (
-                <span className="rounded bg-emerald-700 px-1.5 py-0.5 text-[8px] font-black text-white">
-                  BEST MATCH
+                <span className="rounded bg-emerald-700 px-1.5 py-0.5 text-[8px] font-black text-white uppercase">
+                  RECOMMENDED
                 </span>
               )}
             </div>
@@ -783,21 +1033,18 @@ function VehicleCard({
           </div>
         </div>
 
-        <div className="shrink-0 text-right">
-          <p
-            className={`text-[15px] font-bold ${
-              vehicle.score >= 90
-                ? "text-emerald-700"
-                : vehicle.score >= 80
-                  ? "text-emerald-600"
-                  : "text-amber-600"
-            }`}
-          >
-            {vehicle.score}%
-          </p>
-
-          <p className="text-[9px] text-emerald-600">
-            MATCH
+        <div className="shrink-0 text-right font-mono">
+          <span className={`inline-block rounded px-2 py-0.5 text-[9px] font-bold uppercase ${
+            vehicle.status === "AVAILABLE"
+              ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+              : vehicle.status === "EN ROUTE"
+              ? "bg-blue-100 text-blue-800 border border-blue-300 animate-pulse"
+              : "bg-red-100 text-red-800 border border-red-200"
+          }`}>
+            {vehicle.status}
+          </span>
+          <p className="text-[11px] text-emerald-800 font-bold mt-1">
+            ETA: {vehicle.eta}
           </p>
         </div>
       </div>
@@ -844,7 +1091,9 @@ function VehicleCard({
 
         <span
           className={`shrink-0 text-[9px] font-bold ${
-            lowBattery
+            vehicle.status === "EN ROUTE"
+              ? "text-blue-700 font-bold"
+              : lowBattery
               ? "text-red-600"
               : "text-emerald-700"
           }`}
