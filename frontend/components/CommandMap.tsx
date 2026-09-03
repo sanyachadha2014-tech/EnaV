@@ -10,8 +10,8 @@ export interface MapIncident {
   incident_type: string;
   address?: string;
   district?: string;
-  latitude: number;
-  longitude: number;
+  latitude?: number | null;
+  longitude?: number | null;
   status: string;
   selected_vehicle?: string | null;
   vehicle_type?: string | null;
@@ -144,18 +144,25 @@ export default function CommandMap({
   zoom = 13,
   height = "100%",
 }: CommandMapProps) {
+  // Filter out any incidents missing latitude or longitude to prevent runtime crashes
+  const validIncidents = useMemo(() => {
+    return (incidents || []).filter(
+      (inc) => typeof inc.latitude === "number" && typeof inc.longitude === "number"
+    );
+  }, [incidents]);
+
   // Determine primary map focus coordinate
   const selectedIncident = useMemo(() => {
-    if (!incidents.length) return null;
+    if (!validIncidents.length) return null;
     if (selectedIncidentId) {
-      return incidents.find((i) => i.incident_id === selectedIncidentId) || incidents[0];
+      return validIncidents.find((i) => i.incident_id === selectedIncidentId) || validIncidents[0];
     }
-    return incidents[0];
-  }, [incidents, selectedIncidentId]);
+    return validIncidents[0];
+  }, [validIncidents, selectedIncidentId]);
 
   const mapCenter: [number, number] = useMemo(() => {
     if (center) return center;
-    if (selectedIncident && selectedIncident.latitude && selectedIncident.longitude) {
+    if (selectedIncident && typeof selectedIncident.latitude === "number" && typeof selectedIncident.longitude === "number") {
       return [selectedIncident.latitude, selectedIncident.longitude];
     }
     return [28.6139, 77.2090]; // Default New Delhi central coordinate
@@ -170,13 +177,15 @@ export default function CommandMap({
         style={{ height: "100%", width: "100%" }}
       >
         <TileLayer
-          attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
         <MapViewController center={mapCenter} zoom={selectedIncident ? 14 : zoom} />
 
-        {incidents.map((incident) => {
+        {validIncidents.map((incident) => {
+          const lat = incident.latitude as number;
+          const lng = incident.longitude as number;
           const isSelected = selectedIncident?.incident_id === incident.incident_id;
           const icon = createEmergencyIcon(incident.incident_type, isSelected);
 
@@ -184,21 +193,20 @@ export default function CommandMap({
           const isDispatched = statusLower === "dispatched" || statusLower === "assigned" || statusLower.includes("route");
           const hasAssignedVehicle = Boolean(incident.selected_vehicle && isDispatched);
 
-          // Determine EV vehicle position
+          // Determine EV vehicle position safely
           let vehiclePos: [number, number] | null = null;
           if (hasAssignedVehicle) {
-            if (incident.assigned_vehicle_location) {
+            if (incident.assigned_vehicle_location && typeof incident.assigned_vehicle_location.lat === "number" && typeof incident.assigned_vehicle_location.lng === "number") {
               vehiclePos = [incident.assigned_vehicle_location.lat, incident.assigned_vehicle_location.lng];
             } else {
-              // Simulated nearby deployment station offset
               vehiclePos = [
-                roundCoord(incident.latitude + 0.016),
-                roundCoord(incident.longitude - 0.014)
+                roundCoord(lat + 0.016),
+                roundCoord(lng - 0.014)
               ];
             }
           }
 
-          // Determine polyline route coordinates
+          // Determine polyline route coordinates safely
           let routeCoordinates: [number, number][] = [];
           if (hasAssignedVehicle && vehiclePos) {
             if (incident.route_geometry && incident.route_geometry.length >= 2) {
@@ -207,14 +215,14 @@ export default function CommandMap({
               routeCoordinates = [
                 vehiclePos,
                 [
-                  roundCoord(vehiclePos[0] * 0.65 + incident.latitude * 0.35),
-                  roundCoord(vehiclePos[1] * 0.65 + incident.longitude * 0.35)
+                  roundCoord(vehiclePos[0] * 0.65 + lat * 0.35),
+                  roundCoord(vehiclePos[1] * 0.65 + lng * 0.35)
                 ],
                 [
-                  roundCoord(vehiclePos[0] * 0.35 + incident.latitude * 0.65),
-                  roundCoord(vehiclePos[1] * 0.35 + incident.longitude * 0.65)
+                  roundCoord(vehiclePos[0] * 0.35 + lat * 0.65),
+                  roundCoord(vehiclePos[1] * 0.35 + lng * 0.65)
                 ],
-                [incident.latitude, incident.longitude]
+                [lat, lng]
               ];
             }
           }
@@ -224,9 +232,9 @@ export default function CommandMap({
 
           return (
             <React.Fragment key={incident.incident_id}>
-              {/* Incident Marker (📍) */}
+              {/* Incident Marker */}
               <Marker
-                position={[incident.latitude, incident.longitude]}
+                position={[lat, lng]}
                 icon={icon}
                 eventHandlers={{
                   click: () => {
@@ -259,7 +267,7 @@ export default function CommandMap({
 
                     <div className="pt-1 border-t text-[10px] text-slate-600 flex justify-between font-mono">
                       <span>Unit: <strong className="text-slate-900">{incident.selected_vehicle || "Awaited"}</strong></span>
-                      <span>ETA: <strong className="text-emerald-700">{incident.eta_minutes ? `${incident.eta_minutes.toFixed(1)}m` : "--"}</strong></span>
+                      <span>ETA: <strong className="text-emerald-700">{typeof incident.eta_minutes === 'number' ? `${incident.eta_minutes.toFixed(1)}m` : "--"}</strong></span>
                     </div>
                   </div>
                 </Popup>
@@ -268,7 +276,7 @@ export default function CommandMap({
               {/* Highlighting pulse circle around the active/selected incident */}
               {isSelected && (
                 <Circle
-                  center={[incident.latitude, incident.longitude]}
+                  center={[lat, lng]}
                   radius={450}
                   pathOptions={{
                     color: "#EF4444",
@@ -280,7 +288,7 @@ export default function CommandMap({
                 />
               )}
 
-              {/* Dispatched Vehicle Marker (🚑 EV Unit) */}
+              {/* Dispatched Vehicle Marker */}
               {hasAssignedVehicle && vehiclePos && (
                 <Marker
                   position={vehiclePos}
@@ -298,14 +306,14 @@ export default function CommandMap({
                         Target: <strong>#{incident.incident_id}</strong>
                       </div>
                       <div className="text-[10px] text-slate-600">
-                        Est. ETA: <strong className="text-emerald-700">{incident.eta_minutes ? `${incident.eta_minutes.toFixed(1)} mins` : "6 mins"}</strong>
+                        Est. ETA: <strong className="text-emerald-700">{typeof incident.eta_minutes === 'number' ? `${incident.eta_minutes.toFixed(1)} mins` : "6 mins"}</strong>
                       </div>
                     </div>
                   </Popup>
                 </Marker>
               )}
 
-              {/* Connecting Emergency Route Polyline (EV Unit 🚑 ─────────→ Incident 📍) */}
+              {/* Connecting Emergency Route Polyline */}
               {hasAssignedVehicle && routeCoordinates.length > 1 && (
                 <Polyline
                   positions={routeCoordinates}
