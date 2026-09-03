@@ -21,21 +21,12 @@ import {
     History,
     Sliders,
     X,
-    Gauge
+    Gauge,
+    Eye
 } from "lucide-react";
 
 import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
 
-// Fix for default Leaflet marker icons in Next.js
-if (typeof window !== 'undefined') {
-    delete (L.Icon.Default.prototype as any)._getIconUrl;
-    L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    });
-}
 
 // Dynamically import the isolated EVMap component to prevent SSR window reference issues
 const EVMap = dynamic(() => import("../../../components/EVMap"), {
@@ -67,6 +58,12 @@ interface RouteOption {
     tollCost: string;
     elevationGain: string;
     kwhDepletion: string;
+    carbon?: {
+        iceEmissions: number;
+        evEmissions: number;
+        co2Saved: number;
+        credits: number;
+    };
     chargingStops: { name: string; distance: string; kwh: string }[];
 }
 
@@ -89,6 +86,27 @@ interface TripHistoryItem {
     timestamp: string;
     status: "Completed" | "Cancelled";
 }
+
+// Carbon Credit calculation
+// Project assumptions:
+// ICE vehicle = 0.15 kg CO₂/km
+// EV = 0.05 kg CO₂/km
+// 1 CC = 1 kg CO₂ avoided
+const calculateCarbonCredits = (distanceKm: number) => {
+    const ICE_EMISSION_PER_KM = 0.15;
+    const EV_EMISSION_PER_KM = 0.05;
+
+    const iceEmissions = distanceKm * ICE_EMISSION_PER_KM;
+    const evEmissions = distanceKm * EV_EMISSION_PER_KM;
+    const co2Saved = Math.max(0, iceEmissions - evEmissions);
+
+    return {
+        iceEmissions: Number(iceEmissions.toFixed(2)),
+        evEmissions: Number(evEmissions.toFixed(2)),
+        co2Saved: Number(co2Saved.toFixed(2)),
+        credits: Number(co2Saved.toFixed(2)),
+    };
+};
 
 export default function RouteOptimizerPage() {
     const [isMounted, setIsMounted] = useState(false);
@@ -124,10 +142,23 @@ export default function RouteOptimizerPage() {
     // Modal and Panel States
     const [showVehicleModal, setShowVehicleModal] = useState(false);
     const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
-    const [tripHistory, setTripHistory] = useState<TripHistoryItem[]>([
-        { id: "trip-01", from: "Connaught Place, New Delhi", to: "Cyber City, Gurugram", distance: "28.4 km", duration: "42 mins", timestamp: "2026-09-01 14:30", status: "Completed" },
-        { id: "trip-02", from: "IGDTUW, Kashmere Gate", to: "Noida Sector 62", distance: "22.1 km", duration: "35 mins", timestamp: "2026-08-30 09:15", status: "Completed" }
-    ]);
+    const [showCarbonInfo, setShowCarbonInfo] = useState(false);
+    const [tripHistory, setTripHistory] = useState<TripHistoryItem[]>([]);
+
+    useEffect(() => {
+        try {
+            const savedHistory = localStorage.getItem("ev_trip_history");
+            if (!savedHistory) return;
+
+            const parsedHistory = JSON.parse(savedHistory);
+
+            if (Array.isArray(parsedHistory)) {
+                setTripHistory(parsedHistory);
+            }
+        } catch (error) {
+            console.error("Failed to load trip history:", error);
+        }
+    }, []);
 
     const [vehicleConfig, setVehicleConfig] = useState<VehicleConfig>({
         vehicle_id: "EV-2048-DX",
@@ -271,13 +302,17 @@ export default function RouteOptimizerPage() {
         return () => clearTimeout(timer);
     }, [destQuery, destination]);
 
-    const handleSelectLocation = async (type: 'start' | 'dest', item: LocationSuggestion) => {
-        const loc: Location = { label: item.display_name, lat: parseFloat(item.lat), lon: parseFloat(item.lon) };
-        
-        const currentStart = type === 'start' ? loc : start;
-        const currentDest = type === 'dest' ? loc : destination;
+    const handleSelectLocation = (
+        type: "start" | "dest",
+        item: LocationSuggestion
+    ) => {
+        const loc: Location = {
+            label: item.display_name,
+            lat: parseFloat(item.lat),
+            lon: parseFloat(item.lon),
+        };
 
-        if (type === 'start') {
+        if (type === "start") {
             setStart(loc);
             setStartQuery(item.display_name);
             setStartSuggestions([]);
@@ -286,137 +321,175 @@ export default function RouteOptimizerPage() {
             setDestQuery(item.display_name);
             setDestSuggestions([]);
         }
-        
-        if (currentStart && currentDest) {
-            try {
-                const response = await fetch("http://localhost:8000/route/optimize", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        source: { lat: currentStart.lat, lng: currentStart.lon },
-                        destination: { lat: currentDest.lat, lng: currentDest.lon },
-                        vehicle: vehicleConfig
-                    }),
-                });
 
-                if (!response.ok) {
-                    throw new Error(`Server returned status ${response.status}`);
-                }
-
-                const data = await response.json();
-                const mappedRoutes: RouteOption[] = data.evaluated_routes ? data.evaluated_routes.map((route: any) => ({
-                    id: route.route_id,
-                    type: route.name || (route.is_feasible ? "Optimal Direct Route" : "Requires Intermediary Charging"),
-                    description: route.reason || "Evaluated through multi-variable heuristic pathfinding.",
-                    distance: `${route.distance_km} km`,
-                    duration: `${Math.round(route.duration_seconds / 60)} mins`,
-                    nextAction: route.is_feasible ? "Proceed directly along primary arterial road" : "Detour to recommended charging hub",
-                    co2Saved: "4.8 kg",
-                    tollCost: route.toll_cost_inr !== undefined ? `₹${route.toll_cost_inr}` : (route.toll_cost || "₹0"),
-                    elevationGain: route.elevation_gain_m !== undefined ? `+${route.elevation_gain_m}m` : (route.elevation_gain || "+0m"),
-                    kwhDepletion: route.kwh_depletion !== undefined ? `${route.kwh_depletion} kWh` : "0.0 kWh",
-                    chargingStops: data.charging_required && data.recommended_charger ? [{
-                        name: data.recommended_charger.name,
-                        distance: "En route checkpoint",
-                        kwh: `${data.recommended_charger.charging_power_kw} kW`
-                    }] : []
-                })) : [];
-
-                setRoutes(mappedRoutes);
-                if (mappedRoutes.length > 0) setSelectedRoute(mappedRoutes[0]);
-            } catch (error) {
-                console.warn("Backend connection offline during location select. Using local estimation fallback:", error);
-                const fallbackRoute: RouteOption = {
-                    id: "route-fallback-select",
-                    type: "Primary Corridor (Local Heuristic)",
-                    description: "Estimated path generated locally as backend service is unavailable.",
-                    distance: "24.5 km",
-                    duration: "36 mins",
-                    nextAction: "Proceed along main highway corridor.",
-                    co2Saved: "4.2 kg",
-                    tollCost: "₹45",
-                    elevationGain: "+25m",
-                    kwhDepletion: "3.9 kWh",
-                    chargingStops: [{ name: "Metro Hub Charging Station", distance: "10.2 km away", kwh: "60 kW" }]
-                };
-                setRoutes([fallbackRoute]);
-                setSelectedRoute(fallbackRoute);
-            }
-        }
+        setRoutes([]);
+        setSelectedRoute(null);
+        setIsCompleted(false);
     };
 
     const findBestRoutes = async () => {
-        if (!start || !destination) return;
+        if (!start || !destination || isOptimizing) return;
 
         setIsOptimizing(true);
+
+        const fallbackDistanceKm = 31.2;
+        const fallbackCarbon = calculateCarbonCredits(fallbackDistanceKm);
+
+        const fallbackRoute: RouteOption = {
+            id: `route-fallback-${Date.now()}`,
+            type: "Local Safe Corridor",
+            description:
+                "Local fallback route shown because the route service did not respond in time.",
+            distance: `${fallbackDistanceKm} km`,
+            duration: "45 mins",
+            nextAction:
+                "Continue along the primary corridor and follow the map.",
+            co2Saved: `${fallbackCarbon.co2Saved} kg`,
+            tollCost: "₹0",
+            elevationGain: "+18m",
+            kwhDepletion: "3.8 kWh",
+            carbon: fallbackCarbon,
+            chargingStops: [
+                {
+                    name: "EcoCharge Station B",
+                    distance: "8.5 km away",
+                    kwh: "120 kW",
+                },
+            ],
+        };
+
         try {
-            const response = await fetch("http://127.0.0.1:8000/route/optimize", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    source: { lat: start.lat, lng: start.lon },
-                    destination: { lat: destination.lat, lng: destination.lon },
-                    vehicle: vehicleConfig
-                }),
-            });
+            const controller = new AbortController();
+            const timeoutId = window.setTimeout(() => controller.abort(), 10000);
 
-            if (!response.ok) {
-                throw new Error(`Failed to fetch: ${response.statusText}`);
-            }
+            try {
+                const response = await fetch(
+                    "http://127.0.0.1:8000/route/optimize",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            source: {
+                                lat: start.lat,
+                                lng: start.lon,
+                            },
+                            destination: {
+                                lat: destination.lat,
+                                lng: destination.lon,
+                            },
+                            vehicle: vehicleConfig,
+                        }),
+                        signal: controller.signal,
+                    }
+                );
 
-            const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(
+                        `Route service returned ${response.status}`
+                    );
+                }
 
-            const mappedRoutes: RouteOption[] = data.evaluated_routes ? data.evaluated_routes.map((route: any, index: number) => ({
-                id: route.route_id || `route-${index}`,
-                type: route.name || (route.is_feasible ? `Optimal Corridor ${index + 1}` : `Alternative Route ${index + 1}`),
-                description: route.reason || "High-efficiency path computed with traffic and topology weights.",
-                distance: `${route.distance_km ? route.distance_km.toFixed(2) : "28.4"} km`,
-                duration: `${route.duration_seconds ? Math.round(route.duration_seconds / 60) : "38"} mins`,
-                nextAction: route.is_feasible ? "Proceed directly along primary arterial road" : "Detour to recommended charging hub",
-                co2Saved: "5.1 kg",
-                tollCost: route.toll_cost_inr !== undefined ? `₹${route.toll_cost_inr}` : (route.toll_cost || "₹0"),
-                elevationGain: route.elevation_gain_m !== undefined ? `+${route.elevation_gain_m}m` : (route.elevation_gain || "+0m"),
-                kwhDepletion: route.kwh_depletion !== undefined ? `${route.kwh_depletion} kWh` : "0.0 kWh",
-                chargingStops: data.charging_required && data.recommended_charger 
-                    ? [{ name: data.recommended_charger.name || "Station Alpha", distance: "En route checkpoint", kwh: `${data.recommended_charger.charging_power_kw || 60} kW` }]
-                    : []
-            })) : [];
+                const data = await response.json();
 
-            if (mappedRoutes.length > 0) {
-                setRoutes(mappedRoutes);
-                setSelectedRoute(mappedRoutes[0]);
-            } else {
-                const fallbackRoute: RouteOption = {
-                    id: "route-fallback-1",
-                    type: "Standard Arterial Corridor",
-                    description: "Fallback routing calculation executed.",
-                    distance: "31.2 km",
-                    duration: "45 mins",
-                    nextAction: "Continue straight along primary avenue.",
-                    co2Saved: "3.9 kg",
-                    tollCost: "₹0",
-                    elevationGain: "+18m",
-                    kwhDepletion: "3.8 kWh",
-                    chargingStops: [{ name: "EcoCharge Station B", distance: "8.5 km away", kwh: "120 kW" }]
-                };
-                setRoutes([fallbackRoute]);
-                setSelectedRoute(fallbackRoute);
+                const mappedRoutes: RouteOption[] =
+                    Array.isArray(data?.evaluated_routes)
+                        ? data.evaluated_routes.map(
+                              (route: any, index: number) => {
+                                  const distanceKm =
+                                      Number(route?.distance_km) || 28.4;
+
+                                  const carbon =
+                                      calculateCarbonCredits(distanceKm);
+
+                                  const durationSeconds =
+                                      Number(route?.duration_seconds) || 0;
+
+                                  return {
+                                      id:
+                                          route?.route_id ||
+                                          `route-${index + 1}`,
+                                      type:
+                                          route?.name ||
+                                          (route?.is_feasible
+                                              ? `Optimal Corridor ${index + 1}`
+                                              : `Alternative Route ${index + 1}`),
+                                      description:
+                                          route?.reason ||
+                                          "High-efficiency path computed from the route decision engine.",
+                                      distance: `${distanceKm.toFixed(2)} km`,
+                                      duration:
+                                          durationSeconds > 0
+                                              ? `${Math.round(
+                                                    durationSeconds / 60
+                                                )} mins`
+                                              : "38 mins",
+                                      nextAction:
+                                          route?.is_feasible
+                                              ? "Proceed directly along the primary arterial road."
+                                              : "Detour to the recommended charging hub.",
+                                      co2Saved: `${carbon.co2Saved} kg`,
+                                      tollCost:
+                                          route?.toll_cost_inr !== undefined
+                                              ? `₹${route.toll_cost_inr}`
+                                              : route?.toll_cost || "₹0",
+                                      elevationGain:
+                                          route?.elevation_gain_m !==
+                                          undefined
+                                              ? `+${route.elevation_gain_m}m`
+                                              : route?.elevation_gain ||
+                                                "+0m",
+                                      kwhDepletion:
+                                          route?.kwh_depletion !== undefined
+                                              ? `${route.kwh_depletion} kWh`
+                                              : "0.0 kWh",
+                                      carbon,
+                                      chargingStops:
+                                          data?.charging_required &&
+                                          data?.recommended_charger
+                                              ? [
+                                                    {
+                                                        name:
+                                                            data
+                                                                .recommended_charger
+                                                                .name ||
+                                                            "Recommended Charging Hub",
+                                                        distance:
+                                                            "En route checkpoint",
+                                                        kwh: `${
+                                                            data
+                                                                .recommended_charger
+                                                                .charging_power_kw ||
+                                                            60
+                                                        } kW`,
+                                                    },
+                                                ]
+                                              : [],
+                                  };
+                              }
+                          )
+                        : [];
+
+                if (mappedRoutes.length > 0) {
+                    setRoutes(mappedRoutes);
+                    setSelectedRoute(mappedRoutes[0]);
+                } else {
+                    setRoutes([fallbackRoute]);
+                    setSelectedRoute(fallbackRoute);
+                }
+            } finally {
+                window.clearTimeout(timeoutId);
             }
         } catch (error) {
-            console.error("Backend offline, utilizing fallback telemetry simulation:", error);
-            const fallbackRoute: RouteOption = {
-                id: "route-fallback-1",
-                type: "Standard Arterial Corridor (Offline Mode)",
-                description: "Fallback routing calculation executed locally.",
-                distance: "31.2 km",
-                duration: "45 mins",
-                nextAction: "Continue straight along primary avenue.",
-                co2Saved: "3.9 kg",
-                tollCost: "₹0",
-                elevationGain: "+18m",
-                kwhDepletion: "3.8 kWh",
-                chargingStops: [{ name: "EcoCharge Station B", distance: "8.5 km away", kwh: "120 kW" }]
-            };
+            const message =
+                error instanceof Error ? error.message : String(error);
+
+            console.warn(
+                "Route service unavailable. Showing local fallback route:",
+                message
+            );
+
             setRoutes([fallbackRoute]);
             setSelectedRoute(fallbackRoute);
         } finally {
@@ -435,22 +508,128 @@ export default function RouteOptimizerPage() {
     };
 
     const completeJourney = () => {
+        if (!start || !destination || !selectedRoute) {
+            return;
+        }
+
         setIsActive(false);
         setIsCompleted(true);
+
         const completionTimestamp = new Date().toLocaleString();
         setEndTime(completionTimestamp);
 
-        if (start && destination && selectedRoute) {
-            const newHistoryItem: TripHistoryItem = {
-                id: `trip-${Date.now()}`,
-                from: start.label,
-                to: destination.label,
-                distance: selectedRoute.distance,
-                duration: selectedRoute.duration,
-                timestamp: completionTimestamp,
-                status: "Completed"
+        const journeyId = `trip-${Date.now()}`;
+
+        const newHistoryItem: TripHistoryItem = {
+            id: journeyId,
+            from: start.label,
+            to: destination.label,
+            distance: selectedRoute.distance,
+            duration: selectedRoute.duration,
+            timestamp: completionTimestamp,
+            status: "Completed",
+        };
+
+        setTripHistory((prev) => {
+            const updatedHistory = [newHistoryItem, ...prev];
+
+            try {
+                localStorage.setItem(
+                    "ev_trip_history",
+                    JSON.stringify(updatedHistory)
+                );
+            } catch (error) {
+                console.error("Failed to save trip history:", error);
+            }
+
+            return updatedHistory;
+        });
+
+        const creditsEarned = selectedRoute.carbon?.credits ?? 0;
+
+        if (creditsEarned <= 0) {
+            console.warn("No Carbon Credits generated for this journey.");
+            return;
+        }
+
+        try {
+            const WALLET_KEY = "ev_carbon_wallet_v2";
+            const savedWallet = localStorage.getItem(WALLET_KEY);
+
+            let wallet = {
+                balance: 0,
+                transactions: [] as any[],
             };
-            setTripHistory([newHistoryItem, ...tripHistory]);
+
+            if (savedWallet) {
+                try {
+                    const parsedWallet = JSON.parse(savedWallet);
+
+                    wallet = {
+                        balance: Number(parsedWallet?.balance) || 0,
+                        transactions: Array.isArray(
+                            parsedWallet?.transactions
+                        )
+                            ? parsedWallet.transactions
+                            : [],
+                    };
+                } catch {
+                    console.warn(
+                        "Invalid saved wallet. Starting from 0 CC."
+                    );
+                }
+            }
+
+            const alreadyExists = wallet.transactions.some(
+                (transaction: any) =>
+                    transaction?.journeyId === journeyId
+            );
+
+            if (alreadyExists) {
+                return;
+            }
+
+            const walletTransaction = {
+                id: `cc-${Date.now()}`,
+                journeyId,
+                type: "EV Transit Journey",
+                location: `${start.label} → ${destination.label}`,
+                distance: selectedRoute.distance,
+                creditsEarned: `+${creditsEarned.toFixed(2)} CC`,
+                costComparison: "Carbon Credit Reward",
+                date: completionTimestamp,
+                co2Saved:
+                    selectedRoute.carbon?.co2Saved ??
+                    creditsEarned,
+            };
+
+            const updatedWallet = {
+                balance: Number(
+                    (wallet.balance + creditsEarned).toFixed(2)
+                ),
+                transactions: [
+                    walletTransaction,
+                    ...wallet.transactions,
+                ],
+            };
+
+            localStorage.setItem(
+                WALLET_KEY,
+                JSON.stringify(updatedWallet)
+            );
+
+            window.dispatchEvent(
+                new Event("ev-carbon-wallet-updated")
+            );
+
+            console.log(
+                `Carbon Wallet Updated: +${creditsEarned.toFixed(2)} CC`
+            );
+        } catch (error) {
+            console.error(
+                "Failed to update Carbon Credit wallet:",
+                error
+            );
         }
     };
 
@@ -644,6 +823,68 @@ export default function RouteOptimizerPage() {
                                         <div className="text-cyan-400 font-bold mt-0.5">{selectedRoute.kwhDepletion}</div>
                                     </div>
                                 </div>
+
+                                {selectedRoute.carbon && (
+                                    <div className="mt-3 rounded-2xl border border-emerald-500/30 bg-emerald-950/20 p-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div>
+                                                    <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">
+                                                        Environmental Impact
+                                                    </div>
+                                                    <div className="text-xs text-slate-400 mt-1">
+                                                        Estimated CO₂ avoided by this EV journey
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowCarbonInfo(true)}
+                                                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-emerald-500/20 bg-slate-950/60 text-emerald-400 transition hover:border-emerald-500/50 hover:bg-emerald-500/10"
+                                                    title="How are Carbon Credits calculated?"
+                                                    aria-label="How are Carbon Credits calculated?"
+                                                >
+                                                    <Eye className="h-4 w-4" />
+                                                </button>
+                                            </div>
+
+                                            <div className="text-right">
+                                                <div className="text-[10px] text-slate-400 uppercase">
+                                                    Carbon Credits
+                                                </div>
+                                                    <div className="text-xl font-black text-emerald-400">
+                                                        +{selectedRoute.carbon.credits.toFixed(2)} CC
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        <div className="grid grid-cols-3 gap-2 mt-4">
+                                            <div className="bg-slate-950/60 rounded-xl p-3">
+                                                <div className="text-[9px] text-slate-500 uppercase">ICE</div>
+                                                <div className="text-sm font-bold text-white mt-1">
+                                                    {selectedRoute.carbon.iceEmissions.toFixed(2)} kg
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-slate-950/60 rounded-xl p-3">
+                                                <div className="text-[9px] text-slate-500 uppercase">EV</div>
+                                                <div className="text-sm font-bold text-white mt-1">
+                                                    {selectedRoute.carbon.evEmissions.toFixed(2)} kg
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-emerald-500/10 rounded-xl p-3">
+                                                <div className="text-[9px] text-emerald-400 uppercase">CO₂ Avoided</div>
+                                                <div className="text-sm font-bold text-emerald-400 mt-1">
+                                                    {selectedRoute.carbon.co2Saved.toFixed(2)} kg
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-3 text-[9px] text-slate-500">
+                                            1 CC = 1 kg CO₂ avoided • Estimated value
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {selectedRoute.chargingStops && selectedRoute.chargingStops.length > 0 && (
@@ -709,10 +950,23 @@ export default function RouteOptimizerPage() {
                                     <span className="text-slate-400">Distance Traversed:</span>
                                     <span className="font-bold text-white font-mono">{selectedRoute.distance}</span>
                                 </div>
-                                <div className="flex justify-between py-1 border-b border-slate-800/60">
-                                    <span className="text-slate-400">Carbon Offset:</span>
-                                    <span className="font-bold text-emerald-400 font-mono">{selectedRoute.co2Saved}</span>
-                                </div>
+                                {selectedRoute.carbon && (
+                                    <>
+                                        <div className="flex justify-between py-1 border-b border-slate-800/60">
+                                            <span className="text-slate-400">CO₂ Avoided:</span>
+                                            <span className="font-bold text-emerald-400 font-mono">
+                                                {selectedRoute.carbon.co2Saved.toFixed(2)} kg
+                                            </span>
+                                        </div>
+
+                                        <div className="flex justify-between py-1 border-b border-slate-800/60">
+                                            <span className="text-slate-400">Carbon Credits:</span>
+                                            <span className="font-bold text-emerald-400 font-mono">
+                                                +{selectedRoute.carbon.credits.toFixed(2)} CC
+                                            </span>
+                                        </div>
+                                    </>
+                                )}
                                 <div className="flex justify-between py-1 border-b border-slate-800/60">
                                     <span className="text-slate-400">Session Window:</span>
                                     <span className="font-bold text-white text-right font-mono">{startTime} - {endTime}</span>
@@ -732,13 +986,13 @@ export default function RouteOptimizerPage() {
             </div>
 
             {/* RIGHT MAP CANVAS AREA (DYNAMICALLY RENDERED EVMap) */}
-            <div className="flex-1 relative bg-slate-950 flex flex-col">
-                <div className="absolute top-4 right-4 z-[400] flex items-center gap-2 bg-slate-900/90 backdrop-blur border border-slate-800 px-3.5 py-2 rounded-xl shadow-2xl text-white">
+            <div className="flex-1 relative z-0 bg-slate-950 flex flex-col">
+                <div className="absolute top-4 right-4 z-10 flex items-center gap-2 bg-slate-900/90 backdrop-blur border border-slate-800 px-3.5 py-2 rounded-xl shadow-2xl text-white">
                     <span className="text-xs text-slate-400 font-medium">Map Engine:</span>
                     <span className="text-xs font-bold text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/50">OpenStreetMap Leaflet Vector</span>
                 </div>
 
-                <div className="flex-1 w-full h-full relative">
+                <div className="flex-1 w-full h-full relative z-0">
                     <EVMap
                         center={mapCenter}
                         start={start}
@@ -761,8 +1015,8 @@ export default function RouteOptimizerPage() {
 
             {/* VEHICLE CONFIGURATION MODAL */}
             {showVehicleModal && (
-                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-[#0b1329] border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-5 shadow-2xl animate-fadeIn">
+                <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="relative z-[10000] bg-[#0b1329] border border-slate-800 rounded-2xl w-full max-w-md p-6 space-y-5 shadow-2xl animate-fadeIn">
                         <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                             <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
                                 <Sliders className="h-4 w-4 text-cyan-400" /> Vehicle Telemetry Configuration
@@ -852,10 +1106,103 @@ export default function RouteOptimizerPage() {
                 </div>
             )}
 
+            {/* CARBON CREDIT CALCULATION MODAL */}
+            {showCarbonInfo && (
+                <div className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+                    <div className="relative z-[10002] w-full max-w-lg rounded-2xl border border-slate-800 bg-[#07101d] p-6 shadow-2xl sm:p-8">
+                        <button
+                            type="button"
+                            onClick={() => setShowCarbonInfo(false)}
+                            className="absolute right-5 top-5 text-slate-400 transition hover:text-white"
+                            aria-label="Close Carbon Credit calculation"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+
+                        <div className="flex items-center gap-2.5 text-emerald-400">
+                            <Eye className="h-5 w-5" />
+                            <h2 className="text-base font-black text-white">
+                                Carbon Credit Calculation
+                            </h2>
+                        </div>
+
+                        <p className="mt-2.5 text-xs leading-5 text-slate-300">
+                            Carbon Credits are based on the estimated CO₂ emissions avoided by using an EV instead of the project ICE benchmark.
+                        </p>
+
+                        <div className="mt-5 rounded-xl border border-emerald-500/20 bg-[#050A13] p-4">
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                Formula
+                            </div>
+                            <div className="mt-2 font-mono text-xs leading-6 text-emerald-300">
+                                CO₂ Avoided = Distance × (ICE Emission − EV Emission)
+                            </div>
+                            <div className="mt-1 font-mono text-xs leading-6 text-white">
+                                CO₂ Avoided = Distance × (0.15 − 0.05)
+                            </div>
+                            <div className="mt-1 font-mono text-xs leading-6 text-emerald-400">
+                                CO₂ Avoided = Distance × 0.10 kg
+                            </div>
+                            <div className="mt-3 border-t border-slate-800 pt-3 font-mono text-xs text-white">
+                                1 CC = 1 kg CO₂ avoided
+                            </div>
+                        </div>
+
+                        <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                Current Route
+                            </div>
+                            {selectedRoute?.carbon ? (
+                                <div className="mt-3 space-y-2 text-xs">
+                                    <div className="flex justify-between gap-4">
+                                        <span className="text-slate-400">Distance</span>
+                                        <span className="font-bold text-white">{selectedRoute.distance}</span>
+                                    </div>
+                                    <div className="flex justify-between gap-4">
+                                        <span className="text-slate-400">ICE emissions</span>
+                                        <span className="font-bold text-white">{selectedRoute.carbon.iceEmissions.toFixed(2)} kg</span>
+                                    </div>
+                                    <div className="flex justify-between gap-4">
+                                        <span className="text-slate-400">EV emissions</span>
+                                        <span className="font-bold text-white">{selectedRoute.carbon.evEmissions.toFixed(2)} kg</span>
+                                    </div>
+                                    <div className="border-t border-slate-800 pt-2 flex justify-between gap-4">
+                                        <span className="font-bold text-emerald-400">CO₂ avoided</span>
+                                        <span className="font-black text-emerald-400">{selectedRoute.carbon.co2Saved.toFixed(2)} kg</span>
+                                    </div>
+                                    <div className="flex justify-between gap-4">
+                                        <span className="font-bold text-white">Credits earned</span>
+                                        <span className="font-black text-emerald-400">+{selectedRoute.carbon.credits.toFixed(2)} CC</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="mt-2 text-xs text-slate-500">
+                                    Select a route to view its calculation.
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mt-5 space-y-2 text-xs text-slate-300">
+                            <div><span className="font-bold text-white">ICE benchmark:</span> 0.15 kg CO₂/km.</div>
+                            <div><span className="font-bold text-white">EV benchmark:</span> 0.05 kg CO₂/km.</div>
+                            <div><span className="font-bold text-white">Credit conversion:</span> 1 kg CO₂ avoided = 1 CC.</div>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => setShowCarbonInfo(false)}
+                            className="mt-7 h-11 w-full rounded-xl bg-emerald-400 text-xs font-black uppercase tracking-wider text-[#020712] transition hover:brightness-110"
+                        >
+                            Got It
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* TRIP HISTORY DRAWER */}
             {showHistoryDrawer && (
-                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex justify-end">
-                    <div className="w-full max-w-md bg-[#060a14] border-l border-slate-800 h-full flex flex-col p-6 shadow-2xl animate-slideLeft">
+                <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex justify-end">
+                    <div className="relative z-[10000] w-full max-w-md bg-[#060a14] border-l border-slate-800 h-full flex flex-col p-6 shadow-2xl animate-slideLeft">
                         <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                             <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
                                 <History className="h-4 w-4 text-cyan-400" /> Session & Trip History
