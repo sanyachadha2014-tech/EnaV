@@ -139,6 +139,35 @@ export default function RouteOptimizerPage() {
         is_emergency: false
     });
 
+    // Load the vehicle data saved from the Profile page.
+    useEffect(() => {
+        const loadProfileVehicle = () => {
+            try {
+                const savedProfile = localStorage.getItem("ev_driver_profile");
+                if (!savedProfile) return;
+
+                const profile = JSON.parse(savedProfile);
+                setVehicleConfig((current) => ({
+                    ...current,
+                    vehicle_id: profile.vehicleId ?? current.vehicle_id,
+                    vehicle_type: profile.vehicleType ?? current.vehicle_type,
+                    battery_percentage: profile.currentSoc ?? current.battery_percentage,
+                    battery_capacity_kwh: profile.batteryCapacity ?? current.battery_capacity_kwh,
+                    consumption_kwh_per_km: profile.consumptionRate ?? current.consumption_kwh_per_km,
+                    minimum_reserve_pct: profile.minReserve ?? current.minimum_reserve_pct,
+                }));
+            } catch (error) {
+                console.error("Failed to load vehicle data from Profile:", error);
+            }
+        };
+
+        loadProfileVehicle();
+
+        // Also refresh if the saved profile changes in another tab/window.
+        window.addEventListener("storage", loadProfileVehicle);
+        return () => window.removeEventListener("storage", loadProfileVehicle);
+    }, []);
+
     // Real-time Geolocation watchPosition Effect
     useEffect(() => {
         let watchId: number | null = null;
