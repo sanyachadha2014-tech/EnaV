@@ -41,6 +41,11 @@ class SQLEmergencyVehicleRepository(BaseEmergencyVehicleRepository):
 
     def get_all_vehicles(self) -> List[EmergencyVehicle]:
         models = self.db_session.query(EmergencyVehicleModel).all()
+        if not models:
+            from app.data.mock_vehicles import get_mock_vehicles
+            for v in get_mock_vehicles():
+                self.upsert_vehicle(v)
+            models = self.db_session.query(EmergencyVehicleModel).all()
         return [self._to_pydantic(m) for m in models]
 
     def get_vehicle_by_id(self, vehicle_id: str) -> Optional[EmergencyVehicle]:

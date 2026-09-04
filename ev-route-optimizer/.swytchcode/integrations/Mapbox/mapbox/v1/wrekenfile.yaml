@@ -1,0 +1,1405 @@
+VERSION: 2.0.2
+DEFAULTS:
+  query_access_token: <ACCESS_TOKEN>
+  w_base_url: https://api.mapbox.com
+METHODS:
+  mapbox.geocode.forward.list:
+    SUMMARY: Forward geocoding
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /search/geocode/v6/forward
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - q:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - country:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - types:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - bbox:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - proximity:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - language:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - limit:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - worldview:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - autocomplete:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - permanent:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_geocode_forward_list
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.geocode.forward.list
+  mapbox.geocode.reverse.list:
+    SUMMARY: Reverse geocoding
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /search/geocode/v6/reverse
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - longitude:
+          TYPE: FLOAT
+          REQUIRED: false
+          LOCATION: query
+      - latitude:
+          TYPE: FLOAT
+          REQUIRED: false
+          LOCATION: query
+      - types:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - language:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - worldview:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_geocode_reverse_list
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.geocode.reverse.list
+  mapbox.geocode.batch.create:
+    SUMMARY: Batch geocoding
+    HTTP:
+      METHOD: POST
+      ENDPOINT: /search/geocode/v6/batch
+      HEADERS:
+        Content-Type: application/json
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+      BODY:
+        TYPE: map[STRING]ANY
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - body:
+          TYPE: map[STRING]ANY
+          REQUIRED: true
+          LOCATION: body
+          CONTENT_TYPE: application/json
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_geocode_batch_create
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.geocode.batch.create
+  mapbox.geocoding.get1:
+    SUMMARY: Legacy forward geocoding
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /geocoding/v5/{dataset}/{query}.json
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - dataset:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - query:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - country:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - types:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - bbox:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - proximity:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - language:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - limit:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - autocomplete:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - fuzzyMatch:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - routing:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - worldview:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_geocoding_get1
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.geocoding.get1
+  mapbox.geocoding.get:
+    SUMMARY: Legacy reverse geocoding
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /geocoding/v5/{dataset}/{longitude},{latitude}.json
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - dataset:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - longitude:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - latitude:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - types:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - language:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - limit:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - routing:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - worldview:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_geocoding_get
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.geocoding.get
+  mapbox.mapbox.get1:
+    SUMMARY: Get directions
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /directions/v5/mapbox/{profile}/{coordinates}
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - profile:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - coordinates:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - alternatives:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - annotations:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - approaches:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - bearings:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - continue_straight:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - exclude:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - geometries:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - language:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - overview:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - radiuses:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - steps:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - voice_instructions:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - voice_units:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - banner_instructions:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - roundabout_exits:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - waypoints:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - waypoint_names:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - waypoint_targets:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_mapbox_get1
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.mapbox.get1
+  mapbox.mapbox.get3:
+    SUMMARY: Map match GPS traces
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /matching/v5/mapbox/{profile}/{coordinates}
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - profile:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - coordinates:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - annotations:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - approaches:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - bearings:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - geometries:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - radiuses:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - steps:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - tidy:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - timestamps:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - waypoints:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - gaps:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_mapbox_get3
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.mapbox.get3
+  mapbox.mapbox.get2:
+    SUMMARY: Generate isochrones
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /isochrone/v1/mapbox/{profile}/{coordinates}
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - profile:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - coordinates:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - contours_minutes:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - contours_meters:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - polygons:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - denoise:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - generalize:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - depart_at:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - exclude:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_mapbox_get2
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.mapbox.get2
+  mapbox.mapbox.get:
+    SUMMARY: Calculate travel-time matrix
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /directions-matrix/v1/mapbox/{profile}/{coordinates}
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - profile:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - coordinates:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - annotations:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - approaches:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - bearings:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - fallback_speed:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - fallback_coordinate:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - depart_at:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - sources:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - destinations:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_mapbox_get
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.mapbox.get
+  mapbox.mapbox.get4:
+    SUMMARY: Optimize route
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /optimized-trips/v1/mapbox/{profile}/{coordinates}
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - profile:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - coordinates:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - approaches:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - bearings:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - distributions:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - geometries:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - overview:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - radiuses:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - roundtrip:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - source:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - destination:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - steps:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - waypoints:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - waypoint_names:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - waypoint_targets:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_mapbox_get4
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.mapbox.get4
+  mapbox.style.get:
+    SUMMARY: Get style
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /styles/v1/{username}/{style_id}
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - username:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - style_id:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_style_get
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.style.get
+  mapbox.style.update:
+    SUMMARY: Update style
+    HTTP:
+      METHOD: PATCH
+      ENDPOINT: /styles/v1/{username}/{style_id}
+      HEADERS:
+        Content-Type: application/json
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+      BODY:
+        TYPE: map[STRING]ANY
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - username:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - style_id:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - body:
+          TYPE: map[STRING]ANY
+          REQUIRED: false
+          LOCATION: body
+          CONTENT_TYPE: application/json
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_style_update
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.style.update
+  mapbox.tilequery.get:
+    SUMMARY: Query tileset features
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /tilequery/v4/{tileset_id}/{longitude},{latitude}.json
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - tileset_id:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - longitude:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - latitude:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - radius:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - limit:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - dedupe:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - geometry:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - layers:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_tilequery_get
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.tilequery.get
+  mapbox.dataset.create:
+    SUMMARY: Create dataset
+    HTTP:
+      METHOD: POST
+      ENDPOINT: /datasets/v1/{username}
+      HEADERS:
+        Content-Type: application/json
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+      BODY:
+        TYPE: map[STRING]ANY
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - username:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - body:
+          TYPE: map[STRING]ANY
+          REQUIRED: false
+          LOCATION: body
+          CONTENT_TYPE: application/json
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_dataset_create
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.dataset.create
+  mapbox.dataset.get:
+    SUMMARY: Get dataset
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /datasets/v1/{username}/{dataset_id}
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - username:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - dataset_id:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_dataset_get
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.dataset.get
+  mapbox.dataset.delete:
+    SUMMARY: Delete dataset
+    HTTP:
+      METHOD: DELETE
+      ENDPOINT: /datasets/v1/{username}/{dataset_id}
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - username:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - dataset_id:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    CANONICAL_ID: mapbox.dataset.delete
+  mapbox.feature.get:
+    SUMMARY: List dataset features
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /datasets/v1/{username}/{dataset_id}/features
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - username:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - dataset_id:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - limit:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - start:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - end:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_feature_get
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.feature.get
+  mapbox.feature.get1:
+    SUMMARY: Get dataset feature
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /datasets/v1/{username}/{dataset_id}/features/{feature_id}
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - username:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - dataset_id:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - feature_id:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_feature_get1
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.feature.get1
+  mapbox.feature.update:
+    SUMMARY: Create/update feature
+    HTTP:
+      METHOD: PUT
+      ENDPOINT: /datasets/v1/{username}/{dataset_id}/features/{feature_id}
+      HEADERS:
+        Content-Type: application/json
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+      BODY:
+        TYPE: map[STRING]ANY
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - username:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - dataset_id:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - feature_id:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - body:
+          TYPE: map[STRING]ANY
+          REQUIRED: false
+          LOCATION: body
+          CONTENT_TYPE: application/json
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_feature_update
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.feature.update
+  mapbox.feature.delete:
+    SUMMARY: Delete dataset feature
+    HTTP:
+      METHOD: DELETE
+      ENDPOINT: /datasets/v1/{username}/{dataset_id}/features/{feature_id}
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - username:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - dataset_id:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - feature_id:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    CANONICAL_ID: mapbox.feature.delete
+  mapbox.token.get:
+    SUMMARY: List access tokens
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /tokens/v2/{username}
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - username:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_token_get
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.token.get
+  mapbox.token.create:
+    SUMMARY: Create access token
+    HTTP:
+      METHOD: POST
+      ENDPOINT: /tokens/v2/{username}
+      HEADERS:
+        Content-Type: application/json
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+      BODY:
+        TYPE: map[STRING]ANY
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - username:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - body:
+          TYPE: map[STRING]ANY
+          REQUIRED: false
+          LOCATION: body
+          CONTENT_TYPE: application/json
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_token_create
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.token.create
+  mapbox.token.get1:
+    SUMMARY: Get access token
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /tokens/v2/{username}/{token_id}
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - username:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - token_id:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_token_get1
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.token.get1
+  mapbox.token.update:
+    SUMMARY: Update access token
+    HTTP:
+      METHOD: PATCH
+      ENDPOINT: /tokens/v2/{username}/{token_id}
+      HEADERS:
+        Content-Type: application/json
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+      BODY:
+        TYPE: map[STRING]ANY
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - username:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - token_id:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - body:
+          TYPE: map[STRING]ANY
+          REQUIRED: false
+          LOCATION: body
+          CONTENT_TYPE: application/json
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: mapbox_token_update
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Unauthorized (HTTP 401)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limited (HTTP 429)
+    CANONICAL_ID: mapbox.token.update
+  mapbox.token.delete:
+    SUMMARY: Delete access token
+    HTTP:
+      METHOD: DELETE
+      ENDPOINT: /tokens/v2/{username}/{token_id}
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - AccessToken:
+          type: apiKey
+          in: query
+          name: access_token
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - username:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - token_id:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - access_token:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    CANONICAL_ID: mapbox.token.delete

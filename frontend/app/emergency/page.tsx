@@ -30,10 +30,27 @@ type Step = "HOME" | "CALLING" | "CATEGORY" | "DESCRIPTION" | "LOCATION" | "REVI
 
 type EmergencyCategory = "FIRE" | "POLICE" | "MEDICAL";
 
+interface SwytchcodeIntelligence {
+  provider: string;
+  status: "live" | "error";
+  model?: string;
+  classification_id?: string;
+  flagged_high_risk?: boolean | null;
+  high_risk_indicators?: string[];
+  categories?: Record<string, boolean>;
+  category_scores?: Record<string, number>;
+  ai_triage_category?: string;
+  recommended_priority?: string;
+  summary?: string;
+  error?: string;
+  exit_code?: number;
+}
+
 interface AIAnalysisResult {
   summary: string;
   keywords: string[];
   address?: string;
+  swytchcode_intelligence?: SwytchcodeIntelligence | null;
 }
 
 interface DispatchResult {
@@ -218,14 +235,16 @@ export default function EmergencyReporterPage() {
       setAiAnalysis({
         summary: res.data.summary,
         keywords: res.data.keywords || [],
-        address: res.data.address || undefined
+        address: res.data.address || undefined,
+        swytchcode_intelligence: res.data.swytchcode_intelligence || null
       });
     } catch (err: any) {
-      console.warn("Gemini analyze error:", err);
+      console.warn("Analyze error:", err);
       // Fallback locally if backend fails
       setAiAnalysis({
         summary: description.trim() || `Urgent ${category.toLowerCase()} assistance requested.`,
-        keywords: [category.toLowerCase(), "emergency", "dispatch"]
+        keywords: [category.toLowerCase(), "emergency", "dispatch"],
+        swytchcode_intelligence: null
       });
       setAnalysisError("AI analysis backend was unreachable. Showing raw report summary.");
     } finally {
@@ -729,10 +748,14 @@ export default function EmergencyReporterPage() {
             )}
 
             {analyzing ? (
-              <div className="p-10 rounded-2xl bg-slate-900/90 border border-slate-800 text-center space-y-3 font-mono text-xs">
+              <div className="p-10 rounded-2xl bg-slate-900/90 border border-slate-800 text-center space-y-4 font-mono text-xs">
                 <Loader2 className="w-8 h-8 animate-spin mx-auto text-cyan-400" />
-                <p className="text-sm font-bold text-white">Backend Gemini AI Processing...</p>
-                <p className="text-slate-400">Extracting factual keywords and concise incident summary...</p>
+                <p className="text-sm font-bold text-white">Emergency AI Analysis in Progress...</p>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-800 text-cyan-300 text-xs">
+                  <ShieldAlert className="w-3.5 h-3.5 animate-pulse" />
+                  <span>Swytchcode → Mistral → Analyzing...</span>
+                </div>
+                <p className="text-slate-400">Executing Swytchcode CLI kernel for real Mistral incident triage & risk evaluation...</p>
               </div>
             ) : (
               <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
@@ -772,6 +795,104 @@ export default function EmergencyReporterPage() {
                     </div>
                   </div>
                 )}
+
+                {/* SWYTCHCODE AI ANALYSIS CARD */}
+                <div className="space-y-2 pt-2 border-t border-slate-800/80">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs font-mono font-bold tracking-wider uppercase text-amber-400">
+                      <ShieldAlert className="w-4 h-4 text-amber-400" />
+                      <span>SWYTCHCODE AI ANALYSIS</span>
+                    </div>
+                    {aiAnalysis?.swytchcode_intelligence?.status === "live" ? (
+                      <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold">
+                        Swytchcode → Mistral → Analysis complete
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-400 font-bold">
+                        Swytchcode AI unavailable
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-slate-950 border border-slate-800/90 space-y-3 text-xs font-mono">
+                    <div className="grid grid-cols-2 gap-3 text-[11px]">
+                      <div>
+                        <span className="text-slate-500 uppercase block text-[10px]">Provider</span>
+                        <span className="font-bold text-white">
+                          {aiAnalysis?.swytchcode_intelligence?.provider || "Swytchcode → Mistral"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 uppercase block text-[10px]">Mistral Model</span>
+                        <span className="font-bold text-slate-200">
+                          {aiAnalysis?.swytchcode_intelligence?.model || "mistral-moderation-latest"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 uppercase block text-[10px]">Classification</span>
+                        <span className="font-bold text-slate-200 uppercase">
+                          {aiAnalysis?.swytchcode_intelligence?.ai_triage_category || "Not provided"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 uppercase block text-[10px]">Priority / Severity</span>
+                        <span className="font-bold text-slate-200 uppercase">
+                          {aiAnalysis?.swytchcode_intelligence?.recommended_priority || "Not provided"}
+                        </span>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-slate-500 uppercase block text-[10px]">High-Risk Indicators</span>
+                        <span className="font-bold text-slate-200">
+                          {aiAnalysis?.swytchcode_intelligence?.high_risk_indicators &&
+                          aiAnalysis.swytchcode_intelligence.high_risk_indicators.length > 0
+                            ? aiAnalysis.swytchcode_intelligence.high_risk_indicators.join(", ")
+                            : aiAnalysis?.swytchcode_intelligence?.flagged_high_risk
+                            ? "High Risk Flagged"
+                            : aiAnalysis?.swytchcode_intelligence?.status === "live"
+                            ? "None detected (Normal Risk)"
+                            : "Not provided"}
+                        </span>
+                      </div>
+                      {aiAnalysis?.swytchcode_intelligence?.category_scores && (
+                        <div className="col-span-2">
+                          <span className="text-slate-500 uppercase block text-[10px] mb-1">Mistral Risk Scores</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {Object.entries(aiAnalysis.swytchcode_intelligence.category_scores)
+                              .sort(([, a], [, b]) => Number(b) - Number(a))
+                              .map(([k, v]) => (
+                                <span
+                                  key={k}
+                                  className={`px-2 py-0.5 rounded text-[10px] border ${
+                                    Number(v) > 0.1
+                                      ? "bg-amber-500/10 border-amber-500/30 text-amber-300 font-bold"
+                                      : "bg-slate-900 border-slate-800 text-slate-400"
+                                  }`}
+                                >
+                                  {k.replace(/_/g, " ")}: {(Number(v) * 100).toFixed(1)}%
+                                </span>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+                      <div className="col-span-2">
+                        <span className="text-slate-500 uppercase block text-[10px]">Reasoning / Summary</span>
+                        <span className="text-slate-300 font-sans text-xs leading-relaxed block mt-0.5">
+                          {aiAnalysis?.swytchcode_intelligence?.summary || "Not provided"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {aiAnalysis?.swytchcode_intelligence?.status === "error" && (
+                      <div className="p-2.5 rounded-lg bg-rose-950/40 border border-rose-800/60 text-rose-300 text-[11px] font-mono flex items-start gap-2">
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-rose-400 mt-0.5" />
+                        <div>
+                          <strong className="block text-rose-200">Execution Error:</strong>
+                          <span>{aiAnalysis.swytchcode_intelligence.error || "Mistral execution failed"}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
                 {/* Location Display */}
                 <div className="space-y-1.5">

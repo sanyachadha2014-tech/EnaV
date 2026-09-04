@@ -17,6 +17,7 @@ import {
   Car,
   AlertTriangle,
   Loader2,
+  Flame,
 } from "lucide-react";
 
 const CommandMap = dynamic(() => import("@/components/CommandMap"), {
@@ -99,8 +100,8 @@ const initialIncidents = [
     distance_km: 3.2,
     latitude: 28.6328,
     longitude: 77.0854,
-    assigned_vehicle_location: { lat: 28.6450, lng: 77.0980 },
-    route_geometry: [[28.6450, 77.0980], [28.6390, 77.0920], [28.6328, 77.0854]],
+    assigned_vehicle_location: { lat: 28.6250, lng: 77.2150 },
+    route_geometry: null,
     summary: "Electrical transformer flare-up reported near Outer Ring Road.",
   },
   {
@@ -122,8 +123,8 @@ const initialIncidents = [
     distance_km: 2.1,
     latitude: 28.6139,
     longitude: 77.2090,
-    assigned_vehicle_location: { lat: 28.6230, lng: 77.2180 },
-    route_geometry: [[28.6230, 77.2180], [28.6180, 77.2130], [28.6139, 77.2090]],
+    assigned_vehicle_location: { lat: 28.6120, lng: 77.2150 },
+    route_geometry: null,
     summary: "Pedestrian heat exhaustion near transit junction.",
   },
 ];
@@ -134,63 +135,94 @@ const initialIncidents = [
 
 const initialVehicles = [
   {
-    id: "EV-AMB-21",
-    type: "Advanced Life Support",
-    distance: "3.2 km",
-    battery: 74,
-    eta: "6 min",
-    traffic: "Moderate",
+    id: "FIRE-001",
+    type: "Electric Fire Engine",
+    vehicle_type: "fire",
+    distance: "Monitored",
+    battery: 80,
+    latitude: 28.6250,
+    longitude: 77.2150,
+    eta: "Ready",
+    traffic: "Normal",
     recommended: true,
     status: "AVAILABLE",
   },
   {
-    id: "EV-AMB-18",
-    type: "Basic Life Support",
-    distance: "2.4 km",
-    battery: 8,
-    eta: "14 min",
-    traffic: "Low",
+    id: "FIRE-002",
+    type: "Electric Fire Engine",
+    vehicle_type: "fire",
+    distance: "Monitored",
+    battery: 11,
+    latitude: 28.6150,
+    longitude: 77.2100,
+    eta: "Low Reserve",
+    traffic: "Normal",
     recommended: false,
     status: "LOW BATTERY",
   },
   {
-    id: "EV-AMB-09",
+    id: "FIRE-004",
+    type: "Electric Fire Engine",
+    vehicle_type: "fire",
+    distance: "Monitored",
+    battery: 90,
+    latitude: 28.6350,
+    longitude: 77.2300,
+    eta: "Ready",
+    traffic: "Normal",
+    recommended: true,
+    status: "AVAILABLE",
+  },
+  {
+    id: "POLICE-001",
+    type: "Police Interceptor",
+    vehicle_type: "police",
+    distance: "Monitored",
+    battery: 85,
+    latitude: 28.6140,
+    longitude: 77.2080,
+    eta: "Ready",
+    traffic: "Normal",
+    recommended: true,
+    status: "AVAILABLE",
+  },
+  {
+    id: "POLICE-002",
+    type: "Police Interceptor",
+    vehicle_type: "police",
+    distance: "Monitored",
+    battery: 40,
+    latitude: 28.6300,
+    longitude: 77.2200,
+    eta: "Ready",
+    traffic: "Normal",
+    recommended: false,
+    status: "AVAILABLE",
+  },
+  {
+    id: "AMB-001",
     type: "Advanced Life Support",
-    distance: "5.1 km",
-    battery: 91,
-    eta: "11 min",
-    traffic: "Moderate",
-    recommended: false,
+    vehicle_type: "ambulance",
+    distance: "Monitored",
+    battery: 75,
+    latitude: 28.6120,
+    longitude: 77.2150,
+    eta: "Ready",
+    traffic: "Normal",
+    recommended: true,
     status: "AVAILABLE",
   },
   {
-    id: "EV-RR-02",
-    type: "Rapid Response Unit",
-    distance: "5.8 km",
-    battery: 67,
-    eta: "9 min",
-    traffic: "Low",
-    recommended: false,
-    status: "AVAILABLE",
-  },
-  {
-    id: "EV-AMB-14",
+    id: "AMB-002",
     type: "Advanced Life Support",
-    distance: "7.2 km",
-    battery: 81,
-    eta: "16 min",
-    traffic: "High",
-    recommended: false,
-    status: "AVAILABLE",
-  },
-  {
-    id: "EV-RR-07",
-    type: "Rapid Response Unit",
-    distance: "8.4 km",
-    battery: 56,
-    eta: "18 min",
-    traffic: "Moderate",
-    recommended: false,
+    vehicle_type: "ambulance",
+    distance: "Monitored",
+    battery: 80,
+    latitude: 28.6200,
+    longitude: 77.2000,
+    eta: "Ready",
+    traffic: "Normal",
+    recommended: true,
     status: "AVAILABLE",
   },
 ];
@@ -203,7 +235,7 @@ export default function EmergencyPage() {
   const [incidentsList, setIncidentsList] = useState<any[]>([]);
   const [vehiclesList, setVehiclesList] = useState<any[]>(initialVehicles);
   const [selectedIncidentId, setSelectedIncidentId] = useState<string>("INC-112-4590");
-  const [selectedVehicleId, setSelectedVehicleId] = useState("EV-AMB-21");
+  const [selectedVehicleId, setSelectedVehicleId] = useState("FIRE-001");
 
   const [isDispatching, setIsDispatching] = useState(false);
   const [dispatchToast, setDispatchToast] = useState<{
@@ -282,10 +314,45 @@ export default function EmergencyPage() {
   const selectedIncident =
     incidents.find((incident) => incident.id === selectedIncidentId) ?? incidents[0];
 
+  const sortedVehicles = useMemo(() => {
+    if (!selectedIncident) return vehicles;
+    const incType = (selectedIncident.incident_type || selectedIncident.type || "").toLowerCase();
+    const reqType = incType.includes("fire") ? "fire" : incType.includes("police") ? "police" : "ambulance";
+
+    return [...vehicles].sort((a, b) => {
+      // 1. Available status first
+      const aAvail = a.status === "AVAILABLE" ? 1 : 0;
+      const bAvail = b.status === "AVAILABLE" ? 1 : 0;
+      if (aAvail !== bAvail) return bAvail - aAvail;
+
+      // 2. Matching vehicle type next
+      const aType = (a.vehicle_type || a.type || a.id || "").toLowerCase();
+      const bType = (b.vehicle_type || b.type || b.id || "").toLowerCase();
+      const aMatch = aType.includes(reqType) ? 1 : 0;
+      const bMatch = bType.includes(reqType) ? 1 : 0;
+      if (aMatch !== bMatch) return bMatch - aMatch;
+
+      // 3. Higher battery next
+      return (b.battery || 0) - (a.battery || 0);
+    });
+  }, [vehicles, selectedIncident]);
+
   const selectedVehicle =
     vehicles.find(
       (vehicle) => vehicle.id === selectedVehicleId,
-    ) ?? vehicles[0];
+    ) ?? sortedVehicles[0] ?? vehicles[0];
+
+  useEffect(() => {
+    if (sortedVehicles.length > 0) {
+      const match = sortedVehicles.find((v) => v.id === selectedVehicleId);
+      if (!match || match.status !== "AVAILABLE") {
+        const firstAvailable = sortedVehicles.find((v) => v.status === "AVAILABLE") || sortedVehicles[0];
+        if (firstAvailable) {
+          setSelectedVehicleId(firstAvailable.id);
+        }
+      }
+    }
+  }, [selectedIncidentId, sortedVehicles]);
 
   const availableVehicles = useMemo(
     () =>
@@ -772,7 +839,7 @@ export default function EmergencyPage() {
               "
             >
               <div className="space-y-2.5">
-                {vehicles.map((vehicle) => (
+                {sortedVehicles.map((vehicle) => (
                   <VehicleCard
                     key={vehicle.id}
                     vehicle={vehicle}
@@ -804,15 +871,60 @@ export default function EmergencyPage() {
               </div>
             </div>
 
-            <div className="shrink-0 border-t border-emerald-200 p-3.5">
-              <div className="mb-2.5 flex items-center justify-between gap-2">
-                <span className="text-[10px] uppercase tracking-wide text-emerald-600">
-                  Selected unit
-                </span>
+            <div className="shrink-0 border-t border-emerald-200 p-3.5 space-y-3 bg-white">
+              {/* Unit Specifications & Dispatch Context */}
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50/40 p-3 text-xs space-y-2">
+                <div className="flex items-center justify-between border-b border-emerald-200 pb-1.5">
+                  <span className="text-[10px] uppercase font-bold text-emerald-800 tracking-wider">
+                    Selected Unit Dispatch
+                  </span>
+                  <span className="font-mono font-bold text-emerald-950 text-[11px]">
+                    {selectedVehicle?.id || "None Selected"}
+                  </span>
+                </div>
 
-                <span className="truncate text-[12px] font-bold text-emerald-700">
-                  {selectedVehicle.id}
-                </span>
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 text-[11px] font-mono text-slate-700">
+                  <div>
+                    <span className="text-slate-500 block text-[9px] uppercase font-sans">Vehicle Type</span>
+                    <strong className="text-slate-900">{selectedVehicle?.type || "Unavailable"}</strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[9px] uppercase font-sans">Battery SOC</span>
+                    <strong className={selectedVehicle && selectedVehicle.battery < 20 ? "text-red-600" : "text-emerald-800"}>
+                      {selectedVehicle?.battery !== undefined ? `${selectedVehicle.battery}%` : "Unavailable"}
+                    </strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[9px] uppercase font-sans">Vehicle Location</span>
+                    <strong className="text-slate-900">
+                      {selectedVehicle?.latitude !== undefined && selectedVehicle?.longitude !== undefined
+                        ? `${Number(selectedVehicle.latitude).toFixed(4)}, ${Number(selectedVehicle.longitude).toFixed(4)}`
+                        : "Unavailable"}
+                    </strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[9px] uppercase font-sans">Target Incident</span>
+                    <strong className="text-slate-900 truncate block">
+                      #{selectedIncident?.id}
+                    </strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[9px] uppercase font-sans">Incident Location</span>
+                    <strong className="text-slate-900 truncate block" title={selectedIncident?.address || selectedIncident?.location}>
+                      {selectedIncident?.address || selectedIncident?.location || "Unavailable"}
+                    </strong>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[9px] uppercase font-sans">Distance / ETA</span>
+                    <strong className="text-emerald-700">
+                      {selectedIncident?.distance_km && selectedIncident?.eta_minutes
+                        ? `${Number(selectedIncident.distance_km).toFixed(1)} km · ${Number(selectedIncident.eta_minutes).toFixed(1)}m`
+                        : isAssignedStatus(selectedIncident?.status)
+                        ? "Active Dispatch"
+                        : "Calculated on Dispatch"}
+                    </strong>
+                  </div>
+                </div>
               </div>
 
               <button
@@ -836,7 +948,7 @@ export default function EmergencyPage() {
                 {isDispatching ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>DISPATCHING UNIT...</span>
+                    <span>DISPATCHING UNIT VIA OSRM...</span>
                   </>
                 ) : isAssignedStatus(selectedIncident?.status) ? (
                   <>
@@ -846,17 +958,17 @@ export default function EmergencyPage() {
                 ) : selectedVehicle?.status === "AVAILABLE" ? (
                   <>
                     <Siren className="h-4 w-4" />
-                    <span>ASSIGN {selectedVehicle?.id}</span>
+                    <span>DISPATCH {selectedVehicle?.id}</span>
                   </>
                 ) : (
                   <span>UNIT NOT DISPATCHABLE ({selectedVehicle?.status})</span>
                 )}
               </button>
 
-              <p className="mt-2 text-center text-[10px] text-emerald-600">
+              <p className="mt-1 text-center text-[10px] text-emerald-600">
                 {isAssignedStatus(selectedIncident?.status)
-                  ? `Unit is active on emergency call #${selectedIncident?.id}.`
-                  : "Dispatch creates an emergency route for the selected unit."}
+                  ? `Live emergency route active for unit ${selectedIncident?.selected_vehicle || selectedVehicle?.id}.`
+                  : "Dispatch creates a live OSRM road route from vehicle coordinates."}
               </p>
             </div>
           </section>
@@ -973,21 +1085,13 @@ function VehicleCard({
   selected,
   onSelect,
 }: {
-  vehicle: {
-    id: string;
-    type: string;
-    distance: string;
-    battery: number;
-    eta: string;
-    traffic: string;
-    score: number;
-    recommended: boolean;
-    status: string;
-  };
+  vehicle: any;
   selected: boolean;
   onSelect: () => void;
 }) {
-  const lowBattery = vehicle.battery < 20;
+  const lowBattery = typeof vehicle.battery === "number" && vehicle.battery < 20;
+  const isFire = (vehicle.id || "").toLowerCase().includes("fire") || (vehicle.vehicle_type || vehicle.type || "").toLowerCase().includes("fire");
+  const isPolice = (vehicle.id || "").toLowerCase().includes("police") || (vehicle.vehicle_type || vehicle.type || "").toLowerCase().includes("police");
 
   return (
     <div
@@ -998,20 +1102,29 @@ function VehicleCard({
           : "border-emerald-200 bg-white hover:border-emerald-300"
       }`}
     >
-      {/* TITLE */}
-
+      {/* TITLE & ICON */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
           <div
             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
               lowBattery
                 ? "bg-red-50 text-red-600 border border-red-200"
+                : isFire
+                ? "bg-red-100 text-red-700"
+                : isPolice
+                ? "bg-blue-100 text-blue-700"
                 : selected
-                  ? "bg-emerald-100 text-emerald-700"
-                  : "bg-emerald-50 text-emerald-700"
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-emerald-50 text-emerald-700"
             }`}
           >
-            <Ambulance className="h-4 w-4" />
+            {isFire ? (
+              <Flame className="h-4 w-4 text-red-600" />
+            ) : isPolice ? (
+              <ShieldCheck className="h-4 w-4 text-blue-600" />
+            ) : (
+              <Ambulance className="h-4 w-4 text-emerald-600" />
+            )}
           </div>
 
           <div className="min-w-0">
@@ -1037,36 +1150,44 @@ function VehicleCard({
           <span className={`inline-block rounded px-2 py-0.5 text-[9px] font-bold uppercase ${
             vehicle.status === "AVAILABLE"
               ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-              : vehicle.status === "EN ROUTE"
+              : vehicle.status === "EN ROUTE" || vehicle.status === "BUSY"
               ? "bg-blue-100 text-blue-800 border border-blue-300 animate-pulse"
               : "bg-red-100 text-red-800 border border-red-200"
           }`}>
             {vehicle.status}
           </span>
           <p className="text-[11px] text-emerald-800 font-bold mt-1">
-            ETA: {vehicle.eta}
+            {vehicle.battery !== undefined ? `${vehicle.battery}% SOC` : "Unavailable"}
           </p>
         </div>
       </div>
 
       {/* METRICS */}
-
       <div className="mt-3 grid grid-cols-3 gap-2">
         <VehicleMetric
-          label="Distance"
-          value={vehicle.distance}
-        />
-
-        <VehicleMetric
-          label="ETA"
-          value={vehicle.eta}
+          label="Location"
+          value={
+            vehicle.latitude !== undefined && vehicle.longitude !== undefined
+              ? `${Number(vehicle.latitude).toFixed(2)}, ${Number(vehicle.longitude).toFixed(2)}`
+              : "Unavailable"
+          }
         />
 
         <VehicleMetric
           label="Battery"
-          value={`${vehicle.battery}%`}
+          value={vehicle.battery !== undefined ? `${vehicle.battery}% SOC` : "Unavailable"}
           danger={lowBattery}
         />
+
+        <VehicleMetric
+          label="Status"
+          value={vehicle.status || "Unavailable"}
+        />
+      </div>
+
+      <div className="mt-2 text-[10px] font-mono text-slate-500 flex items-center justify-between">
+        <span>Coords: {vehicle.latitude !== undefined && vehicle.longitude !== undefined ? `${Number(vehicle.latitude).toFixed(4)}, ${Number(vehicle.longitude).toFixed(4)}` : "Unavailable"}</span>
+        <span>Type: {vehicle.vehicle_type || (isFire ? "fire" : isPolice ? "police" : "ambulance")}</span>
       </div>
 
       {/* TRAFFIC */}

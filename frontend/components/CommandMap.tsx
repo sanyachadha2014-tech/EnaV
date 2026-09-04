@@ -193,38 +193,26 @@ export default function CommandMap({
           const isDispatched = statusLower === "dispatched" || statusLower === "assigned" || statusLower.includes("route");
           const hasAssignedVehicle = Boolean(incident.selected_vehicle && isDispatched);
 
-          // Determine EV vehicle position safely
+          // Determine EV vehicle position strictly from assigned_vehicle_location
           let vehiclePos: [number, number] | null = null;
-          if (hasAssignedVehicle) {
-            if (incident.assigned_vehicle_location && typeof incident.assigned_vehicle_location.lat === "number" && typeof incident.assigned_vehicle_location.lng === "number") {
-              vehiclePos = [incident.assigned_vehicle_location.lat, incident.assigned_vehicle_location.lng];
-            } else {
-              vehiclePos = [
-                roundCoord(lat + 0.016),
-                roundCoord(lng - 0.014)
-              ];
-            }
+          if (
+            hasAssignedVehicle &&
+            incident.assigned_vehicle_location &&
+            typeof incident.assigned_vehicle_location.lat === "number" &&
+            typeof incident.assigned_vehicle_location.lng === "number"
+          ) {
+            vehiclePos = [incident.assigned_vehicle_location.lat, incident.assigned_vehicle_location.lng];
           }
 
-          // Determine polyline route coordinates safely
+          // Determine polyline route coordinates strictly from real OSRM route_geometry
           let routeCoordinates: [number, number][] = [];
-          if (hasAssignedVehicle && vehiclePos) {
-            if (incident.route_geometry && incident.route_geometry.length >= 2) {
-              routeCoordinates = incident.route_geometry.map((pt) => [pt[0], pt[1]]);
-            } else {
-              routeCoordinates = [
-                vehiclePos,
-                [
-                  roundCoord(vehiclePos[0] * 0.65 + lat * 0.35),
-                  roundCoord(vehiclePos[1] * 0.65 + lng * 0.35)
-                ],
-                [
-                  roundCoord(vehiclePos[0] * 0.35 + lat * 0.65),
-                  roundCoord(vehiclePos[1] * 0.35 + lng * 0.65)
-                ],
-                [lat, lng]
-              ];
-            }
+          if (
+            hasAssignedVehicle &&
+            incident.route_geometry &&
+            Array.isArray(incident.route_geometry) &&
+            incident.route_geometry.length >= 2
+          ) {
+            routeCoordinates = incident.route_geometry.map((pt) => [pt[0], pt[1]]);
           }
 
           const isFire = (incident.incident_type || "").toLowerCase().includes("fire");
@@ -297,7 +285,17 @@ export default function CommandMap({
                   <Popup>
                     <div className="font-sans text-xs p-1 space-y-1 font-mono">
                       <div className="flex items-center gap-1 font-bold text-emerald-900">
-                        <span>🚑</span> {incident.selected_vehicle}
+                        <span>
+                          {(incident.selected_vehicle || "").toLowerCase().includes("fire") || (incident.vehicle_type || "").toLowerCase().includes("fire")
+                            ? "🚒"
+                            : (incident.selected_vehicle || "").toLowerCase().includes("police") || (incident.vehicle_type || "").toLowerCase().includes("police")
+                            ? "🚔"
+                            : "🚑"}
+                        </span>{" "}
+                        {incident.selected_vehicle}
+                      </div>
+                      <div className="text-[10px] text-slate-600">
+                        Type: <strong className="text-slate-800">{incident.vehicle_type || "Emergency Unit"}</strong>
                       </div>
                       <div className="text-[10px] text-slate-600">
                         Status: <strong className="text-emerald-700">EN ROUTE</strong>
@@ -306,7 +304,7 @@ export default function CommandMap({
                         Target: <strong>#{incident.incident_id}</strong>
                       </div>
                       <div className="text-[10px] text-slate-600">
-                        Est. ETA: <strong className="text-emerald-700">{typeof incident.eta_minutes === 'number' ? `${incident.eta_minutes.toFixed(1)} mins` : "6 mins"}</strong>
+                        Est. ETA: <strong className="text-emerald-700">{typeof incident.eta_minutes === 'number' ? `${incident.eta_minutes.toFixed(1)} mins` : "Unavailable"}</strong>
                       </div>
                     </div>
                   </Popup>

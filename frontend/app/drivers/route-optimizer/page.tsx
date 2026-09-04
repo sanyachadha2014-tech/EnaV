@@ -22,7 +22,8 @@ import {
     Sliders,
     X,
     Gauge,
-    Eye
+    Eye,
+    AlertTriangle
 } from "lucide-react";
 
 import 'leaflet/dist/leaflet.css';
@@ -58,6 +59,11 @@ interface RouteOption {
     tollCost: string;
     elevationGain: string;
     kwhDepletion: string;
+    isFeasible: boolean;
+    arrivalBatteryPercentage: number;
+    energyConsumedKwh: number;
+    reason: string;
+    geometry: [number, number][];
     carbon?: {
         iceEmissions: number;
         evEmissions: number;
@@ -126,6 +132,7 @@ export default function RouteOptimizerPage() {
     const [startLoading, setStartLoading] = useState(false);
     const [destLoading, setDestLoading] = useState(false);
     const [isOptimizing, setIsOptimizing] = useState(false);
+    const [optimizationError, setOptimizationError] = useState<string | null>(null);
 
     const [routes, setRoutes] = useState<RouteOption[]>([]);
     const [selectedRoute, setSelectedRoute] = useState<RouteOption | null>(null);
@@ -324,6 +331,22 @@ export default function RouteOptimizerPage() {
 
         setRoutes([]);
         setSelectedRoute(null);
+        setOptimizationError(null);
+        setIsCompleted(false);
+    };
+
+    const handleSetPreset = (startName: string, startCoords: [number, number], destName: string, destCoords: [number, number]) => {
+        const startLoc: Location = { label: startName, lat: startCoords[0], lon: startCoords[1] };
+        const destLoc: Location = { label: destName, lat: destCoords[0], lon: destCoords[1] };
+        setStart(startLoc);
+        setStartQuery(startName);
+        setStartSuggestions([]);
+        setDestination(destLoc);
+        setDestQuery(destName);
+        setDestSuggestions([]);
+        setRoutes([]);
+        setSelectedRoute(null);
+        setOptimizationError(null);
         setIsCompleted(false);
     };
 
@@ -331,64 +354,60 @@ export default function RouteOptimizerPage() {
         if (!start || !destination || isOptimizing) return;
 
         setIsOptimizing(true);
+        setOptimizationError(null);
 
-        const fallbackDistanceKm = 31.2;
-        const fallbackCarbon = calculateCarbonCredits(fallbackDistanceKm);
-
-        const fallbackRoute: RouteOption = {
-            id: `route-fallback-${Date.now()}`,
-            type: "Local Safe Corridor",
-            description:
-                "Local fallback route shown because the route service did not respond in time.",
-            distance: `${fallbackDistanceKm} km`,
-            duration: "45 mins",
-            nextAction:
-                "Continue along the primary corridor and follow the map.",
-            co2Saved: `${fallbackCarbon.co2Saved} kg`,
-            tollCost: "₹0",
-            elevationGain: "+18m",
-            kwhDepletion: "3.8 kWh",
-            carbon: fallbackCarbon,
-            chargingStops: [
-                {
-                    name: "EcoCharge Station B",
-                    distance: "8.5 km away",
-                    kwh: "120 kW",
-                },
-            ],
-        };
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
         try {
             const controller = new AbortController();
-            const timeoutId = window.setTimeout(() => controller.abort(), 10000);
+            const timeoutId = window.setTimeout(() => controller.abort(), 15000);
+
+            const sanitizedVehicle = {
+                vehicle_id: vehicleConfig.vehicle_id || "EV-2048-DX",
+                vehicle_type: vehicleConfig.vehicle_type || "citizen",
+                battery_percentage: Number(vehicleConfig.battery_percentage),
+                battery_capacity_kwh: Number(vehicleConfig.battery_capacity_kwh),
+                consumption_kwh_per_km: Number(vehicleConfig.consumption_kwh_per_km),
+                minimum_reserve_pct: Number(vehicleConfig.minimum_reserve_pct),
+                is_emergency: Boolean(vehicleConfig.is_emergency)
+            };
+
+            const requestPayload = {
+                source: {
+                    lat: start.lat,
+                    lng: start.lon,
+                },
+                destination: {
+                    lat: destination.lat,
+                    lng: destination.lon,
+                },
+                vehicle: sanitizedVehicle,
+            };
+
+            console.info("⚡ [Route Optimizer Request]", JSON.stringify(requestPayload, null, 2));
 
             try {
                 const response = await fetch(
-                    "http://127.0.0.1:8000/route/optimize",
+                    `${apiUrl}/route/optimize`,
                     {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
                         },
-                        body: JSON.stringify({
-                            source: {
-                                lat: start.lat,
-                                lng: start.lon,
-                            },
-                            destination: {
-                                lat: destination.lat,
-                                lng: destination.lon,
-                            },
-                            vehicle: vehicleConfig,
-                        }),
+                        body: JSON.stringify(requestPayload),
                         signal: controller.signal,
                     }
                 );
 
                 if (!response.ok) {
-                    throw new Error(
-                        `Route service returned ${response.status}`
-                    );
+                    let errDetail = `Route service returned HTTP ${response.status}`;
+                    try {
+                        const errJson = await response.json();
+                        if (errJson?.detail) {
+                            errDetail = typeof errJson.detail === "string" ? errJson.detail : JSON.stringify(errJson.detail);
+                        }
+                    } catch {}
+                    throw new Error(errDetail);
                 }
 
                 const data = await response.json();
@@ -397,75 +416,51 @@ export default function RouteOptimizerPage() {
                     Array.isArray(data?.evaluated_routes)
                         ? data.evaluated_routes.map(
                               (route: any, index: number) => {
-                                  const distanceKm =
-                                      Number(route?.distance_km) || 28.4;
+                                  const distanceKm = Number(route?.distance_km) || 0;
+                                  const carbon = calculateCarbonCredits(distanceKm);
+                                  const durationSeconds = Number(route?.duration_seconds) || 0;
+                                  const isFeasible = Boolean(route?.is_feasible);
+                                  const arrivalBatteryPercentage = Number(route?.arrival_battery_percentage) || 0;
+                                  const energyConsumedKwh = Number(route?.energy_consumed_kwh) || 0;
 
-                                  const carbon =
-                                      calculateCarbonCredits(distanceKm);
-
-                                  const durationSeconds =
-                                      Number(route?.duration_seconds) || 0;
+                                  // Extract OSRM turn-by-turn road coordinates
+                                  const geomPoints: [number, number][] = [];
+                                  if (Array.isArray(route?.geometry)) {
+                                      for (const pt of route.geometry) {
+                                          if (pt && typeof pt === "object") {
+                                              const lat = pt.lat !== undefined ? Number(pt.lat) : Array.isArray(pt) ? Number(pt[0]) : null;
+                                              const lng = pt.lng !== undefined ? Number(pt.lng) : Array.isArray(pt) ? Number(pt[1]) : null;
+                                              if (lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng)) {
+                                                  geomPoints.push([lat, lng]);
+                                              }
+                                          }
+                                      }
+                                  }
 
                                   return {
-                                      id:
-                                          route?.route_id ||
-                                          `route-${index + 1}`,
-                                      type:
-                                          route?.name ||
-                                          (route?.is_feasible
-                                              ? `Optimal Corridor ${index + 1}`
-                                              : `Alternative Route ${index + 1}`),
-                                      description:
-                                          route?.reason ||
-                                          "High-efficiency path computed from the route decision engine.",
+                                      id: route?.route_id || `route-${index + 1}`,
+                                      type: route?.name || (isFeasible ? `Optimal Corridor ${index + 1}` : `Infeasible Corridor ${index + 1}`),
+                                      description: route?.reason || (isFeasible ? "High-efficiency path computed from route decision engine." : "Violates minimum battery reserve."),
                                       distance: `${distanceKm.toFixed(2)} km`,
-                                      duration:
-                                          durationSeconds > 0
-                                              ? `${Math.round(
-                                                    durationSeconds / 60
-                                                )} mins`
-                                              : "38 mins",
-                                      nextAction:
-                                          route?.is_feasible
-                                              ? "Proceed directly along the primary arterial road."
-                                              : "Detour to the recommended charging hub.",
+                                      duration: durationSeconds > 0 ? `${Math.round(durationSeconds / 60)} mins` : "N/A",
+                                      nextAction: isFeasible ? "Proceed directly along primary arterial route." : "Charging required before reaching destination.",
                                       co2Saved: `${carbon.co2Saved} kg`,
-                                      tollCost:
-                                          route?.toll_cost_inr !== undefined
-                                              ? `₹${route.toll_cost_inr}`
-                                              : route?.toll_cost || "₹0",
-                                      elevationGain:
-                                          route?.elevation_gain_m !==
-                                          undefined
-                                              ? `+${route.elevation_gain_m}m`
-                                              : route?.elevation_gain ||
-                                                "+0m",
-                                      kwhDepletion:
-                                          route?.kwh_depletion !== undefined
-                                              ? `${route.kwh_depletion} kWh`
-                                              : "0.0 kWh",
+                                      tollCost: route?.toll_cost_inr !== undefined ? (String(route.toll_cost_inr).startsWith("₹") ? route.toll_cost_inr : `₹${route.toll_cost_inr}`) : route?.tolls || "₹0",
+                                      elevationGain: route?.elevation_gain_m !== undefined ? (String(route.elevation_gain_m).startsWith("+") ? route.elevation_gain_m : `+${route.elevation_gain_m}`) : route?.elevation_gain || "+0m",
+                                      kwhDepletion: `${energyConsumedKwh.toFixed(2)} kWh`,
+                                      isFeasible,
+                                      arrivalBatteryPercentage,
+                                      energyConsumedKwh,
+                                      reason: route?.reason || (isFeasible ? "Feasible directly" : "Violates minimum battery reserve."),
+                                      geometry: geomPoints,
                                       carbon,
-                                      chargingStops:
-                                          data?.charging_required &&
-                                          data?.recommended_charger
-                                              ? [
-                                                    {
-                                                        name:
-                                                            data
-                                                                .recommended_charger
-                                                                .name ||
-                                                            "Recommended Charging Hub",
-                                                        distance:
-                                                            "En route checkpoint",
-                                                        kwh: `${
-                                                            data
-                                                                .recommended_charger
-                                                                .charging_power_kw ||
-                                                            60
-                                                        } kW`,
-                                                    },
-                                                ]
-                                              : [],
+                                      chargingStops: data?.charging_required && data?.recommended_charger ? [
+                                          {
+                                              name: data.recommended_charger.name || "Recommended Charging Hub",
+                                              distance: "En route checkpoint",
+                                              kwh: `${data.recommended_charger.charging_power_kw || 60} kW`,
+                                          }
+                                      ] : [],
                                   };
                               }
                           )
@@ -474,9 +469,17 @@ export default function RouteOptimizerPage() {
                 if (mappedRoutes.length > 0) {
                     setRoutes(mappedRoutes);
                     setSelectedRoute(mappedRoutes[0]);
+                    if (!data?.feasible) {
+                        setOptimizationError(data?.reason || "All evaluated routes violate the vehicle's minimum battery reserve.");
+                    } else {
+                        setOptimizationError(null);
+                    }
                 } else {
-                    setRoutes([fallbackRoute]);
-                    setSelectedRoute(fallbackRoute);
+                    setRoutes([]);
+                    setSelectedRoute(null);
+                    setOptimizationError(
+                        data?.reason || "No candidate routes could be evaluated for the given endpoints and vehicle constraints."
+                    );
                 }
             } finally {
                 window.clearTimeout(timeoutId);
@@ -485,13 +488,12 @@ export default function RouteOptimizerPage() {
             const message =
                 error instanceof Error ? error.message : String(error);
 
-            console.warn(
-                "Route service unavailable. Showing local fallback route:",
-                message
+            console.error("Route optimization failed:", message);
+            setRoutes([]);
+            setSelectedRoute(null);
+            setOptimizationError(
+                `Unable to compute route: ${message}`
             );
-
-            setRoutes([fallbackRoute]);
-            setSelectedRoute(fallbackRoute);
         } finally {
             setIsOptimizing(false);
         }
@@ -640,6 +642,7 @@ export default function RouteOptimizerPage() {
         setDestQuery("");
         setRoutes([]);
         setSelectedRoute(null);
+        setOptimizationError(null);
         setIsActive(false);
         setIsCompleted(false);
         setStartTime(null);
@@ -686,6 +689,132 @@ export default function RouteOptimizerPage() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
+                    {/* EV BATTERY & VEHICLE SPECIFICATIONS (DYNAMICALLY EDITABLE) */}
+                    <div className="space-y-3 bg-slate-900/50 p-4 rounded-2xl border border-slate-800/80 shadow-lg">
+                        <div className="text-xs font-bold uppercase tracking-widest text-slate-300 flex items-center justify-between">
+                            <span className="flex items-center gap-1.5 text-cyan-400">
+                                <Zap className="h-4 w-4 fill-cyan-400/20" />
+                                <span>EV Battery & Telemetry</span>
+                            </span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-bold border ${
+                                vehicleConfig.battery_percentage >= vehicleConfig.minimum_reserve_pct
+                                    ? "text-cyan-400 bg-cyan-950/60 border-cyan-800/50"
+                                    : "text-rose-400 bg-rose-950/60 border-rose-800/50"
+                            }`}>
+                                {vehicleConfig.battery_percentage}% SOC
+                            </span>
+                        </div>
+
+                        {/* Quick Test Presets */}
+                        <div className="space-y-1.5 pt-1">
+                            <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Quick Test Presets:</div>
+                            <div className="flex flex-wrap gap-1.5">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        handleSetPreset("Connaught Place, New Delhi", [28.6315, 77.2167], "Noida Sector 18, Uttar Pradesh", [28.5708, 77.3260]);
+                                        setVehicleConfig(v => ({ ...v, battery_percentage: 85, battery_capacity_kwh: 75, consumption_kwh_per_km: 0.15, minimum_reserve_pct: 15 }));
+                                    }}
+                                    className="px-2.5 py-1 text-[10px] rounded-lg bg-slate-800/80 hover:bg-cyan-950/80 hover:border-cyan-500/50 border border-slate-700/60 text-slate-300 hover:text-cyan-300 font-medium transition-all cursor-pointer"
+                                >
+                                    CP → Noida (85% SOC)
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        handleSetPreset("Connaught Place, New Delhi", [28.6315, 77.2167], "Noida Sector 18, Uttar Pradesh", [28.5708, 77.3260]);
+                                        setVehicleConfig(v => ({ ...v, battery_percentage: 16, battery_capacity_kwh: 75, consumption_kwh_per_km: 0.15, minimum_reserve_pct: 15 }));
+                                    }}
+                                    className="px-2.5 py-1 text-[10px] rounded-lg bg-slate-800/80 hover:bg-rose-950/80 hover:border-rose-500/50 border border-slate-700/60 text-slate-300 hover:text-rose-300 font-medium transition-all cursor-pointer"
+                                >
+                                    CP → Noida (16% Low SOC)
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        handleSetPreset("Connaught Place, New Delhi", [28.6315, 77.2167], "DLF Cyber Hub, Gurgaon", [28.4986, 77.0878]);
+                                        setVehicleConfig(v => ({ ...v, battery_percentage: 85, battery_capacity_kwh: 75, consumption_kwh_per_km: 0.15, minimum_reserve_pct: 15 }));
+                                    }}
+                                    className="px-2.5 py-1 text-[10px] rounded-lg bg-slate-800/80 hover:bg-cyan-950/80 hover:border-cyan-500/50 border border-slate-700/60 text-slate-300 hover:text-cyan-300 font-medium transition-all cursor-pointer"
+                                >
+                                    CP → Cyber Hub
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Direct input controls */}
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                            <div>
+                                <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                                    Current SOC (%)
+                                </label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="100"
+                                    step="1"
+                                    value={vehicleConfig.battery_percentage}
+                                    onChange={(e) => setVehicleConfig({ ...vehicleConfig, battery_percentage: parseFloat(e.target.value) || 0 })}
+                                    className="w-full h-9 px-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono text-xs focus:border-cyan-500 outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                                    Min Reserve (%)
+                                </label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="50"
+                                    step="1"
+                                    value={vehicleConfig.minimum_reserve_pct}
+                                    onChange={(e) => setVehicleConfig({ ...vehicleConfig, minimum_reserve_pct: parseFloat(e.target.value) || 0 })}
+                                    className="w-full h-9 px-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono text-xs focus:border-cyan-500 outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                                    Capacity (kWh)
+                                </label>
+                                <input
+                                    type="number"
+                                    min="10"
+                                    max="200"
+                                    step="1"
+                                    value={vehicleConfig.battery_capacity_kwh}
+                                    onChange={(e) => setVehicleConfig({ ...vehicleConfig, battery_capacity_kwh: parseFloat(e.target.value) || 0 })}
+                                    className="w-full h-9 px-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono text-xs focus:border-cyan-500 outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                                    Rate (kWh/km)
+                                </label>
+                                <input
+                                    type="number"
+                                    min="0.05"
+                                    max="0.5"
+                                    step="0.01"
+                                    value={vehicleConfig.consumption_kwh_per_km}
+                                    onChange={(e) => setVehicleConfig({ ...vehicleConfig, consumption_kwh_per_km: parseFloat(e.target.value) || 0 })}
+                                    className="w-full h-9 px-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono text-xs focus:border-cyan-500 outline-none"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+                                Vehicle Model / ID
+                            </label>
+                            <input
+                                type="text"
+                                value={vehicleConfig.vehicle_id}
+                                onChange={(e) => setVehicleConfig({ ...vehicleConfig, vehicle_id: e.target.value })}
+                                className="w-full h-9 px-2.5 rounded-lg bg-slate-950 border border-slate-800 text-white font-mono text-xs focus:border-cyan-500 outline-none"
+                            />
+                        </div>
+                    </div>
+
                     <div className="space-y-3 bg-slate-900/40 p-4 rounded-2xl border border-slate-800/60">
                         <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1 flex items-center justify-between">
                             <span>Route Parameters</span>
@@ -748,6 +877,18 @@ export default function RouteOptimizerPage() {
                         </button>
                     </div>
 
+                    {optimizationError && !isOptimizing && (
+                        <div className="p-4 bg-red-950/40 border border-red-500/40 rounded-2xl text-red-200 text-xs space-y-1.5 animate-fadeIn">
+                            <div className="flex items-center gap-2 font-bold text-red-400">
+                                <AlertTriangle className="h-4 w-4 shrink-0" />
+                                <span>Optimization Unavailable</span>
+                            </div>
+                            <p className="text-[11px] text-red-300/80 leading-relaxed">
+                                {optimizationError}
+                            </p>
+                        </div>
+                    )}
+
                     {selectedRoute && !isCompleted && (
                         <div className="space-y-4 animate-fadeIn">
                             {routes.length > 1 && (
@@ -792,13 +933,31 @@ export default function RouteOptimizerPage() {
 
                             <div className="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl space-y-3">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[10px] uppercase font-bold tracking-wider text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/50">Optimal Path Verified</span>
+                                    <span className={`text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-lg border ${
+                                        selectedRoute.isFeasible
+                                            ? "text-emerald-400 bg-emerald-950/60 border-emerald-800/60"
+                                            : "text-rose-400 bg-rose-950/60 border-rose-800/60"
+                                    }`}>
+                                        {selectedRoute.isFeasible ? "✓ Feasible Route Verified" : "⚠ Infeasible: Violates Min Reserve"}
+                                    </span>
                                     {isActive && <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" /> Live GPS Tracking Active</span>}
                                 </div>
                                 <h3 className="text-base font-black text-white">{selectedRoute.type}</h3>
                                 <p className="text-xs text-slate-400 leading-relaxed">{selectedRoute.description}</p>
 
-                                <div className="grid grid-cols-2 gap-3 pt-2">
+                                {!selectedRoute.isFeasible && (
+                                    <div className="p-3 bg-rose-950/40 border border-rose-500/40 rounded-xl text-rose-200 text-xs space-y-1">
+                                        <div className="flex items-center gap-1.5 font-bold text-rose-400">
+                                            <AlertTriangle className="h-4 w-4 shrink-0" />
+                                            <span>Insufficient Battery Margin</span>
+                                        </div>
+                                        <p className="text-[11px] text-rose-300/80 leading-relaxed">
+                                            {selectedRoute.reason || `Arrival battery (${selectedRoute.arrivalBatteryPercentage.toFixed(1)}%) drops below vehicle reserve (${vehicleConfig.minimum_reserve_pct}%). Charging stop required.`}
+                                        </p>
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-2 gap-2.5 pt-2">
                                     <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/40">
                                         <div className="text-[10px] text-slate-400 uppercase font-semibold">Total Distance</div>
                                         <div className="text-sm font-black text-white mt-0.5">{selectedRoute.distance}</div>
@@ -807,9 +966,31 @@ export default function RouteOptimizerPage() {
                                         <div className="text-[10px] text-slate-400 uppercase font-semibold">Estimated ETA</div>
                                         <div className="text-sm font-black text-white mt-0.5">{selectedRoute.duration}</div>
                                     </div>
+                                    <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/40">
+                                        <div className="text-[10px] text-slate-400 uppercase font-semibold">Arrival Battery SOC</div>
+                                        <div className={`text-sm font-black mt-0.5 ${
+                                            selectedRoute.arrivalBatteryPercentage >= vehicleConfig.minimum_reserve_pct
+                                                ? "text-emerald-400"
+                                                : "text-rose-400"
+                                        }`}>
+                                            {selectedRoute.arrivalBatteryPercentage !== undefined ? `${selectedRoute.arrivalBatteryPercentage.toFixed(1)}%` : "N/A"}
+                                        </div>
+                                        <div className="text-[9px] text-slate-500 mt-0.5 font-mono">
+                                            Min Reserve: {vehicleConfig.minimum_reserve_pct}%
+                                        </div>
+                                    </div>
+                                    <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/40">
+                                        <div className="text-[10px] text-slate-400 uppercase font-semibold">Battery Drain</div>
+                                        <div className="text-sm font-black text-cyan-400 mt-0.5">
+                                            {selectedRoute.energyConsumedKwh !== undefined ? `${selectedRoute.energyConsumedKwh.toFixed(2)} kWh` : selectedRoute.kwhDepletion}
+                                        </div>
+                                        <div className="text-[9px] text-slate-500 mt-0.5 font-mono">
+                                            Rate: {vehicleConfig.consumption_kwh_per_km} kWh/km
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-2 pt-1">
+                                <div className="grid grid-cols-2 gap-2 pt-1">
                                     <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/40 text-[10px] font-mono">
                                         <div className="text-slate-400 uppercase font-semibold">Toll Cost</div>
                                         <div className="text-white font-bold mt-0.5">{selectedRoute.tollCost}</div>
@@ -817,10 +998,6 @@ export default function RouteOptimizerPage() {
                                     <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/40 text-[10px] font-mono">
                                         <div className="text-slate-400 uppercase font-semibold">Elevation</div>
                                         <div className="text-white font-bold mt-0.5">{selectedRoute.elevationGain}</div>
-                                    </div>
-                                    <div className="bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/40 text-[10px] font-mono">
-                                        <div className="text-slate-400 uppercase font-semibold">Energy Drain</div>
-                                        <div className="text-cyan-400 font-bold mt-0.5">{selectedRoute.kwhDepletion}</div>
                                     </div>
                                 </div>
 
@@ -999,6 +1176,8 @@ export default function RouteOptimizerPage() {
                         destination={destination}
                         currentVehiclePos={currentVehiclePos}
                         travelledPath={travelledPath}
+                        routeGeometry={selectedRoute?.geometry}
+                        isFeasible={selectedRoute?.isFeasible}
                     />
 
                     {!start && !destination && (

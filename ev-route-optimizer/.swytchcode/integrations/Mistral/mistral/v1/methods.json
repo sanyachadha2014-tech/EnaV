@@ -1,0 +1,799 @@
+{
+  "methods": [
+    {
+      "method_uuid": "",
+      "method_name": "Add a conversation record to a dataset",
+      "canonical_id": "mistral.dataset.records.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Append entries to a conversation and get the updated history",
+      "canonical_id": "mistral.conversation.create1"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Append new entries and stream conversation completion",
+      "canonical_id": "mistral.conversation_idstream.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Archive a fine-tuned model",
+      "canonical_id": "mistral.model.archive.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Archive a specific workflow",
+      "canonical_id": "mistral.archive.update"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Call a tool on an MCP connector",
+      "canonical_id": "mistral.tool.call.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Cancel a fine tuning job",
+      "canonical_id": "mistral.job.cancel1"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Cancel a running workflow execution by its ID",
+      "canonical_id": "mistral.execution.cancel"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Cancel a scheduled workflow",
+      "canonical_id": "mistral.schedule.delete"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Cancel a specific batch job",
+      "canonical_id": "mistral.job.cancel"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Cancel multiple workflow executions at once",
+      "canonical_id": "mistral.execution.cancel1"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Classify chat messages for analysis",
+      "canonical_id": "mistral.classification.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Create a conversation and append entries to it",
+      "canonical_id": "mistral.conversation.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Create a new agent with instructions, tools, and description",
+      "canonical_id": "mistral.agent.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Create a new batch job for processing",
+      "canonical_id": "mistral.job.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Create a new classification",
+      "canonical_id": "mistral.classification.create1"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Create a new empty observability dataset",
+      "canonical_id": "mistral.dataset.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Create a new fine-tuning job for processing",
+      "canonical_id": "mistral.job.create1"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Create a new judge",
+      "canonical_id": "mistral.judge.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Create a new library, initially private to you",
+      "canonical_id": "mistral.library.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Create a new MCP connector with custom visibility, URL, and auth",
+      "canonical_id": "mistral.connector.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Create a new voice with an audio sample",
+      "canonical_id": "mistral.voice.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Create a real-time audio transcription stream",
+      "canonical_id": "mistral.transcriptionsstream.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Create embeddings for text or other data",
+      "canonical_id": "mistral.embedding.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Create or update organization credentials for a connector",
+      "canonical_id": "mistral.organization.credentials.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Create or update user credentials for a connector",
+      "canonical_id": "mistral.user.credentials.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Create or update workspace credentials for a connector",
+      "canonical_id": "mistral.workspace.credentials.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Delete a conversation by its ID",
+      "canonical_id": "mistral.conversation.delete"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Delete a custom voice by its ID",
+      "canonical_id": "mistral.voice.delete"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Delete a fine-tuned model",
+      "canonical_id": "mistral.model.delete"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Delete a library and all its documents",
+      "canonical_id": "mistral.library.delete"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Delete a specific dataset by its ID",
+      "canonical_id": "mistral.dataset.delete"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Delete a specific file by its ID",
+      "canonical_id": "mistral.file.delete"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Delete an agent alias by ID",
+      "canonical_id": "mistral.alias.delete"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Delete organization credentials for a connector",
+      "canonical_id": "mistral.organization.credentials.delete"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Delete user credentials for a connector",
+      "canonical_id": "mistral.user.credentials.delete"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Delete workspace credentials for a connector",
+      "canonical_id": "mistral.workspace.credentials.delete"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Download the content of a specific file by its ID",
+      "canonical_id": "mistral.content.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Execute a specific workflow with provided details",
+      "canonical_id": "mistral.execute.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Execute a workflow registration with provided details",
+      "canonical_id": "mistral.registration.execute"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Export a dataset to JSONL and get a download URL",
+      "canonical_id": "mistral.dataset.toJsonl.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Extract text from images using OCR",
+      "canonical_id": "mistral.ocr.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Find judges with filters and search",
+      "canonical_id": "mistral.judge.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Find workflow registrations by ID, task queue, or status",
+      "canonical_id": "mistral.registration.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Generate agent completions based on provided requests",
+      "canonical_id": "mistral.completion.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Generate an audio transcription",
+      "canonical_id": "mistral.transcription.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Generate code completions for FIM requests",
+      "canonical_id": "mistral.completion.create2"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Generate speech from text using a saved voice or reference audio",
+      "canonical_id": "mistral.speech.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Generate text responses for chat conversations",
+      "canonical_id": "mistral.completion.create1"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get a document's signed URL from a library",
+      "canonical_id": "mistral.document.signedUrl.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get a list of agent entities",
+      "canonical_id": "mistral.agent.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get a list of available audio voices",
+      "canonical_id": "mistral.voice.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get a list of available models",
+      "canonical_id": "mistral.model.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get a list of conversations sorted by creation time",
+      "canonical_id": "mistral.conversation.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get a paginated list of agents you can access",
+      "canonical_id": "mistral.page.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get a signed URL for a file",
+      "canonical_id": "mistral.url.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get a specific agent version by version number",
+      "canonical_id": "mistral.version.get1"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get a specific workflow deployment by its name",
+      "canonical_id": "mistral.deployment.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get agent details by ID and optional version",
+      "canonical_id": "mistral.agent.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get all entries for a specific conversation",
+      "canonical_id": "mistral.history.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get all messages for a specific conversation",
+      "canonical_id": "mistral.message.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get an audio sample for a specific voice",
+      "canonical_id": "mistral.voice.sample.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get conversation by its ID",
+      "canonical_id": "mistral.conversation.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get detailed information for a specific library",
+      "canonical_id": "mistral.library.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get details for a specific voice",
+      "canonical_id": "mistral.voice.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get file information by file ID",
+      "canonical_id": "mistral.file.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get information about the current worker",
+      "canonical_id": "mistral.worker.whoami.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get library access details by library ID",
+      "canonical_id": "mistral.share.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get metadata for a specific document in a library",
+      "canonical_id": "mistral.document.get1"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get metrics for a specific workflow",
+      "canonical_id": "mistral.metric.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get model details by model ID",
+      "canonical_id": "mistral.model.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get signed URL for extracted document text",
+      "canonical_id": "mistral.document.extractedTextSignedUrl.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get text content for a specific document in a library",
+      "canonical_id": "mistral.document.textContent.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get the OAuth2 authorization URL for a connector",
+      "canonical_id": "mistral.auth_url.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get the OpenTelemetry trace for a specific workflow execution",
+      "canonical_id": "mistral.execution.otel.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get the processing status for a specific document",
+      "canonical_id": "mistral.document.status.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get the status of a dataset import task",
+      "canonical_id": "mistral.dataset.tasks.get1"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get the status of a specific campaign",
+      "canonical_id": "mistral.campaign.status.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get the summary of a workflow execution trace",
+      "canonical_id": "mistral.execution.summary.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get trace events for a workflow execution",
+      "canonical_id": "mistral.execution.events.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get workflow schedules",
+      "canonical_id": "mistral.schedule.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Import campaign data into a dataset",
+      "canonical_id": "mistral.dataset.fromCampaign.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Import data samples from one dataset to another",
+      "canonical_id": "mistral.dataset.fromDataset.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Import data samples into a dataset from a file",
+      "canonical_id": "mistral.dataset.fromFile.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Import samples from the explorer into a dataset",
+      "canonical_id": "mistral.dataset.fromExplorer.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "List all aliases for a specific agent",
+      "canonical_id": "mistral.alias.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "List all libraries you have access to",
+      "canonical_id": "mistral.library.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "List all tools for a specific connector",
+      "canonical_id": "mistral.tool.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "List all versions for a specific agent",
+      "canonical_id": "mistral.version.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "List all your custom connectors with filters",
+      "canonical_id": "mistral.connector.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "List available observability datasets",
+      "canonical_id": "mistral.dataset.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "List batch jobs for your organization and user",
+      "canonical_id": "mistral.job.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "List documents within a specific library",
+      "canonical_id": "mistral.document.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "List files for your organization with filtering options",
+      "canonical_id": "mistral.file.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "List fine-tuning jobs with filters",
+      "canonical_id": "mistral.job.list1"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "List import tasks for a specific dataset",
+      "canonical_id": "mistral.dataset.tasks.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "List organization credentials for a connector",
+      "canonical_id": "mistral.organization.credentials.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "List records within a specific dataset",
+      "canonical_id": "mistral.dataset.records.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "List user credentials for a connector",
+      "canonical_id": "mistral.user.credentials.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "List workflow deployments, optionally filtered by workflow name or active status",
+      "canonical_id": "mistral.deployment.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "List workflow events by execution or run ID",
+      "canonical_id": "mistral.event.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "List workflow runs with filtering and pagination options",
+      "canonical_id": "mistral.run.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "List workspace credentials for a connector",
+      "canonical_id": "mistral.workspace.credentials.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Manage agent version aliases, creating or updating them",
+      "canonical_id": "mistral.alias.update"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Moderate chat messages for harmful content",
+      "canonical_id": "mistral.moderation.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Populate a dataset with samples from the playground",
+      "canonical_id": "mistral.dataset.fromPlayground.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Query a specific workflow execution",
+      "canonical_id": "mistral.execution.queries.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Remove a judge by their ID",
+      "canonical_id": "mistral.judge.delete"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Remove a specific campaign by its ID",
+      "canonical_id": "mistral.campaign.delete"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Remove a specific connector by its ID",
+      "canonical_id": "mistral.connector_idid.delete"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Remove a specific document from a library",
+      "canonical_id": "mistral.document.delete"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Remove an agent by its unique identifier",
+      "canonical_id": "mistral.agent.delete"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Remove library access for a specific entity",
+      "canonical_id": "mistral.share.delete"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Reprocess a document and incur a new billing charge",
+      "canonical_id": "mistral.document.reprocess.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Reset a workflow execution to a previous state",
+      "canonical_id": "mistral.execution.reset.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Restart a conversation from a specific entry",
+      "canonical_id": "mistral.restart.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Restart a conversation from a specific point and stream the results",
+      "canonical_id": "mistral.restartstream.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Restore a fine-tuned model from archive",
+      "canonical_id": "mistral.model.archive.delete"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Restore a previously archived workflow",
+      "canonical_id": "mistral.unarchive.update"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Retrieve a list of all campaigns, with optional filtering and pagination",
+      "canonical_id": "mistral.campaign.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Retrieve a specific campaign using its ID",
+      "canonical_id": "mistral.campaign.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Retrieve a specific connector by its ID or name",
+      "canonical_id": "mistral.connector_id_or_nameidorname.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Retrieve a specific dataset using its unique identifier",
+      "canonical_id": "mistral.dataset.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Retrieve a specific workflow by its identifier",
+      "canonical_id": "mistral.workflow.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Retrieve a specific workflow execution by its ID",
+      "canonical_id": "mistral.execution.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Retrieve a specific workflow registration by its ID",
+      "canonical_id": "mistral.registration.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Retrieve a specific workflow run by its ID",
+      "canonical_id": "mistral.run.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Retrieve authentication methods for a connector",
+      "canonical_id": "mistral.authentication_method.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Retrieve batch job details by ID",
+      "canonical_id": "mistral.job.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Retrieve event IDs selected for a specific campaign",
+      "canonical_id": "mistral.campaign.selectedEvents.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Retrieve fine-tuning job details by ID",
+      "canonical_id": "mistral.job.get1"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Retrieve judge details by their unique identifier",
+      "canonical_id": "mistral.judge.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Retrieve the execution history for a specific workflow run",
+      "canonical_id": "mistral.run.history.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Retrieve workflow execution history by ID",
+      "canonical_id": "mistral.execution.history.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Run a saved judge on a conversation",
+      "canonical_id": "mistral.judge.liveJudging.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Schedule a workflow to run at a specific time",
+      "canonical_id": "mistral.schedule.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Share a library by setting access levels for entities",
+      "canonical_id": "mistral.share.update"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Signal a specific workflow execution",
+      "canonical_id": "mistral.execution.signals.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Start a conversation and add messages to it",
+      "canonical_id": "mistral.conversationsstream.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Start a fine-tuning job",
+      "canonical_id": "mistral.job.start"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Start a new observability campaign",
+      "canonical_id": "mistral.campaign.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Stream workflow events with various filters",
+      "canonical_id": "mistral.event.stream.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Stream workflow execution events",
+      "canonical_id": "mistral.execution.stream.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Submit content for moderation",
+      "canonical_id": "mistral.moderation.create1"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Switch an agent's version",
+      "canonical_id": "mistral.version.update"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Terminate a running workflow execution",
+      "canonical_id": "mistral.execution.terminate.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Terminate multiple workflow executions at once",
+      "canonical_id": "mistral.execution.terminate.create1"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Update a connector by its ID",
+      "canonical_id": "mistral.connector_idid.update"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Update a dataset's configuration",
+      "canonical_id": "mistral.dataset.update"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Update a document's metadata within a library",
+      "canonical_id": "mistral.document.update"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Update a fine-tuned model's name or description",
+      "canonical_id": "mistral.model.update"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Update a library's name and description by its ID",
+      "canonical_id": "mistral.library.update"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Update a specific workflow by its identifier",
+      "canonical_id": "mistral.workflow.update"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Update a voice's metadata like name, gender, and tags",
+      "canonical_id": "mistral.voice.update"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Update a workflow execution with new details",
+      "canonical_id": "mistral.execution.updates.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Update an agent's attributes and create a new version",
+      "canonical_id": "mistral.agent.update"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Update judge information by ID",
+      "canonical_id": "mistral.judge.update"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Upload a file for use across various endpoints",
+      "canonical_id": "mistral.file.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Upload a new document to a library",
+      "canonical_id": "mistral.document.create"
+    }
+  ]
+}

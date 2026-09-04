@@ -1,3 +1,4 @@
+import os
 import requests
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -8,8 +9,8 @@ from app.models.ev_station import EVStation
 
 router = APIRouter(prefix="/stations", tags=["EV Stations"])
 
-# Apni Open Charge Map ki API key yahan daalein
-OCM_API_KEY = "e894bdae-c52c-4311-a529-7e71a3ff1515"
+# Open Charge Map API key loaded securely from environment
+OCM_API_KEY = os.getenv("OPENCHARGEMAP_API_KEY", os.getenv("OCM_API_KEY", "")).strip()
 OPEN_CHARGE_MAP_URL = "https://api.openchargemap.io/v3/poi/"
 
 class StationResponse(BaseModel):

@@ -1,0 +1,128 @@
+{
+  "Mapbox.mapbox": {
+    "version": "v1",
+    "sandbox_endpoint": "http://localhost",
+    "production_endpoint": "https://api.mapbox.com",
+    "methods": 25,
+    "auth": {
+      "provider_slug": "Mapbox",
+      "type": "api_key"
+    },
+    "init_details": {
+      "VERSION": "2.0.2",
+      "auth_type": "api_key"
+    },
+    "execution_policy": {
+      "max_retries": 3,
+      "base_delay_ms": 500,
+      "max_delay_ms": 30000,
+      "http_timeout_ms": 30000,
+      "connect_timeout_ms": 5000,
+      "total_timeout_ms": 90000,
+      "retry_on": [
+        429,
+        503,
+        504
+      ],
+      "non_retryable": [
+        400,
+        401,
+        403,
+        404,
+        422
+      ],
+      "on_401": "fail",
+      "max_concurrent": 5,
+      "max_response_bytes": 102400,
+      "idempotency": {
+        "mode": "none",
+        "header_name": "Idempotency-Key",
+        "scope": "call"
+      }
+    }
+  },
+  "Mistral.mistral": {
+    "version": "v1",
+    "sandbox_endpoint": "http://localhost",
+    "production_endpoint": "https://api.mistral.ai",
+    "methods": 173,
+    "auth": {
+      "provider_slug": "Mistral",
+      "type": "api_key"
+    },
+    "init_details": {
+      "VERSION": "2.0.2",
+      "auth_type": "api_key"
+    },
+    "execution_policy": {
+      "max_retries": 3,
+      "base_delay_ms": 500,
+      "max_delay_ms": 30000,
+      "http_timeout_ms": 30000,
+      "connect_timeout_ms": 5000,
+      "total_timeout_ms": 90000,
+      "retry_on": [
+        429,
+        503,
+        504
+      ],
+      "non_retryable": [
+        400,
+        401,
+        403,
+        404,
+        422
+      ],
+      "on_401": "fail",
+      "max_concurrent": 5,
+      "max_response_bytes": 102400,
+      "idempotency": {
+        "mode": "none",
+        "header_name": "Idempotency-Key",
+        "scope": "call"
+      }
+    }
+  },
+  "OpenWeather.openweather": {
+    "version": "v1",
+    "sandbox_endpoint": "http://localhost",
+    "production_endpoint": "https://api.openweathermap.org",
+    "methods": 19,
+    "auth": {
+      "provider_slug": "OpenWeather",
+      "type": "api_key"
+    },
+    "init_details": {
+      "VERSION": "2.0.2",
+      "auth_type": "api_key"
+    },
+    "execution_policy": {
+      "max_retries": 3,
+      "base_delay_ms": 500,
+      "max_delay_ms": 30000,
+      "http_timeout_ms": 30000,
+      "connect_timeout_ms": 5000,
+      "total_timeout_ms": 90000,
+      "retry_on": [
+        429,
+        503,
+        504
+      ],
+      "non_retryable": [
+        400,
+        401,
+        403,
+        404,
+        422
+      ],
+      "on_401": "fail",
+      "max_concurrent": 5,
+      "max_response_bytes": 102400,
+      "idempotency": {
+        "mode": "none",
+        "header_name": "Idempotency-Key",
+        "scope": "call"
+      }
+    }
+  }
+}

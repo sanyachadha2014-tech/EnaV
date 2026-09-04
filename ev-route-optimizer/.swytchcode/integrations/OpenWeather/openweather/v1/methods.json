@@ -1,0 +1,99 @@
+{
+  "methods": [
+    {
+      "method_uuid": "",
+      "method_name": "Find location details from latitude and longitude",
+      "canonical_id": "openweather.1.0.reverse.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get 1-minute weather timeline for a specific location",
+      "canonical_id": "openweather.4.0.1min.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get 15-minute weather timeline by location",
+      "canonical_id": "openweather.4.0.15min.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get 5 day / 3 hour weather forecast",
+      "canonical_id": "openweather.2.5.forecast.list1"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get current air pollution data",
+      "canonical_id": "openweather.2.5.airPollution.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get current air pollution forecast data",
+      "canonical_id": "openweather.2.5.forecast.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get current weather and forecasts for a location",
+      "canonical_id": "openweather.3.0.onecall.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get current weather data by location or coordinates",
+      "canonical_id": "openweather.2.5.weather.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get current weather data for a specified location",
+      "canonical_id": "openweather.4.0.current.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get daily weather summary for a specific date",
+      "canonical_id": "openweather.3.0.daySummary.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get daily weather timeline",
+      "canonical_id": "openweather.4.0.1day.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get geographic data by ZIP or postal code",
+      "canonical_id": "openweather.1.0.zip.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get geographical coordinates from a location name",
+      "canonical_id": "openweather.1.0.direct.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get historical weather data for a specific date and time",
+      "canonical_id": "openweather.3.0.timemachine.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get hourly weather forecast data",
+      "canonical_id": "openweather.4.0.1h.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get weather overview for a specific location and date",
+      "canonical_id": "openweather.3.0.overview.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Retrieve daily weather forecasts",
+      "canonical_id": "openweather.2.5.daily.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Retrieve historical air pollution data for a specified location and time",
+      "canonical_id": "openweather.2.5.history.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Retrieve weather alert details by ID",
+      "canonical_id": "openweather.4.0.alerts.get"
+    }
+  ]
+}

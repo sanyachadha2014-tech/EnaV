@@ -1,0 +1,3075 @@
+{
+  "editor": "none",
+  "integrations": {
+    "Mapbox.mapbox": {
+      "version": "v1"
+    },
+    "Mistral.mistral": {
+      "version": "v1"
+    },
+    "OpenWeather.openweather": {
+      "version": "v1"
+    }
+  },
+  "mode": "live",
+  "tools": {
+    "mapbox.geocode.forward.list": {
+      "desc": "",
+      "inputs": [
+        {
+          "access_token": {
+            "LOCATION": "query",
+            "REQUIRED": false,
+            "TYPE": "STRING"
+          }
+        },
+        {
+          "q": {
+            "LOCATION": "query",
+            "REQUIRED": false,
+            "TYPE": "STRING"
+          }
+        },
+        {
+          "country": {
+            "LOCATION": "query",
+            "REQUIRED": false,
+            "TYPE": "STRING"
+          }
+        },
+        {
+          "types": {
+            "LOCATION": "query",
+            "REQUIRED": false,
+            "TYPE": "STRING"
+          }
+        },
+        {
+          "bbox": {
+            "LOCATION": "query",
+            "REQUIRED": false,
+            "TYPE": "STRING"
+          }
+        },
+        {
+          "proximity": {
+            "LOCATION": "query",
+            "REQUIRED": false,
+            "TYPE": "STRING"
+          }
+        },
+        {
+          "language": {
+            "LOCATION": "query",
+            "REQUIRED": false,
+            "TYPE": "STRING"
+          }
+        },
+        {
+          "limit": {
+            "LOCATION": "query",
+            "REQUIRED": false,
+            "TYPE": "STRING"
+          }
+        },
+        {
+          "worldview": {
+            "LOCATION": "query",
+            "REQUIRED": false,
+            "TYPE": "STRING"
+          }
+        },
+        {
+          "autocomplete": {
+            "LOCATION": "query",
+            "REQUIRED": false,
+            "TYPE": "STRING"
+          }
+        },
+        {
+          "permanent": {
+            "LOCATION": "query",
+            "REQUIRED": false,
+            "TYPE": "STRING"
+          }
+        }
+      ],
+      "integration": "Mapbox.mapbox@v1",
+      "method_hash": "b2e592f94f5e68fc69cea8562c49fd8ea6782246e01856abe719221de5dd9423",
+      "output": {
+        "schema": {
+          "type": "map[STRING]ANY"
+        },
+        "status": 200
+      },
+      "summary": "Forward geocoding",
+      "type": "method"
+    },
+    "mistral.classification.create": {
+      "desc": "",
+      "inputs": [
+        {
+          "body": {
+            "CONTENT_TYPE": "application/json",
+            "LOCATION": "body",
+            "REQUIRED": true,
+            "TYPE": "OBJECT",
+            "schema": {
+              "properties": {
+                "input": {
+                  "properties": {
+                    "_COMPOSITION": {
+                      "required": false,
+                      "type": "ANY_OF"
+                    },
+                    "variant_1": {
+                      "items": {
+                        "properties": {
+                          "messages": {
+                            "items": {
+                              "properties": {
+                                "_COMPOSITION": {
+                                  "required": false,
+                                  "type": "ONE_OF"
+                                },
+                                "role": {
+                                  "required": true,
+                                  "type": "string"
+                                },
+                                "variant_AssistantMessage": {
+                                  "properties": {
+                                    "content": {
+                                      "properties": {
+                                        "_COMPOSITION": {
+                                          "required": false,
+                                          "type": "ANY_OF"
+                                        },
+                                        "variant_0": {
+                                          "required": false,
+                                          "type": "string"
+                                        },
+                                        "variant_1": {
+                                          "required": false,
+                                          "type": "NULL"
+                                        },
+                                        "variant_2": {
+                                          "items": {
+                                            "properties": {
+                                              "_COMPOSITION": {
+                                                "required": false,
+                                                "type": "ONE_OF"
+                                              },
+                                              "type": {
+                                                "required": true,
+                                                "type": "string"
+                                              },
+                                              "variant_AudioChunk": {
+                                                "properties": {
+                                                  "input_audio": {
+                                                    "properties": {
+                                                      "_COMPOSITION": {
+                                                        "required": false,
+                                                        "type": "ANY_OF"
+                                                      },
+                                                      "variant_0": {
+                                                        "required": false,
+                                                        "type": "string"
+                                                      },
+                                                      "variant_1": {
+                                                        "required": false,
+                                                        "type": "string"
+                                                      }
+                                                    },
+                                                    "type": "object"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "input_audio"
+                                                ],
+                                                "type": "object"
+                                              },
+                                              "variant_DocumentURLChunk": {
+                                                "properties": {
+                                                  "document_name": {
+                                                    "properties": {
+                                                      "_COMPOSITION": {
+                                                        "required": false,
+                                                        "type": "ANY_OF"
+                                                      },
+                                                      "variant_0": {
+                                                        "required": false,
+                                                        "type": "string"
+                                                      },
+                                                      "variant_1": {
+                                                        "required": false,
+                                                        "type": "NULL"
+                                                      }
+                                                    },
+                                                    "type": "object"
+                                                  },
+                                                  "document_url": {
+                                                    "required": true,
+                                                    "type": "string"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "document_url"
+                                                ],
+                                                "type": "object"
+                                              },
+                                              "variant_FileChunk": {
+                                                "properties": {
+                                                  "file_id": {
+                                                    "required": true,
+                                                    "type": "string"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "file_id"
+                                                ],
+                                                "type": "object"
+                                              },
+                                              "variant_ImageURLChunk": {
+                                                "properties": {
+                                                  "image_url": {
+                                                    "properties": {
+                                                      "_COMPOSITION": {
+                                                        "required": false,
+                                                        "type": "ANY_OF"
+                                                      },
+                                                      "variant_1": {
+                                                        "required": false,
+                                                        "type": "string"
+                                                      },
+                                                      "variant_ImageURL": {
+                                                        "properties": {
+                                                          "detail": {
+                                                            "properties": {
+                                                              "_COMPOSITION": {
+                                                                "required": false,
+                                                                "type": "ANY_OF"
+                                                              },
+                                                              "variant_1": {
+                                                                "required": false,
+                                                                "type": "NULL"
+                                                              },
+                                                              "variant_ImageDetail": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              }
+                                                            },
+                                                            "type": "object"
+                                                          },
+                                                          "url": {
+                                                            "required": true,
+                                                            "type": "string"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "url"
+                                                        ],
+                                                        "type": "object"
+                                                      }
+                                                    },
+                                                    "type": "object"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "image_url"
+                                                ],
+                                                "type": "object"
+                                              },
+                                              "variant_ReferenceChunk": {
+                                                "properties": {
+                                                  "reference_ids": {
+                                                    "required": true,
+                                                    "type": "[]INT"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "reference_ids"
+                                                ],
+                                                "type": "object"
+                                              },
+                                              "variant_TextChunk": {
+                                                "properties": {
+                                                  "text": {
+                                                    "required": true,
+                                                    "type": "string"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "text"
+                                                ],
+                                                "type": "object"
+                                              },
+                                              "variant_ThinkChunk": {
+                                                "properties": {
+                                                  "closed": {
+                                                    "required": false,
+                                                    "type": "boolean"
+                                                  },
+                                                  "thinking": {
+                                                    "items": {
+                                                      "properties": {
+                                                        "_COMPOSITION": {
+                                                          "required": false,
+                                                          "type": "ANY_OF"
+                                                        },
+                                                        "variant_ReferenceChunk": {
+                                                          "properties": {
+                                                            "reference_ids": {
+                                                              "required": true,
+                                                              "type": "[]INT"
+                                                            },
+                                                            "type": {
+                                                              "required": false,
+                                                              "type": "string"
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "reference_ids"
+                                                          ],
+                                                          "type": "object"
+                                                        },
+                                                        "variant_TextChunk": {
+                                                          "properties": {
+                                                            "text": {
+                                                              "required": true,
+                                                              "type": "string"
+                                                            },
+                                                            "type": {
+                                                              "required": false,
+                                                              "type": "string"
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "text"
+                                                          ],
+                                                          "type": "object"
+                                                        },
+                                                        "variant_ToolReferenceChunk": {
+                                                          "properties": {
+                                                            "description": {
+                                                              "properties": {
+                                                                "_COMPOSITION": {
+                                                                  "required": false,
+                                                                  "type": "ANY_OF"
+                                                                },
+                                                                "variant_0": {
+                                                                  "required": false,
+                                                                  "type": "string"
+                                                                },
+                                                                "variant_1": {
+                                                                  "required": false,
+                                                                  "type": "NULL"
+                                                                }
+                                                              },
+                                                              "type": "object"
+                                                            },
+                                                            "favicon": {
+                                                              "properties": {
+                                                                "_COMPOSITION": {
+                                                                  "required": false,
+                                                                  "type": "ANY_OF"
+                                                                },
+                                                                "variant_0": {
+                                                                  "required": false,
+                                                                  "type": "string"
+                                                                },
+                                                                "variant_1": {
+                                                                  "required": false,
+                                                                  "type": "NULL"
+                                                                }
+                                                              },
+                                                              "type": "object"
+                                                            },
+                                                            "title": {
+                                                              "required": true,
+                                                              "type": "string"
+                                                            },
+                                                            "tool": {
+                                                              "properties": {
+                                                                "_COMPOSITION": {
+                                                                  "required": false,
+                                                                  "type": "ANY_OF"
+                                                                },
+                                                                "variant_1": {
+                                                                  "required": false,
+                                                                  "type": "string"
+                                                                },
+                                                                "variant_BuiltInConnectors": {
+                                                                  "required": false,
+                                                                  "type": "string"
+                                                                }
+                                                              },
+                                                              "type": "object"
+                                                            },
+                                                            "type": {
+                                                              "required": false,
+                                                              "type": "string"
+                                                            },
+                                                            "url": {
+                                                              "properties": {
+                                                                "_COMPOSITION": {
+                                                                  "required": false,
+                                                                  "type": "ANY_OF"
+                                                                },
+                                                                "variant_0": {
+                                                                  "required": false,
+                                                                  "type": "string"
+                                                                },
+                                                                "variant_1": {
+                                                                  "required": false,
+                                                                  "type": "NULL"
+                                                                }
+                                                              },
+                                                              "type": "object"
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "tool",
+                                                            "title"
+                                                          ],
+                                                          "type": "object"
+                                                        }
+                                                      },
+                                                      "type": "object"
+                                                    },
+                                                    "required": true,
+                                                    "type": "array"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "thinking"
+                                                ],
+                                                "type": "object"
+                                              }
+                                            },
+                                            "required": [
+                                              "type"
+                                            ],
+                                            "type": "object"
+                                          },
+                                          "required": false,
+                                          "type": "array"
+                                        }
+                                      },
+                                      "type": "object"
+                                    },
+                                    "prefix": {
+                                      "required": false,
+                                      "type": "boolean"
+                                    },
+                                    "role": {
+                                      "required": false,
+                                      "type": "string"
+                                    },
+                                    "tool_calls": {
+                                      "properties": {
+                                        "_COMPOSITION": {
+                                          "required": false,
+                                          "type": "ANY_OF"
+                                        },
+                                        "variant_0": {
+                                          "items": {
+                                            "properties": {
+                                              "function": {
+                                                "properties": {
+                                                  "arguments": {
+                                                    "properties": {
+                                                      "_COMPOSITION": {
+                                                        "required": false,
+                                                        "type": "ANY_OF"
+                                                      },
+                                                      "variant_0": {
+                                                        "required": false,
+                                                        "type": "map[STRING]ANY"
+                                                      },
+                                                      "variant_1": {
+                                                        "required": false,
+                                                        "type": "string"
+                                                      }
+                                                    },
+                                                    "type": "object"
+                                                  },
+                                                  "name": {
+                                                    "required": true,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "name",
+                                                  "arguments"
+                                                ],
+                                                "type": "object"
+                                              },
+                                              "id": {
+                                                "required": false,
+                                                "type": "string"
+                                              },
+                                              "index": {
+                                                "required": false,
+                                                "type": "integer"
+                                              },
+                                              "type": {
+                                                "required": false,
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "function"
+                                            ],
+                                            "type": "object"
+                                          },
+                                          "required": false,
+                                          "type": "array"
+                                        },
+                                        "variant_1": {
+                                          "required": false,
+                                          "type": "NULL"
+                                        }
+                                      },
+                                      "type": "object"
+                                    }
+                                  },
+                                  "type": "object"
+                                },
+                                "variant_SystemMessage": {
+                                  "properties": {
+                                    "content": {
+                                      "properties": {
+                                        "_COMPOSITION": {
+                                          "required": false,
+                                          "type": "ANY_OF"
+                                        },
+                                        "variant_0": {
+                                          "required": false,
+                                          "type": "string"
+                                        },
+                                        "variant_1": {
+                                          "items": {
+                                            "properties": {
+                                              "_COMPOSITION": {
+                                                "required": false,
+                                                "type": "ONE_OF"
+                                              },
+                                              "type": {
+                                                "required": true,
+                                                "type": "string"
+                                              },
+                                              "variant_TextChunk": {
+                                                "properties": {
+                                                  "text": {
+                                                    "required": true,
+                                                    "type": "string"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "text"
+                                                ],
+                                                "type": "object"
+                                              },
+                                              "variant_ThinkChunk": {
+                                                "properties": {
+                                                  "closed": {
+                                                    "required": false,
+                                                    "type": "boolean"
+                                                  },
+                                                  "thinking": {
+                                                    "items": {
+                                                      "properties": {
+                                                        "_COMPOSITION": {
+                                                          "required": false,
+                                                          "type": "ANY_OF"
+                                                        },
+                                                        "variant_ReferenceChunk": {
+                                                          "properties": {
+                                                            "reference_ids": {
+                                                              "required": true,
+                                                              "type": "[]INT"
+                                                            },
+                                                            "type": {
+                                                              "required": false,
+                                                              "type": "string"
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "reference_ids"
+                                                          ],
+                                                          "type": "object"
+                                                        },
+                                                        "variant_TextChunk": {
+                                                          "properties": {
+                                                            "text": {
+                                                              "required": true,
+                                                              "type": "string"
+                                                            },
+                                                            "type": {
+                                                              "required": false,
+                                                              "type": "string"
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "text"
+                                                          ],
+                                                          "type": "object"
+                                                        },
+                                                        "variant_ToolReferenceChunk": {
+                                                          "properties": {
+                                                            "description": {
+                                                              "properties": {
+                                                                "_COMPOSITION": {
+                                                                  "required": false,
+                                                                  "type": "ANY_OF"
+                                                                },
+                                                                "variant_0": {
+                                                                  "required": false,
+                                                                  "type": "string"
+                                                                },
+                                                                "variant_1": {
+                                                                  "required": false,
+                                                                  "type": "NULL"
+                                                                }
+                                                              },
+                                                              "type": "object"
+                                                            },
+                                                            "favicon": {
+                                                              "properties": {
+                                                                "_COMPOSITION": {
+                                                                  "required": false,
+                                                                  "type": "ANY_OF"
+                                                                },
+                                                                "variant_0": {
+                                                                  "required": false,
+                                                                  "type": "string"
+                                                                },
+                                                                "variant_1": {
+                                                                  "required": false,
+                                                                  "type": "NULL"
+                                                                }
+                                                              },
+                                                              "type": "object"
+                                                            },
+                                                            "title": {
+                                                              "required": true,
+                                                              "type": "string"
+                                                            },
+                                                            "tool": {
+                                                              "properties": {
+                                                                "_COMPOSITION": {
+                                                                  "required": false,
+                                                                  "type": "ANY_OF"
+                                                                },
+                                                                "variant_1": {
+                                                                  "required": false,
+                                                                  "type": "string"
+                                                                },
+                                                                "variant_BuiltInConnectors": {
+                                                                  "required": false,
+                                                                  "type": "string"
+                                                                }
+                                                              },
+                                                              "type": "object"
+                                                            },
+                                                            "type": {
+                                                              "required": false,
+                                                              "type": "string"
+                                                            },
+                                                            "url": {
+                                                              "properties": {
+                                                                "_COMPOSITION": {
+                                                                  "required": false,
+                                                                  "type": "ANY_OF"
+                                                                },
+                                                                "variant_0": {
+                                                                  "required": false,
+                                                                  "type": "string"
+                                                                },
+                                                                "variant_1": {
+                                                                  "required": false,
+                                                                  "type": "NULL"
+                                                                }
+                                                              },
+                                                              "type": "object"
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "tool",
+                                                            "title"
+                                                          ],
+                                                          "type": "object"
+                                                        }
+                                                      },
+                                                      "type": "object"
+                                                    },
+                                                    "required": true,
+                                                    "type": "array"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "thinking"
+                                                ],
+                                                "type": "object"
+                                              }
+                                            },
+                                            "required": [
+                                              "type"
+                                            ],
+                                            "type": "object"
+                                          },
+                                          "required": false,
+                                          "type": "array"
+                                        }
+                                      },
+                                      "type": "object"
+                                    },
+                                    "role": {
+                                      "required": false,
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "content"
+                                  ],
+                                  "type": "object"
+                                },
+                                "variant_ToolMessage": {
+                                  "properties": {
+                                    "content": {
+                                      "properties": {
+                                        "_COMPOSITION": {
+                                          "required": false,
+                                          "type": "ANY_OF"
+                                        },
+                                        "variant_0": {
+                                          "required": false,
+                                          "type": "string"
+                                        },
+                                        "variant_1": {
+                                          "required": false,
+                                          "type": "NULL"
+                                        },
+                                        "variant_2": {
+                                          "items": {
+                                            "properties": {
+                                              "_COMPOSITION": {
+                                                "required": false,
+                                                "type": "ONE_OF"
+                                              },
+                                              "type": {
+                                                "required": true,
+                                                "type": "string"
+                                              },
+                                              "variant_AudioChunk": {
+                                                "properties": {
+                                                  "input_audio": {
+                                                    "properties": {
+                                                      "_COMPOSITION": {
+                                                        "required": false,
+                                                        "type": "ANY_OF"
+                                                      },
+                                                      "variant_0": {
+                                                        "required": false,
+                                                        "type": "string"
+                                                      },
+                                                      "variant_1": {
+                                                        "required": false,
+                                                        "type": "string"
+                                                      }
+                                                    },
+                                                    "type": "object"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "input_audio"
+                                                ],
+                                                "type": "object"
+                                              },
+                                              "variant_DocumentURLChunk": {
+                                                "properties": {
+                                                  "document_name": {
+                                                    "properties": {
+                                                      "_COMPOSITION": {
+                                                        "required": false,
+                                                        "type": "ANY_OF"
+                                                      },
+                                                      "variant_0": {
+                                                        "required": false,
+                                                        "type": "string"
+                                                      },
+                                                      "variant_1": {
+                                                        "required": false,
+                                                        "type": "NULL"
+                                                      }
+                                                    },
+                                                    "type": "object"
+                                                  },
+                                                  "document_url": {
+                                                    "required": true,
+                                                    "type": "string"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "document_url"
+                                                ],
+                                                "type": "object"
+                                              },
+                                              "variant_FileChunk": {
+                                                "properties": {
+                                                  "file_id": {
+                                                    "required": true,
+                                                    "type": "string"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "file_id"
+                                                ],
+                                                "type": "object"
+                                              },
+                                              "variant_ImageURLChunk": {
+                                                "properties": {
+                                                  "image_url": {
+                                                    "properties": {
+                                                      "_COMPOSITION": {
+                                                        "required": false,
+                                                        "type": "ANY_OF"
+                                                      },
+                                                      "variant_1": {
+                                                        "required": false,
+                                                        "type": "string"
+                                                      },
+                                                      "variant_ImageURL": {
+                                                        "properties": {
+                                                          "detail": {
+                                                            "properties": {
+                                                              "_COMPOSITION": {
+                                                                "required": false,
+                                                                "type": "ANY_OF"
+                                                              },
+                                                              "variant_1": {
+                                                                "required": false,
+                                                                "type": "NULL"
+                                                              },
+                                                              "variant_ImageDetail": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              }
+                                                            },
+                                                            "type": "object"
+                                                          },
+                                                          "url": {
+                                                            "required": true,
+                                                            "type": "string"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "url"
+                                                        ],
+                                                        "type": "object"
+                                                      }
+                                                    },
+                                                    "type": "object"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "image_url"
+                                                ],
+                                                "type": "object"
+                                              },
+                                              "variant_ReferenceChunk": {
+                                                "properties": {
+                                                  "reference_ids": {
+                                                    "required": true,
+                                                    "type": "[]INT"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "reference_ids"
+                                                ],
+                                                "type": "object"
+                                              },
+                                              "variant_TextChunk": {
+                                                "properties": {
+                                                  "text": {
+                                                    "required": true,
+                                                    "type": "string"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "text"
+                                                ],
+                                                "type": "object"
+                                              },
+                                              "variant_ThinkChunk": {
+                                                "properties": {
+                                                  "closed": {
+                                                    "required": false,
+                                                    "type": "boolean"
+                                                  },
+                                                  "thinking": {
+                                                    "items": {
+                                                      "properties": {
+                                                        "_COMPOSITION": {
+                                                          "required": false,
+                                                          "type": "ANY_OF"
+                                                        },
+                                                        "variant_ReferenceChunk": {
+                                                          "properties": {
+                                                            "reference_ids": {
+                                                              "required": true,
+                                                              "type": "[]INT"
+                                                            },
+                                                            "type": {
+                                                              "required": false,
+                                                              "type": "string"
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "reference_ids"
+                                                          ],
+                                                          "type": "object"
+                                                        },
+                                                        "variant_TextChunk": {
+                                                          "properties": {
+                                                            "text": {
+                                                              "required": true,
+                                                              "type": "string"
+                                                            },
+                                                            "type": {
+                                                              "required": false,
+                                                              "type": "string"
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "text"
+                                                          ],
+                                                          "type": "object"
+                                                        },
+                                                        "variant_ToolReferenceChunk": {
+                                                          "properties": {
+                                                            "description": {
+                                                              "properties": {
+                                                                "_COMPOSITION": {
+                                                                  "required": false,
+                                                                  "type": "ANY_OF"
+                                                                },
+                                                                "variant_0": {
+                                                                  "required": false,
+                                                                  "type": "string"
+                                                                },
+                                                                "variant_1": {
+                                                                  "required": false,
+                                                                  "type": "NULL"
+                                                                }
+                                                              },
+                                                              "type": "object"
+                                                            },
+                                                            "favicon": {
+                                                              "properties": {
+                                                                "_COMPOSITION": {
+                                                                  "required": false,
+                                                                  "type": "ANY_OF"
+                                                                },
+                                                                "variant_0": {
+                                                                  "required": false,
+                                                                  "type": "string"
+                                                                },
+                                                                "variant_1": {
+                                                                  "required": false,
+                                                                  "type": "NULL"
+                                                                }
+                                                              },
+                                                              "type": "object"
+                                                            },
+                                                            "title": {
+                                                              "required": true,
+                                                              "type": "string"
+                                                            },
+                                                            "tool": {
+                                                              "properties": {
+                                                                "_COMPOSITION": {
+                                                                  "required": false,
+                                                                  "type": "ANY_OF"
+                                                                },
+                                                                "variant_1": {
+                                                                  "required": false,
+                                                                  "type": "string"
+                                                                },
+                                                                "variant_BuiltInConnectors": {
+                                                                  "required": false,
+                                                                  "type": "string"
+                                                                }
+                                                              },
+                                                              "type": "object"
+                                                            },
+                                                            "type": {
+                                                              "required": false,
+                                                              "type": "string"
+                                                            },
+                                                            "url": {
+                                                              "properties": {
+                                                                "_COMPOSITION": {
+                                                                  "required": false,
+                                                                  "type": "ANY_OF"
+                                                                },
+                                                                "variant_0": {
+                                                                  "required": false,
+                                                                  "type": "string"
+                                                                },
+                                                                "variant_1": {
+                                                                  "required": false,
+                                                                  "type": "NULL"
+                                                                }
+                                                              },
+                                                              "type": "object"
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "tool",
+                                                            "title"
+                                                          ],
+                                                          "type": "object"
+                                                        }
+                                                      },
+                                                      "type": "object"
+                                                    },
+                                                    "required": true,
+                                                    "type": "array"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "thinking"
+                                                ],
+                                                "type": "object"
+                                              }
+                                            },
+                                            "required": [
+                                              "type"
+                                            ],
+                                            "type": "object"
+                                          },
+                                          "required": false,
+                                          "type": "array"
+                                        }
+                                      },
+                                      "type": "object"
+                                    },
+                                    "name": {
+                                      "properties": {
+                                        "_COMPOSITION": {
+                                          "required": false,
+                                          "type": "ANY_OF"
+                                        },
+                                        "variant_0": {
+                                          "required": false,
+                                          "type": "string"
+                                        },
+                                        "variant_1": {
+                                          "required": false,
+                                          "type": "NULL"
+                                        }
+                                      },
+                                      "type": "object"
+                                    },
+                                    "role": {
+                                      "required": false,
+                                      "type": "string"
+                                    },
+                                    "tool_call_id": {
+                                      "properties": {
+                                        "_COMPOSITION": {
+                                          "required": false,
+                                          "type": "ANY_OF"
+                                        },
+                                        "variant_0": {
+                                          "required": false,
+                                          "type": "string"
+                                        },
+                                        "variant_1": {
+                                          "required": false,
+                                          "type": "NULL"
+                                        }
+                                      },
+                                      "type": "object"
+                                    }
+                                  },
+                                  "required": [
+                                    "content"
+                                  ],
+                                  "type": "object"
+                                },
+                                "variant_UserMessage": {
+                                  "properties": {
+                                    "content": {
+                                      "properties": {
+                                        "_COMPOSITION": {
+                                          "required": false,
+                                          "type": "ANY_OF"
+                                        },
+                                        "variant_0": {
+                                          "required": false,
+                                          "type": "string"
+                                        },
+                                        "variant_1": {
+                                          "required": false,
+                                          "type": "NULL"
+                                        },
+                                        "variant_2": {
+                                          "items": {
+                                            "properties": {
+                                              "_COMPOSITION": {
+                                                "required": false,
+                                                "type": "ONE_OF"
+                                              },
+                                              "type": {
+                                                "required": true,
+                                                "type": "string"
+                                              },
+                                              "variant_AudioChunk": {
+                                                "properties": {
+                                                  "input_audio": {
+                                                    "properties": {
+                                                      "_COMPOSITION": {
+                                                        "required": false,
+                                                        "type": "ANY_OF"
+                                                      },
+                                                      "variant_0": {
+                                                        "required": false,
+                                                        "type": "string"
+                                                      },
+                                                      "variant_1": {
+                                                        "required": false,
+                                                        "type": "string"
+                                                      }
+                                                    },
+                                                    "type": "object"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "input_audio"
+                                                ],
+                                                "type": "object"
+                                              },
+                                              "variant_DocumentURLChunk": {
+                                                "properties": {
+                                                  "document_name": {
+                                                    "properties": {
+                                                      "_COMPOSITION": {
+                                                        "required": false,
+                                                        "type": "ANY_OF"
+                                                      },
+                                                      "variant_0": {
+                                                        "required": false,
+                                                        "type": "string"
+                                                      },
+                                                      "variant_1": {
+                                                        "required": false,
+                                                        "type": "NULL"
+                                                      }
+                                                    },
+                                                    "type": "object"
+                                                  },
+                                                  "document_url": {
+                                                    "required": true,
+                                                    "type": "string"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "document_url"
+                                                ],
+                                                "type": "object"
+                                              },
+                                              "variant_FileChunk": {
+                                                "properties": {
+                                                  "file_id": {
+                                                    "required": true,
+                                                    "type": "string"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "file_id"
+                                                ],
+                                                "type": "object"
+                                              },
+                                              "variant_ImageURLChunk": {
+                                                "properties": {
+                                                  "image_url": {
+                                                    "properties": {
+                                                      "_COMPOSITION": {
+                                                        "required": false,
+                                                        "type": "ANY_OF"
+                                                      },
+                                                      "variant_1": {
+                                                        "required": false,
+                                                        "type": "string"
+                                                      },
+                                                      "variant_ImageURL": {
+                                                        "properties": {
+                                                          "detail": {
+                                                            "properties": {
+                                                              "_COMPOSITION": {
+                                                                "required": false,
+                                                                "type": "ANY_OF"
+                                                              },
+                                                              "variant_1": {
+                                                                "required": false,
+                                                                "type": "NULL"
+                                                              },
+                                                              "variant_ImageDetail": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              }
+                                                            },
+                                                            "type": "object"
+                                                          },
+                                                          "url": {
+                                                            "required": true,
+                                                            "type": "string"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "url"
+                                                        ],
+                                                        "type": "object"
+                                                      }
+                                                    },
+                                                    "type": "object"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "image_url"
+                                                ],
+                                                "type": "object"
+                                              },
+                                              "variant_ReferenceChunk": {
+                                                "properties": {
+                                                  "reference_ids": {
+                                                    "required": true,
+                                                    "type": "[]INT"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "reference_ids"
+                                                ],
+                                                "type": "object"
+                                              },
+                                              "variant_TextChunk": {
+                                                "properties": {
+                                                  "text": {
+                                                    "required": true,
+                                                    "type": "string"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "text"
+                                                ],
+                                                "type": "object"
+                                              },
+                                              "variant_ThinkChunk": {
+                                                "properties": {
+                                                  "closed": {
+                                                    "required": false,
+                                                    "type": "boolean"
+                                                  },
+                                                  "thinking": {
+                                                    "items": {
+                                                      "properties": {
+                                                        "_COMPOSITION": {
+                                                          "required": false,
+                                                          "type": "ANY_OF"
+                                                        },
+                                                        "variant_ReferenceChunk": {
+                                                          "properties": {
+                                                            "reference_ids": {
+                                                              "required": true,
+                                                              "type": "[]INT"
+                                                            },
+                                                            "type": {
+                                                              "required": false,
+                                                              "type": "string"
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "reference_ids"
+                                                          ],
+                                                          "type": "object"
+                                                        },
+                                                        "variant_TextChunk": {
+                                                          "properties": {
+                                                            "text": {
+                                                              "required": true,
+                                                              "type": "string"
+                                                            },
+                                                            "type": {
+                                                              "required": false,
+                                                              "type": "string"
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "text"
+                                                          ],
+                                                          "type": "object"
+                                                        },
+                                                        "variant_ToolReferenceChunk": {
+                                                          "properties": {
+                                                            "description": {
+                                                              "properties": {
+                                                                "_COMPOSITION": {
+                                                                  "required": false,
+                                                                  "type": "ANY_OF"
+                                                                },
+                                                                "variant_0": {
+                                                                  "required": false,
+                                                                  "type": "string"
+                                                                },
+                                                                "variant_1": {
+                                                                  "required": false,
+                                                                  "type": "NULL"
+                                                                }
+                                                              },
+                                                              "type": "object"
+                                                            },
+                                                            "favicon": {
+                                                              "properties": {
+                                                                "_COMPOSITION": {
+                                                                  "required": false,
+                                                                  "type": "ANY_OF"
+                                                                },
+                                                                "variant_0": {
+                                                                  "required": false,
+                                                                  "type": "string"
+                                                                },
+                                                                "variant_1": {
+                                                                  "required": false,
+                                                                  "type": "NULL"
+                                                                }
+                                                              },
+                                                              "type": "object"
+                                                            },
+                                                            "title": {
+                                                              "required": true,
+                                                              "type": "string"
+                                                            },
+                                                            "tool": {
+                                                              "properties": {
+                                                                "_COMPOSITION": {
+                                                                  "required": false,
+                                                                  "type": "ANY_OF"
+                                                                },
+                                                                "variant_1": {
+                                                                  "required": false,
+                                                                  "type": "string"
+                                                                },
+                                                                "variant_BuiltInConnectors": {
+                                                                  "required": false,
+                                                                  "type": "string"
+                                                                }
+                                                              },
+                                                              "type": "object"
+                                                            },
+                                                            "type": {
+                                                              "required": false,
+                                                              "type": "string"
+                                                            },
+                                                            "url": {
+                                                              "properties": {
+                                                                "_COMPOSITION": {
+                                                                  "required": false,
+                                                                  "type": "ANY_OF"
+                                                                },
+                                                                "variant_0": {
+                                                                  "required": false,
+                                                                  "type": "string"
+                                                                },
+                                                                "variant_1": {
+                                                                  "required": false,
+                                                                  "type": "NULL"
+                                                                }
+                                                              },
+                                                              "type": "object"
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "tool",
+                                                            "title"
+                                                          ],
+                                                          "type": "object"
+                                                        }
+                                                      },
+                                                      "type": "object"
+                                                    },
+                                                    "required": true,
+                                                    "type": "array"
+                                                  },
+                                                  "type": {
+                                                    "required": false,
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "thinking"
+                                                ],
+                                                "type": "object"
+                                              }
+                                            },
+                                            "required": [
+                                              "type"
+                                            ],
+                                            "type": "object"
+                                          },
+                                          "required": false,
+                                          "type": "array"
+                                        }
+                                      },
+                                      "type": "object"
+                                    },
+                                    "role": {
+                                      "required": false,
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "content"
+                                  ],
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "role"
+                              ],
+                              "type": "object"
+                            },
+                            "required": true,
+                            "type": "array"
+                          }
+                        },
+                        "required": [
+                          "messages"
+                        ],
+                        "type": "object"
+                      },
+                      "required": false,
+                      "type": "array"
+                    },
+                    "variant_InstructRequest": {
+                      "properties": {
+                        "messages": {
+                          "items": {
+                            "properties": {
+                              "_COMPOSITION": {
+                                "required": false,
+                                "type": "ONE_OF"
+                              },
+                              "role": {
+                                "required": true,
+                                "type": "string"
+                              },
+                              "variant_AssistantMessage": {
+                                "properties": {
+                                  "content": {
+                                    "properties": {
+                                      "_COMPOSITION": {
+                                        "required": false,
+                                        "type": "ANY_OF"
+                                      },
+                                      "variant_0": {
+                                        "required": false,
+                                        "type": "string"
+                                      },
+                                      "variant_1": {
+                                        "required": false,
+                                        "type": "NULL"
+                                      },
+                                      "variant_2": {
+                                        "items": {
+                                          "properties": {
+                                            "_COMPOSITION": {
+                                              "required": false,
+                                              "type": "ONE_OF"
+                                            },
+                                            "type": {
+                                              "required": true,
+                                              "type": "string"
+                                            },
+                                            "variant_AudioChunk": {
+                                              "properties": {
+                                                "input_audio": {
+                                                  "properties": {
+                                                    "_COMPOSITION": {
+                                                      "required": false,
+                                                      "type": "ANY_OF"
+                                                    },
+                                                    "variant_0": {
+                                                      "required": false,
+                                                      "type": "string"
+                                                    },
+                                                    "variant_1": {
+                                                      "required": false,
+                                                      "type": "string"
+                                                    }
+                                                  },
+                                                  "type": "object"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "input_audio"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "variant_DocumentURLChunk": {
+                                              "properties": {
+                                                "document_name": {
+                                                  "properties": {
+                                                    "_COMPOSITION": {
+                                                      "required": false,
+                                                      "type": "ANY_OF"
+                                                    },
+                                                    "variant_0": {
+                                                      "required": false,
+                                                      "type": "string"
+                                                    },
+                                                    "variant_1": {
+                                                      "required": false,
+                                                      "type": "NULL"
+                                                    }
+                                                  },
+                                                  "type": "object"
+                                                },
+                                                "document_url": {
+                                                  "required": true,
+                                                  "type": "string"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "document_url"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "variant_FileChunk": {
+                                              "properties": {
+                                                "file_id": {
+                                                  "required": true,
+                                                  "type": "string"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "file_id"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "variant_ImageURLChunk": {
+                                              "properties": {
+                                                "image_url": {
+                                                  "properties": {
+                                                    "_COMPOSITION": {
+                                                      "required": false,
+                                                      "type": "ANY_OF"
+                                                    },
+                                                    "variant_1": {
+                                                      "required": false,
+                                                      "type": "string"
+                                                    },
+                                                    "variant_ImageURL": {
+                                                      "properties": {
+                                                        "detail": {
+                                                          "properties": {
+                                                            "_COMPOSITION": {
+                                                              "required": false,
+                                                              "type": "ANY_OF"
+                                                            },
+                                                            "variant_1": {
+                                                              "required": false,
+                                                              "type": "NULL"
+                                                            },
+                                                            "variant_ImageDetail": {
+                                                              "required": false,
+                                                              "type": "string"
+                                                            }
+                                                          },
+                                                          "type": "object"
+                                                        },
+                                                        "url": {
+                                                          "required": true,
+                                                          "type": "string"
+                                                        }
+                                                      },
+                                                      "required": [
+                                                        "url"
+                                                      ],
+                                                      "type": "object"
+                                                    }
+                                                  },
+                                                  "type": "object"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "image_url"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "variant_ReferenceChunk": {
+                                              "properties": {
+                                                "reference_ids": {
+                                                  "required": true,
+                                                  "type": "[]INT"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "reference_ids"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "variant_TextChunk": {
+                                              "properties": {
+                                                "text": {
+                                                  "required": true,
+                                                  "type": "string"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "text"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "variant_ThinkChunk": {
+                                              "properties": {
+                                                "closed": {
+                                                  "required": false,
+                                                  "type": "boolean"
+                                                },
+                                                "thinking": {
+                                                  "items": {
+                                                    "properties": {
+                                                      "_COMPOSITION": {
+                                                        "required": false,
+                                                        "type": "ANY_OF"
+                                                      },
+                                                      "variant_ReferenceChunk": {
+                                                        "properties": {
+                                                          "reference_ids": {
+                                                            "required": true,
+                                                            "type": "[]INT"
+                                                          },
+                                                          "type": {
+                                                            "required": false,
+                                                            "type": "string"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "reference_ids"
+                                                        ],
+                                                        "type": "object"
+                                                      },
+                                                      "variant_TextChunk": {
+                                                        "properties": {
+                                                          "text": {
+                                                            "required": true,
+                                                            "type": "string"
+                                                          },
+                                                          "type": {
+                                                            "required": false,
+                                                            "type": "string"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "text"
+                                                        ],
+                                                        "type": "object"
+                                                      },
+                                                      "variant_ToolReferenceChunk": {
+                                                        "properties": {
+                                                          "description": {
+                                                            "properties": {
+                                                              "_COMPOSITION": {
+                                                                "required": false,
+                                                                "type": "ANY_OF"
+                                                              },
+                                                              "variant_0": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              },
+                                                              "variant_1": {
+                                                                "required": false,
+                                                                "type": "NULL"
+                                                              }
+                                                            },
+                                                            "type": "object"
+                                                          },
+                                                          "favicon": {
+                                                            "properties": {
+                                                              "_COMPOSITION": {
+                                                                "required": false,
+                                                                "type": "ANY_OF"
+                                                              },
+                                                              "variant_0": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              },
+                                                              "variant_1": {
+                                                                "required": false,
+                                                                "type": "NULL"
+                                                              }
+                                                            },
+                                                            "type": "object"
+                                                          },
+                                                          "title": {
+                                                            "required": true,
+                                                            "type": "string"
+                                                          },
+                                                          "tool": {
+                                                            "properties": {
+                                                              "_COMPOSITION": {
+                                                                "required": false,
+                                                                "type": "ANY_OF"
+                                                              },
+                                                              "variant_1": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              },
+                                                              "variant_BuiltInConnectors": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              }
+                                                            },
+                                                            "type": "object"
+                                                          },
+                                                          "type": {
+                                                            "required": false,
+                                                            "type": "string"
+                                                          },
+                                                          "url": {
+                                                            "properties": {
+                                                              "_COMPOSITION": {
+                                                                "required": false,
+                                                                "type": "ANY_OF"
+                                                              },
+                                                              "variant_0": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              },
+                                                              "variant_1": {
+                                                                "required": false,
+                                                                "type": "NULL"
+                                                              }
+                                                            },
+                                                            "type": "object"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "tool",
+                                                          "title"
+                                                        ],
+                                                        "type": "object"
+                                                      }
+                                                    },
+                                                    "type": "object"
+                                                  },
+                                                  "required": true,
+                                                  "type": "array"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "thinking"
+                                              ],
+                                              "type": "object"
+                                            }
+                                          },
+                                          "required": [
+                                            "type"
+                                          ],
+                                          "type": "object"
+                                        },
+                                        "required": false,
+                                        "type": "array"
+                                      }
+                                    },
+                                    "type": "object"
+                                  },
+                                  "prefix": {
+                                    "required": false,
+                                    "type": "boolean"
+                                  },
+                                  "role": {
+                                    "required": false,
+                                    "type": "string"
+                                  },
+                                  "tool_calls": {
+                                    "properties": {
+                                      "_COMPOSITION": {
+                                        "required": false,
+                                        "type": "ANY_OF"
+                                      },
+                                      "variant_0": {
+                                        "items": {
+                                          "properties": {
+                                            "function": {
+                                              "properties": {
+                                                "arguments": {
+                                                  "properties": {
+                                                    "_COMPOSITION": {
+                                                      "required": false,
+                                                      "type": "ANY_OF"
+                                                    },
+                                                    "variant_0": {
+                                                      "required": false,
+                                                      "type": "map[STRING]ANY"
+                                                    },
+                                                    "variant_1": {
+                                                      "required": false,
+                                                      "type": "string"
+                                                    }
+                                                  },
+                                                  "type": "object"
+                                                },
+                                                "name": {
+                                                  "required": true,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "name",
+                                                "arguments"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "id": {
+                                              "required": false,
+                                              "type": "string"
+                                            },
+                                            "index": {
+                                              "required": false,
+                                              "type": "integer"
+                                            },
+                                            "type": {
+                                              "required": false,
+                                              "type": "string"
+                                            }
+                                          },
+                                          "required": [
+                                            "function"
+                                          ],
+                                          "type": "object"
+                                        },
+                                        "required": false,
+                                        "type": "array"
+                                      },
+                                      "variant_1": {
+                                        "required": false,
+                                        "type": "NULL"
+                                      }
+                                    },
+                                    "type": "object"
+                                  }
+                                },
+                                "type": "object"
+                              },
+                              "variant_SystemMessage": {
+                                "properties": {
+                                  "content": {
+                                    "properties": {
+                                      "_COMPOSITION": {
+                                        "required": false,
+                                        "type": "ANY_OF"
+                                      },
+                                      "variant_0": {
+                                        "required": false,
+                                        "type": "string"
+                                      },
+                                      "variant_1": {
+                                        "items": {
+                                          "properties": {
+                                            "_COMPOSITION": {
+                                              "required": false,
+                                              "type": "ONE_OF"
+                                            },
+                                            "type": {
+                                              "required": true,
+                                              "type": "string"
+                                            },
+                                            "variant_TextChunk": {
+                                              "properties": {
+                                                "text": {
+                                                  "required": true,
+                                                  "type": "string"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "text"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "variant_ThinkChunk": {
+                                              "properties": {
+                                                "closed": {
+                                                  "required": false,
+                                                  "type": "boolean"
+                                                },
+                                                "thinking": {
+                                                  "items": {
+                                                    "properties": {
+                                                      "_COMPOSITION": {
+                                                        "required": false,
+                                                        "type": "ANY_OF"
+                                                      },
+                                                      "variant_ReferenceChunk": {
+                                                        "properties": {
+                                                          "reference_ids": {
+                                                            "required": true,
+                                                            "type": "[]INT"
+                                                          },
+                                                          "type": {
+                                                            "required": false,
+                                                            "type": "string"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "reference_ids"
+                                                        ],
+                                                        "type": "object"
+                                                      },
+                                                      "variant_TextChunk": {
+                                                        "properties": {
+                                                          "text": {
+                                                            "required": true,
+                                                            "type": "string"
+                                                          },
+                                                          "type": {
+                                                            "required": false,
+                                                            "type": "string"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "text"
+                                                        ],
+                                                        "type": "object"
+                                                      },
+                                                      "variant_ToolReferenceChunk": {
+                                                        "properties": {
+                                                          "description": {
+                                                            "properties": {
+                                                              "_COMPOSITION": {
+                                                                "required": false,
+                                                                "type": "ANY_OF"
+                                                              },
+                                                              "variant_0": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              },
+                                                              "variant_1": {
+                                                                "required": false,
+                                                                "type": "NULL"
+                                                              }
+                                                            },
+                                                            "type": "object"
+                                                          },
+                                                          "favicon": {
+                                                            "properties": {
+                                                              "_COMPOSITION": {
+                                                                "required": false,
+                                                                "type": "ANY_OF"
+                                                              },
+                                                              "variant_0": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              },
+                                                              "variant_1": {
+                                                                "required": false,
+                                                                "type": "NULL"
+                                                              }
+                                                            },
+                                                            "type": "object"
+                                                          },
+                                                          "title": {
+                                                            "required": true,
+                                                            "type": "string"
+                                                          },
+                                                          "tool": {
+                                                            "properties": {
+                                                              "_COMPOSITION": {
+                                                                "required": false,
+                                                                "type": "ANY_OF"
+                                                              },
+                                                              "variant_1": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              },
+                                                              "variant_BuiltInConnectors": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              }
+                                                            },
+                                                            "type": "object"
+                                                          },
+                                                          "type": {
+                                                            "required": false,
+                                                            "type": "string"
+                                                          },
+                                                          "url": {
+                                                            "properties": {
+                                                              "_COMPOSITION": {
+                                                                "required": false,
+                                                                "type": "ANY_OF"
+                                                              },
+                                                              "variant_0": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              },
+                                                              "variant_1": {
+                                                                "required": false,
+                                                                "type": "NULL"
+                                                              }
+                                                            },
+                                                            "type": "object"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "tool",
+                                                          "title"
+                                                        ],
+                                                        "type": "object"
+                                                      }
+                                                    },
+                                                    "type": "object"
+                                                  },
+                                                  "required": true,
+                                                  "type": "array"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "thinking"
+                                              ],
+                                              "type": "object"
+                                            }
+                                          },
+                                          "required": [
+                                            "type"
+                                          ],
+                                          "type": "object"
+                                        },
+                                        "required": false,
+                                        "type": "array"
+                                      }
+                                    },
+                                    "type": "object"
+                                  },
+                                  "role": {
+                                    "required": false,
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "content"
+                                ],
+                                "type": "object"
+                              },
+                              "variant_ToolMessage": {
+                                "properties": {
+                                  "content": {
+                                    "properties": {
+                                      "_COMPOSITION": {
+                                        "required": false,
+                                        "type": "ANY_OF"
+                                      },
+                                      "variant_0": {
+                                        "required": false,
+                                        "type": "string"
+                                      },
+                                      "variant_1": {
+                                        "required": false,
+                                        "type": "NULL"
+                                      },
+                                      "variant_2": {
+                                        "items": {
+                                          "properties": {
+                                            "_COMPOSITION": {
+                                              "required": false,
+                                              "type": "ONE_OF"
+                                            },
+                                            "type": {
+                                              "required": true,
+                                              "type": "string"
+                                            },
+                                            "variant_AudioChunk": {
+                                              "properties": {
+                                                "input_audio": {
+                                                  "properties": {
+                                                    "_COMPOSITION": {
+                                                      "required": false,
+                                                      "type": "ANY_OF"
+                                                    },
+                                                    "variant_0": {
+                                                      "required": false,
+                                                      "type": "string"
+                                                    },
+                                                    "variant_1": {
+                                                      "required": false,
+                                                      "type": "string"
+                                                    }
+                                                  },
+                                                  "type": "object"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "input_audio"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "variant_DocumentURLChunk": {
+                                              "properties": {
+                                                "document_name": {
+                                                  "properties": {
+                                                    "_COMPOSITION": {
+                                                      "required": false,
+                                                      "type": "ANY_OF"
+                                                    },
+                                                    "variant_0": {
+                                                      "required": false,
+                                                      "type": "string"
+                                                    },
+                                                    "variant_1": {
+                                                      "required": false,
+                                                      "type": "NULL"
+                                                    }
+                                                  },
+                                                  "type": "object"
+                                                },
+                                                "document_url": {
+                                                  "required": true,
+                                                  "type": "string"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "document_url"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "variant_FileChunk": {
+                                              "properties": {
+                                                "file_id": {
+                                                  "required": true,
+                                                  "type": "string"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "file_id"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "variant_ImageURLChunk": {
+                                              "properties": {
+                                                "image_url": {
+                                                  "properties": {
+                                                    "_COMPOSITION": {
+                                                      "required": false,
+                                                      "type": "ANY_OF"
+                                                    },
+                                                    "variant_1": {
+                                                      "required": false,
+                                                      "type": "string"
+                                                    },
+                                                    "variant_ImageURL": {
+                                                      "properties": {
+                                                        "detail": {
+                                                          "properties": {
+                                                            "_COMPOSITION": {
+                                                              "required": false,
+                                                              "type": "ANY_OF"
+                                                            },
+                                                            "variant_1": {
+                                                              "required": false,
+                                                              "type": "NULL"
+                                                            },
+                                                            "variant_ImageDetail": {
+                                                              "required": false,
+                                                              "type": "string"
+                                                            }
+                                                          },
+                                                          "type": "object"
+                                                        },
+                                                        "url": {
+                                                          "required": true,
+                                                          "type": "string"
+                                                        }
+                                                      },
+                                                      "required": [
+                                                        "url"
+                                                      ],
+                                                      "type": "object"
+                                                    }
+                                                  },
+                                                  "type": "object"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "image_url"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "variant_ReferenceChunk": {
+                                              "properties": {
+                                                "reference_ids": {
+                                                  "required": true,
+                                                  "type": "[]INT"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "reference_ids"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "variant_TextChunk": {
+                                              "properties": {
+                                                "text": {
+                                                  "required": true,
+                                                  "type": "string"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "text"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "variant_ThinkChunk": {
+                                              "properties": {
+                                                "closed": {
+                                                  "required": false,
+                                                  "type": "boolean"
+                                                },
+                                                "thinking": {
+                                                  "items": {
+                                                    "properties": {
+                                                      "_COMPOSITION": {
+                                                        "required": false,
+                                                        "type": "ANY_OF"
+                                                      },
+                                                      "variant_ReferenceChunk": {
+                                                        "properties": {
+                                                          "reference_ids": {
+                                                            "required": true,
+                                                            "type": "[]INT"
+                                                          },
+                                                          "type": {
+                                                            "required": false,
+                                                            "type": "string"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "reference_ids"
+                                                        ],
+                                                        "type": "object"
+                                                      },
+                                                      "variant_TextChunk": {
+                                                        "properties": {
+                                                          "text": {
+                                                            "required": true,
+                                                            "type": "string"
+                                                          },
+                                                          "type": {
+                                                            "required": false,
+                                                            "type": "string"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "text"
+                                                        ],
+                                                        "type": "object"
+                                                      },
+                                                      "variant_ToolReferenceChunk": {
+                                                        "properties": {
+                                                          "description": {
+                                                            "properties": {
+                                                              "_COMPOSITION": {
+                                                                "required": false,
+                                                                "type": "ANY_OF"
+                                                              },
+                                                              "variant_0": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              },
+                                                              "variant_1": {
+                                                                "required": false,
+                                                                "type": "NULL"
+                                                              }
+                                                            },
+                                                            "type": "object"
+                                                          },
+                                                          "favicon": {
+                                                            "properties": {
+                                                              "_COMPOSITION": {
+                                                                "required": false,
+                                                                "type": "ANY_OF"
+                                                              },
+                                                              "variant_0": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              },
+                                                              "variant_1": {
+                                                                "required": false,
+                                                                "type": "NULL"
+                                                              }
+                                                            },
+                                                            "type": "object"
+                                                          },
+                                                          "title": {
+                                                            "required": true,
+                                                            "type": "string"
+                                                          },
+                                                          "tool": {
+                                                            "properties": {
+                                                              "_COMPOSITION": {
+                                                                "required": false,
+                                                                "type": "ANY_OF"
+                                                              },
+                                                              "variant_1": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              },
+                                                              "variant_BuiltInConnectors": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              }
+                                                            },
+                                                            "type": "object"
+                                                          },
+                                                          "type": {
+                                                            "required": false,
+                                                            "type": "string"
+                                                          },
+                                                          "url": {
+                                                            "properties": {
+                                                              "_COMPOSITION": {
+                                                                "required": false,
+                                                                "type": "ANY_OF"
+                                                              },
+                                                              "variant_0": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              },
+                                                              "variant_1": {
+                                                                "required": false,
+                                                                "type": "NULL"
+                                                              }
+                                                            },
+                                                            "type": "object"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "tool",
+                                                          "title"
+                                                        ],
+                                                        "type": "object"
+                                                      }
+                                                    },
+                                                    "type": "object"
+                                                  },
+                                                  "required": true,
+                                                  "type": "array"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "thinking"
+                                              ],
+                                              "type": "object"
+                                            }
+                                          },
+                                          "required": [
+                                            "type"
+                                          ],
+                                          "type": "object"
+                                        },
+                                        "required": false,
+                                        "type": "array"
+                                      }
+                                    },
+                                    "type": "object"
+                                  },
+                                  "name": {
+                                    "properties": {
+                                      "_COMPOSITION": {
+                                        "required": false,
+                                        "type": "ANY_OF"
+                                      },
+                                      "variant_0": {
+                                        "required": false,
+                                        "type": "string"
+                                      },
+                                      "variant_1": {
+                                        "required": false,
+                                        "type": "NULL"
+                                      }
+                                    },
+                                    "type": "object"
+                                  },
+                                  "role": {
+                                    "required": false,
+                                    "type": "string"
+                                  },
+                                  "tool_call_id": {
+                                    "properties": {
+                                      "_COMPOSITION": {
+                                        "required": false,
+                                        "type": "ANY_OF"
+                                      },
+                                      "variant_0": {
+                                        "required": false,
+                                        "type": "string"
+                                      },
+                                      "variant_1": {
+                                        "required": false,
+                                        "type": "NULL"
+                                      }
+                                    },
+                                    "type": "object"
+                                  }
+                                },
+                                "required": [
+                                  "content"
+                                ],
+                                "type": "object"
+                              },
+                              "variant_UserMessage": {
+                                "properties": {
+                                  "content": {
+                                    "properties": {
+                                      "_COMPOSITION": {
+                                        "required": false,
+                                        "type": "ANY_OF"
+                                      },
+                                      "variant_0": {
+                                        "required": false,
+                                        "type": "string"
+                                      },
+                                      "variant_1": {
+                                        "required": false,
+                                        "type": "NULL"
+                                      },
+                                      "variant_2": {
+                                        "items": {
+                                          "properties": {
+                                            "_COMPOSITION": {
+                                              "required": false,
+                                              "type": "ONE_OF"
+                                            },
+                                            "type": {
+                                              "required": true,
+                                              "type": "string"
+                                            },
+                                            "variant_AudioChunk": {
+                                              "properties": {
+                                                "input_audio": {
+                                                  "properties": {
+                                                    "_COMPOSITION": {
+                                                      "required": false,
+                                                      "type": "ANY_OF"
+                                                    },
+                                                    "variant_0": {
+                                                      "required": false,
+                                                      "type": "string"
+                                                    },
+                                                    "variant_1": {
+                                                      "required": false,
+                                                      "type": "string"
+                                                    }
+                                                  },
+                                                  "type": "object"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "input_audio"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "variant_DocumentURLChunk": {
+                                              "properties": {
+                                                "document_name": {
+                                                  "properties": {
+                                                    "_COMPOSITION": {
+                                                      "required": false,
+                                                      "type": "ANY_OF"
+                                                    },
+                                                    "variant_0": {
+                                                      "required": false,
+                                                      "type": "string"
+                                                    },
+                                                    "variant_1": {
+                                                      "required": false,
+                                                      "type": "NULL"
+                                                    }
+                                                  },
+                                                  "type": "object"
+                                                },
+                                                "document_url": {
+                                                  "required": true,
+                                                  "type": "string"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "document_url"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "variant_FileChunk": {
+                                              "properties": {
+                                                "file_id": {
+                                                  "required": true,
+                                                  "type": "string"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "file_id"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "variant_ImageURLChunk": {
+                                              "properties": {
+                                                "image_url": {
+                                                  "properties": {
+                                                    "_COMPOSITION": {
+                                                      "required": false,
+                                                      "type": "ANY_OF"
+                                                    },
+                                                    "variant_1": {
+                                                      "required": false,
+                                                      "type": "string"
+                                                    },
+                                                    "variant_ImageURL": {
+                                                      "properties": {
+                                                        "detail": {
+                                                          "properties": {
+                                                            "_COMPOSITION": {
+                                                              "required": false,
+                                                              "type": "ANY_OF"
+                                                            },
+                                                            "variant_1": {
+                                                              "required": false,
+                                                              "type": "NULL"
+                                                            },
+                                                            "variant_ImageDetail": {
+                                                              "required": false,
+                                                              "type": "string"
+                                                            }
+                                                          },
+                                                          "type": "object"
+                                                        },
+                                                        "url": {
+                                                          "required": true,
+                                                          "type": "string"
+                                                        }
+                                                      },
+                                                      "required": [
+                                                        "url"
+                                                      ],
+                                                      "type": "object"
+                                                    }
+                                                  },
+                                                  "type": "object"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "image_url"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "variant_ReferenceChunk": {
+                                              "properties": {
+                                                "reference_ids": {
+                                                  "required": true,
+                                                  "type": "[]INT"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "reference_ids"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "variant_TextChunk": {
+                                              "properties": {
+                                                "text": {
+                                                  "required": true,
+                                                  "type": "string"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "text"
+                                              ],
+                                              "type": "object"
+                                            },
+                                            "variant_ThinkChunk": {
+                                              "properties": {
+                                                "closed": {
+                                                  "required": false,
+                                                  "type": "boolean"
+                                                },
+                                                "thinking": {
+                                                  "items": {
+                                                    "properties": {
+                                                      "_COMPOSITION": {
+                                                        "required": false,
+                                                        "type": "ANY_OF"
+                                                      },
+                                                      "variant_ReferenceChunk": {
+                                                        "properties": {
+                                                          "reference_ids": {
+                                                            "required": true,
+                                                            "type": "[]INT"
+                                                          },
+                                                          "type": {
+                                                            "required": false,
+                                                            "type": "string"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "reference_ids"
+                                                        ],
+                                                        "type": "object"
+                                                      },
+                                                      "variant_TextChunk": {
+                                                        "properties": {
+                                                          "text": {
+                                                            "required": true,
+                                                            "type": "string"
+                                                          },
+                                                          "type": {
+                                                            "required": false,
+                                                            "type": "string"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "text"
+                                                        ],
+                                                        "type": "object"
+                                                      },
+                                                      "variant_ToolReferenceChunk": {
+                                                        "properties": {
+                                                          "description": {
+                                                            "properties": {
+                                                              "_COMPOSITION": {
+                                                                "required": false,
+                                                                "type": "ANY_OF"
+                                                              },
+                                                              "variant_0": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              },
+                                                              "variant_1": {
+                                                                "required": false,
+                                                                "type": "NULL"
+                                                              }
+                                                            },
+                                                            "type": "object"
+                                                          },
+                                                          "favicon": {
+                                                            "properties": {
+                                                              "_COMPOSITION": {
+                                                                "required": false,
+                                                                "type": "ANY_OF"
+                                                              },
+                                                              "variant_0": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              },
+                                                              "variant_1": {
+                                                                "required": false,
+                                                                "type": "NULL"
+                                                              }
+                                                            },
+                                                            "type": "object"
+                                                          },
+                                                          "title": {
+                                                            "required": true,
+                                                            "type": "string"
+                                                          },
+                                                          "tool": {
+                                                            "properties": {
+                                                              "_COMPOSITION": {
+                                                                "required": false,
+                                                                "type": "ANY_OF"
+                                                              },
+                                                              "variant_1": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              },
+                                                              "variant_BuiltInConnectors": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              }
+                                                            },
+                                                            "type": "object"
+                                                          },
+                                                          "type": {
+                                                            "required": false,
+                                                            "type": "string"
+                                                          },
+                                                          "url": {
+                                                            "properties": {
+                                                              "_COMPOSITION": {
+                                                                "required": false,
+                                                                "type": "ANY_OF"
+                                                              },
+                                                              "variant_0": {
+                                                                "required": false,
+                                                                "type": "string"
+                                                              },
+                                                              "variant_1": {
+                                                                "required": false,
+                                                                "type": "NULL"
+                                                              }
+                                                            },
+                                                            "type": "object"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "tool",
+                                                          "title"
+                                                        ],
+                                                        "type": "object"
+                                                      }
+                                                    },
+                                                    "type": "object"
+                                                  },
+                                                  "required": true,
+                                                  "type": "array"
+                                                },
+                                                "type": {
+                                                  "required": false,
+                                                  "type": "string"
+                                                }
+                                              },
+                                              "required": [
+                                                "thinking"
+                                              ],
+                                              "type": "object"
+                                            }
+                                          },
+                                          "required": [
+                                            "type"
+                                          ],
+                                          "type": "object"
+                                        },
+                                        "required": false,
+                                        "type": "array"
+                                      }
+                                    },
+                                    "type": "object"
+                                  },
+                                  "role": {
+                                    "required": false,
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "content"
+                                ],
+                                "type": "object"
+                              }
+                            },
+                            "required": [
+                              "role"
+                            ],
+                            "type": "object"
+                          },
+                          "required": true,
+                          "type": "array"
+                        }
+                      },
+                      "required": [
+                        "messages"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "model": {
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "model",
+                "input"
+              ]
+            }
+          }
+        }
+      ],
+      "integration": "Mistral.mistral@v1",
+      "method_hash": "db86b1be436ba56b393b89cd1de12f98f913fbc027fe57cc0b789c52d07ab282",
+      "output": {
+        "schema": {
+          "properties": {
+            "id": {
+              "required": true,
+              "type": "string"
+            },
+            "model": {
+              "required": true,
+              "type": "string"
+            },
+            "results": {
+              "required": true,
+              "type": "[]ANY"
+            }
+          },
+          "required": [
+            "id",
+            "model",
+            "results"
+          ]
+        },
+        "status": 200
+      },
+      "summary": "Chat Classifications",
+      "type": "method"
+    },
+    "openweather.2.5.weather.list": {
+      "desc": "",
+      "inputs": [
+        {
+          "appid": {
+            "LOCATION": "query",
+            "REQUIRED": false,
+            "TYPE": "STRING"
+          }
+        },
+        {
+          "units": {
+            "LOCATION": "query",
+            "REQUIRED": false,
+            "TYPE": "STRING"
+          }
+        },
+        {
+          "lang": {
+            "LOCATION": "query",
+            "REQUIRED": false,
+            "TYPE": "STRING"
+          }
+        },
+        {
+          "lat": {
+            "LOCATION": "query",
+            "REQUIRED": false,
+            "TYPE": "FLOAT"
+          }
+        },
+        {
+          "lon": {
+            "LOCATION": "query",
+            "REQUIRED": false,
+            "TYPE": "FLOAT"
+          }
+        },
+        {
+          "q": {
+            "LOCATION": "query",
+            "REQUIRED": false,
+            "TYPE": "STRING"
+          }
+        },
+        {
+          "id": {
+            "LOCATION": "query",
+            "REQUIRED": false,
+            "TYPE": "STRING"
+          }
+        },
+        {
+          "zip": {
+            "LOCATION": "query",
+            "REQUIRED": false,
+            "TYPE": "STRING"
+          }
+        }
+      ],
+      "integration": "OpenWeather.openweather@v1",
+      "method_hash": "54487d807fef9bb94e9ded8f8d54dd81d9fe19fd52d0b6e3ed0c2995aa4d00e3",
+      "output": {
+        "schema": {
+          "type": "map[STRING]ANY"
+        },
+        "status": 200
+      },
+      "summary": "Get current weather by coordinates or location",
+      "type": "method"
+    }
+  },
+  "version": "2.20.15"
+}

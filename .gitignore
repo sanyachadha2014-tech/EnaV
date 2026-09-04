@@ -1,3 +1,50 @@
+# ===== Environment Variables & Secrets =====
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+**/.env
+**/.env.*
+**/.env.local
+**/.env.*.local
+!.env.example
+!**/.env.example
+
+# ===== Keys, Certificates & Credentials =====
+*.key
+*.pem
+*.crt
+*.pfx
+*.p12
+credentials.json
+auth.json
+
+# ===== Local SQLite Databases =====
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+**/*.db
+**/*.sqlite
+**/*.sqlite3
+
+# ===== Swytchcode Local-Only Files & Credentials =====
+.swytchcode/workspace.json
+.swytchcode/auth.json
+.swytchcode/credentials*
+.swytchcode/cache/
+.swytchcode/audit/
+**/.swytchcode/workspace.json
+**/.swytchcode/auth.json
+**/.swytchcode/credentials*
+**/.swytchcode/cache/
+**/.swytchcode/*.lock
+**/.swytchcode/**/*.lock
+
 # ===== Python / Backend =====
 __pycache__/
 *.py[cod]
@@ -13,11 +60,9 @@ ENV/
 .mypy_cache/
 .ruff_cache/
 instance/
-
-# Environment variables & secrets
-.env
-.env.*
-!.env.example
+htmlcov/
+.coverage
+.coverage.*
 
 # ===== Node / Next.js / Frontend =====
 node_modules/
@@ -30,13 +75,13 @@ dist/
 *.tsbuildinfo
 next-env.d.ts
 
-# Package manager logs
+# ===== Package Manager Logs =====
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# ===== Editor / OS junk =====
+# ===== Editor & OS Junk =====
 .vscode/
 .idea/
 *.swp
@@ -45,8 +90,10 @@ pnpm-debug.log*
 Thumbs.db
 desktop.ini
 
-# ===== Logs & misc =====
+# ===== Logs & Temporary Files =====
 *.log
 logs/
 coverage/
 .cache/
+tmp/
+temp/

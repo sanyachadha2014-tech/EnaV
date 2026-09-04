@@ -11,6 +11,7 @@ from app.services.routing_provider import BaseRoutingProvider, get_routing_provi
 from app.services.vehicle_repository import BaseEmergencyVehicleRepository, get_vehicle_repository
 from app.services.gemini_service import analyze_emergency_description
 from app.services.reverse_geocoder import reverse_geocode
+from app.services.swytchcode_service import get_swytchcode_service
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,7 @@ class EmergencyAnalyzeResponse(BaseModel):
     summary: str
     keywords: List[str]
     address: Optional[str] = None
+    swytchcode_intelligence: Optional[Dict[str, Any]] = None
 
 class EmergencyReportCreate(BaseModel):
     incident_id: Optional[str] = Field(None, description="Optional incident ID (generated if not provided)")
@@ -101,72 +103,6 @@ class EmergencyDispatchAssignResponse(BaseModel):
     message: str
 
 # ---------------------------------------------------------------------------
-# In-Memory Active Fleet Status (Persisted per backend session)
-# ---------------------------------------------------------------------------
-VEHICLES_FLEET_STORE: List[Dict[str, Any]] = [
-    {
-        "id": "EV-AMB-21",
-        "type": "Advanced Life Support",
-        "distance": "3.2 km",
-        "battery": 74,
-        "eta": "6 min",
-        "traffic": "Moderate",
-        "recommended": True,
-        "status": "AVAILABLE",
-    },
-    {
-        "id": "EV-AMB-18",
-        "type": "Basic Life Support",
-        "distance": "2.4 km",
-        "battery": 8,
-        "eta": "14 min",
-        "traffic": "Low",
-        "recommended": False,
-        "status": "LOW BATTERY",
-    },
-    {
-        "id": "EV-AMB-09",
-        "type": "Advanced Life Support",
-        "distance": "5.1 km",
-        "battery": 91,
-        "eta": "11 min",
-        "traffic": "Moderate",
-        "recommended": False,
-        "status": "AVAILABLE",
-    },
-    {
-        "id": "EV-RR-02",
-        "type": "Rapid Response Unit",
-        "distance": "5.8 km",
-        "battery": 67,
-        "eta": "9 min",
-        "traffic": "Low",
-        "recommended": False,
-        "status": "AVAILABLE",
-    },
-    {
-        "id": "EV-AMB-14",
-        "type": "Advanced Life Support",
-        "distance": "7.2 km",
-        "battery": 81,
-        "eta": "16 min",
-        "traffic": "High",
-        "recommended": False,
-        "status": "AVAILABLE",
-    },
-    {
-        "id": "EV-RR-07",
-        "type": "Rapid Response Unit",
-        "distance": "8.4 km",
-        "battery": 56,
-        "eta": "18 min",
-        "traffic": "Moderate",
-        "recommended": False,
-        "status": "AVAILABLE",
-    }
-]
-
-# ---------------------------------------------------------------------------
 # In-Memory Active Alerts Store (Demo Session Ledger)
 # ---------------------------------------------------------------------------
 EMERGENCY_ALERTS_LEDGER: List[Dict[str, Any]] = [
@@ -202,8 +138,8 @@ EMERGENCY_ALERTS_LEDGER: List[Dict[str, Any]] = [
         "vehicle_type": "Electric Fire Engine",
         "eta_minutes": 6.8,
         "distance_km": 3.2,
-        "assigned_vehicle_location": {"lat": 28.6450, "lng": 77.0980},
-        "route_geometry": [[28.6450, 77.0980], [28.6390, 77.0920], [28.6328, 77.0854]],
+        "assigned_vehicle_location": {"lat": 28.6250, "lng": 77.2150},
+        "route_geometry": None,
         "created_at": (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(minutes=14)).isoformat()
     },
     {
@@ -220,8 +156,8 @@ EMERGENCY_ALERTS_LEDGER: List[Dict[str, Any]] = [
         "vehicle_type": "Advanced Life Support",
         "eta_minutes": 4.5,
         "distance_km": 2.1,
-        "assigned_vehicle_location": {"lat": 28.6230, "lng": 77.2180},
-        "route_geometry": [[28.6230, 77.2180], [28.6180, 77.2130], [28.6139, 77.2090]],
+        "assigned_vehicle_location": {"lat": 28.6120, "lng": 77.2150},
+        "route_geometry": None,
         "created_at": (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(minutes=32)).isoformat()
     }
 ]
@@ -250,11 +186,19 @@ async def analyze_emergency(request: EmergencyAnalyzeRequest):
         if request.latitude is not None and request.longitude is not None:
             address = await reverse_geocode(request.latitude, request.longitude)
 
+        # Real Swytchcode Mistral AI Emergency Analysis
+        swytchcode_svc = get_swytchcode_service()
+        swytchcode_intel = swytchcode_svc.classify_incident_mistral(
+            incident_type=request.incident_type,
+            description=request.raw_description
+        )
+
         return EmergencyAnalyzeResponse(
             incident_type=request.incident_type,
             summary=summary,
             keywords=keywords,
-            address=address
+            address=address,
+            swytchcode_intelligence=swytchcode_intel
         )
     except Exception as exc:
         raise HTTPException(
@@ -325,23 +269,17 @@ async def submit_emergency_report(
 
         selected_veh_id = opt_res.selected_vehicle.vehicle_id if opt_res.selected_vehicle else None
         selected_veh_type = opt_res.selected_vehicle.vehicle_type if opt_res.selected_vehicle else None
-        eta_min = opt_res.selected_vehicle.estimated_eta_minutes if opt_res.selected_vehicle else None
+        eta_min = opt_res.route.eta_minutes if opt_res.route else None
         dist_km = opt_res.route.distance_km if opt_res.route else None
-        dispatch_status = "DISPATCHED" if selected_veh_id else "PENDING_RESOURCES"
+        dispatch_status = "PENDING_RESOURCES"
 
         veh_location = None
         route_points = None
-        if selected_veh_id:
-            veh_lat = round(report.latitude + 0.015, 5)
-            veh_lng = round(report.longitude - 0.012, 5)
-            veh_location = {"lat": veh_lat, "lng": veh_lng}
-            route_points = [
-                [veh_lat, veh_lng],
-                [round(veh_lat * 0.6 + report.latitude * 0.4, 5), round(veh_lng * 0.6 + report.longitude * 0.4, 5)],
-                [report.latitude, report.longitude]
-            ]
+        if selected_veh_id and opt_res.route:
+            veh_location = {"lat": opt_res.route.source.lat, "lng": opt_res.route.source.lng}
+            route_points = [[c.lat, c.lng] for c in opt_res.route.geometry]
 
-        # Record in Government Alerts Ledger
+        # Record in Government Alerts Ledger as PENDING_RESOURCES for operator dispatch
         alert_entry = {
             "incident_id": incident_id,
             "incident_type": req_type,
@@ -351,13 +289,13 @@ async def submit_emergency_report(
             "district": district_name,
             "latitude": report.latitude,
             "longitude": report.longitude,
-            "status": dispatch_status,
-            "selected_vehicle": selected_veh_id,
-            "vehicle_type": selected_veh_type,
-            "eta_minutes": eta_min,
-            "distance_km": dist_km,
-            "assigned_vehicle_location": veh_location,
-            "route_geometry": route_points,
+            "status": "PENDING_RESOURCES",
+            "selected_vehicle": None,
+            "vehicle_type": None,
+            "eta_minutes": None,
+            "distance_km": None,
+            "assigned_vehicle_location": None,
+            "route_geometry": None,
             "created_at": now_iso
         }
         EMERGENCY_ALERTS_LEDGER.insert(0, alert_entry)
@@ -395,12 +333,14 @@ async def submit_emergency_report(
 )
 async def assign_emergency_dispatch(
     request: EmergencyDispatchAssignRequest,
-    provider: BaseRoutingProvider = Depends(get_routing_provider)
+    provider: BaseRoutingProvider = Depends(get_routing_provider),
+    vehicle_repository: BaseEmergencyVehicleRepository = Depends(get_vehicle_repository)
 ):
     """
     Executes actual EV dispatch assignment. Updates the incident status from PENDING_RESOURCES
-    to DISPATCHED, calculates the emergency route and ETA, updates the assigned vehicle status
-    to EN ROUTE, and persists this state across the ledger.
+    to DISPATCHED, calculates the real emergency route and ETA using the vehicle's real database
+    coordinates and OSRM, updates the assigned vehicle status to busy/en route, and persists
+    this state across the ledger.
     """
     try:
         # 1. Locate the incident in the ledger
@@ -410,93 +350,101 @@ async def assign_emergency_dispatch(
                 incident_entry = alert
                 break
 
-        # Fallback if not found (e.g. initial demo reference)
         if not incident_entry:
-            incident_entry = {
-                "incident_id": request.incident_id,
-                "incident_type": "ambulance" if "AMB" in request.vehicle_id else "fire" if "FIRE" in request.vehicle_id else "police",
-                "summary": f"Emergency response unit {request.vehicle_id} dispatched.",
-                "keywords": ["emergency", "dispatch"],
-                "address": "Delhi NCR Urban Sector",
-                "district": "Delhi NCR",
-                "latitude": 28.6290,
-                "longitude": 77.0780,
-                "status": "PENDING_RESOURCES",
-                "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
-            }
-            EMERGENCY_ALERTS_LEDGER.insert(0, incident_entry)
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Incident '{request.incident_id}' not found in active alerts ledger."
+            )
 
-        inc_lat = incident_entry.get("latitude", 28.6290)
-        inc_lng = incident_entry.get("longitude", 77.0780)
+        inc_lat = incident_entry.get("latitude")
+        inc_lng = incident_entry.get("longitude")
+        if inc_lat is None or inc_lng is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Incident '{request.incident_id}' is missing valid GPS coordinates."
+            )
 
-        # 2. Determine realistic source coordinates for the dispatched vehicle
-        veh_lat = round(inc_lat + 0.016, 5)
-        veh_lng = round(inc_lng - 0.014, 5)
+        # 2. Retrieve the real vehicle from the vehicle repository
+        dispatched_vehicle = vehicle_repository.get_vehicle_by_id(request.vehicle_id)
+        if not dispatched_vehicle:
+            for v in vehicle_repository.get_all_vehicles():
+                if v.vehicle_id.upper() == request.vehicle_id.upper():
+                    dispatched_vehicle = v
+                    break
+
+        if not dispatched_vehicle:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Vehicle '{request.vehicle_id}' not found in active fleet registry."
+            )
+
+        # Real vehicle source coordinates from vehicle telemetry / database
+        veh_lat = dispatched_vehicle.current_location.lat
+        veh_lng = dispatched_vehicle.current_location.lng
         veh_location = {"lat": veh_lat, "lng": veh_lng}
 
-        # 3. Calculate route geometry and ETA using existing routing provider
-        route_points: List[List[float]] = []
-        eta_minutes = request.eta_minutes or 6.2
-        distance_km = request.distance_km or 3.2
+        v_type_clean = (dispatched_vehicle.vehicle_type or "").lower()
+        if "fire" in v_type_clean:
+            veh_type = "Electric Fire Engine"
+        elif "police" in v_type_clean:
+            veh_type = "Police Interceptor"
+        else:
+            veh_type = "Advanced Life Support"
 
+        # 3. Calculate real OSRM road route geometry, distance, and ETA
+        source_coord = Coordinate(lat=veh_lat, lng=veh_lng)
+        dest_coord = Coordinate(lat=inc_lat, lng=inc_lng)
+        
+        candidate_routes = provider.get_candidate_routes(source_coord, dest_coord)
+        if not candidate_routes:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Unable to calculate OSRM road route between vehicle '{request.vehicle_id}' and incident location."
+            )
+
+        best_route = candidate_routes[0]
+        geom = getattr(best_route, "geometry", None)
+        if not geom or len(geom) < 2:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"OSRM returned insufficient road geometry points."
+            )
+
+        route_points = [[c.lat, c.lng] for c in geom]
+        distance_km = round(best_route.distance_km, 2)
+        eta_minutes = round(best_route.duration_seconds / 60.0, 1)
+
+        # 4. Update the vehicle status in the vehicle repository
+        dispatched_vehicle.availability_status = "busy"
         try:
-            source_coord = Coordinate(lat=veh_lat, lng=veh_lng)
-            dest_coord = Coordinate(lat=inc_lat, lng=inc_lng)
-            candidate_routes = provider.get_candidate_routes(source_coord, dest_coord)
-            if candidate_routes:
-                best = candidate_routes[0]
-                geom = getattr(best, "geometry", None) or getattr(best, "route_geometry", None)
-                if geom:
-                    route_points = [[c.lat, c.lng] for c in geom]
+            vehicle_repository.upsert_vehicle(dispatched_vehicle)
         except Exception as exc:
-            logger.warning(f"Routing calculation fallback for dispatch: {exc}")
+            logger.warning(f"Could not update vehicle availability in repository: {exc}")
 
-        # Ensure route line geometry exists for Leaflet visualization
-        if not route_points or len(route_points) < 2:
-            route_points = [
-                [veh_lat, veh_lng],
-                [round(veh_lat * 0.75 + inc_lat * 0.25, 5), round(veh_lng * 0.75 + inc_lng * 0.25, 5)],
-                [round(veh_lat * 0.50 + inc_lat * 0.50, 5), round(veh_lng * 0.50 + inc_lng * 0.50, 5)],
-                [round(veh_lat * 0.25 + inc_lat * 0.75, 5), round(veh_lng * 0.25 + inc_lng * 0.75, 5)],
-                [inc_lat, inc_lng]
-            ]
-
-        veh_type = request.vehicle_type or (
-            "Advanced Life Support" if "AMB" in request.vehicle_id
-            else "Rapid Response Unit" if "RR" in request.vehicle_id
-            else "Electric Fire Engine" if "FIRE" in request.vehicle_id
-            else "Police Patrol Unit"
-        )
-
-        # 4. Update the incident status in the single source of truth ledger
+        # 5. Update the incident status in the single source of truth ledger
         incident_entry["status"] = "DISPATCHED"
-        incident_entry["selected_vehicle"] = request.vehicle_id
+        incident_entry["selected_vehicle"] = dispatched_vehicle.vehicle_id
         incident_entry["vehicle_type"] = veh_type
         incident_entry["eta_minutes"] = eta_minutes
         incident_entry["distance_km"] = distance_km
         incident_entry["assigned_vehicle_location"] = veh_location
         incident_entry["route_geometry"] = route_points
 
-        # 5. Update vehicle in fleet store from AVAILABLE to EN ROUTE
-        for veh in VEHICLES_FLEET_STORE:
-            if veh["id"] == request.vehicle_id:
-                veh["status"] = "EN ROUTE"
-                veh["eta"] = f"{eta_minutes:.0f} min"
-                break
-
         return EmergencyDispatchAssignResponse(
             success=True,
             incident_id=incident_entry["incident_id"],
             status="DISPATCHED",
-            selected_vehicle=request.vehicle_id,
+            selected_vehicle=dispatched_vehicle.vehicle_id,
             vehicle_type=veh_type,
             eta_minutes=eta_minutes,
             distance_km=distance_km,
             assigned_vehicle_location=veh_location,
             route_geometry=route_points,
-            message=f"Unit {request.vehicle_id} successfully dispatched to incident {incident_entry['incident_id']}."
+            message=f"Unit {dispatched_vehicle.vehicle_id} successfully dispatched to incident {incident_entry['incident_id']}."
         )
 
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -507,11 +455,46 @@ async def assign_emergency_dispatch(
     "/vehicles",
     summary="Get Emergency Vehicle Fleet Status"
 )
-async def get_emergency_vehicles():
+async def get_emergency_vehicles(
+    repository: BaseEmergencyVehicleRepository = Depends(get_vehicle_repository)
+):
     """
-    Returns the real-time emergency vehicle fleet statuses for the Government Dashboard.
+    Returns the real-time emergency vehicle fleet statuses from the vehicle repository
+    for the Government Dashboard.
     """
-    return VEHICLES_FLEET_STORE
+    try:
+        vehicles = repository.get_all_vehicles()
+    except Exception as exc:
+        logger.warning(f"Error fetching vehicles from repository: {exc}")
+        from app.data.mock_vehicles import get_mock_vehicles
+        vehicles = get_mock_vehicles()
+
+    fleet = []
+    for v in vehicles:
+        type_clean = (v.vehicle_type or "").lower()
+        if "fire" in type_clean:
+            type_label = "Electric Fire Engine"
+        elif "police" in type_clean:
+            type_label = "Police Interceptor"
+        else:
+            type_label = "Advanced Life Support"
+
+        status_label = "AVAILABLE" if v.availability_status == "available" else v.availability_status.upper().replace("_", " ")
+
+        fleet.append({
+            "id": v.vehicle_id,
+            "type": type_label,
+            "vehicle_type": v.vehicle_type,
+            "distance": "Monitored",
+            "battery": int(round(v.battery_percentage)),
+            "latitude": v.current_location.lat,
+            "longitude": v.current_location.lng,
+            "eta": "Ready" if status_label == "AVAILABLE" else "En Route",
+            "traffic": "Normal",
+            "recommended": status_label == "AVAILABLE" and v.battery_percentage >= v.minimum_reserve_pct,
+            "status": status_label,
+        })
+    return fleet
 
 @router.get(
     "/alerts",

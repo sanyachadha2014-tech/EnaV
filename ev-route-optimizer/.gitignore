@@ -18,3 +18,16 @@ htmlcov/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Swytchcode sensitive files & caches
+.swytchcode/workspace.json
+.swytchcode/auth.json
+.swytchcode/credentials*
+.swytchcode/cache/
+.swytchcode/audit/
+.swytchcode/*.lock
+*.key
+*.pem
+*.db
+*.sqlite
+*.sqlite3

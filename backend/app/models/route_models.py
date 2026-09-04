@@ -1,9 +1,46 @@
 from typing import List, Optional, Any
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 class Coordinate(BaseModel):
     lat: float = Field(..., description="Latitude of the coordinate")
     lng: float = Field(..., description="Longitude of the coordinate")
+
+    @model_validator(mode="before")
+    @classmethod
+    def parse_coordinate_aliases(cls, values: Any) -> Any:
+        # Handle list/tuple formats like [lat, lng]
+        if isinstance(values, (list, tuple)) and len(values) >= 2:
+            return {"lat": values[0], "lng": values[1]}
+        # Handle dictionary inputs using alternative key names like latitude/longitude or lon/long
+        if isinstance(values, dict):
+            lat = values.get("lat") if values.get("lat") is not None else values.get("latitude")
+            lng = (
+                values.get("lng") 
+                if values.get("lng") is not None 
+                else values.get("longitude") 
+                if values.get("longitude") is not None 
+                else values.get("lon")
+                if values.get("lon") is not None
+                else values.get("long")
+            )
+            return {"lat": lat, "lng": lng}
+        return values
+
+    @property
+    def latitude(self) -> float:
+        return self.lat
+
+    @latitude.setter
+    def latitude(self, v: float):
+        self.lat = v
+
+    @property
+    def longitude(self) -> float:
+        return self.lng
+
+    @longitude.setter
+    def longitude(self, v: float):
+        self.lng = v
 
     @field_validator("lat")
     @classmethod
@@ -28,6 +65,82 @@ class VehicleInfo(BaseModel):
     minimum_reserve_pct: float = Field(15.0, description="Minimum battery reserve percentage required (0-100)")
     is_emergency: bool = Field(False, description="Whether the vehicle is currently on an emergency mission")
     target_soc_pct: Optional[float] = Field(None, description="Target battery percentage to charge to (e.g., 80.0)")
+
+    @model_validator(mode="before")
+    @classmethod
+    def parse_vehicle_aliases(cls, values: Any) -> Any:
+        if isinstance(values, dict):
+            v_id = values.get("vehicle_id") or values.get("vehicleId") or "CITIZEN-01"
+            v_type = values.get("vehicle_type") or values.get("vehicleType") or "citizen"
+            bat_pct = (
+                values.get("battery_percentage")
+                if values.get("battery_percentage") is not None
+                else values.get("currentSocPct")
+                if values.get("currentSocPct") is not None
+                else values.get("currentSoc")
+                if values.get("currentSoc") is not None
+                else values.get("batteryPercentage")
+                if values.get("batteryPercentage") is not None
+                else 80.0
+            )
+            cap_kwh = (
+                values.get("battery_capacity_kwh")
+                if values.get("battery_capacity_kwh") is not None
+                else values.get("batteryCapacityKwh")
+                if values.get("batteryCapacityKwh") is not None
+                else values.get("batteryCapacity")
+                if values.get("batteryCapacity") is not None
+                else values.get("battery_capacity")
+                if values.get("battery_capacity") is not None
+                else 60.0
+            )
+            cons_kwh = (
+                values.get("consumption_kwh_per_km")
+                if values.get("consumption_kwh_per_km") is not None
+                else values.get("consumptionRateKwhPerKm")
+                if values.get("consumptionRateKwhPerKm") is not None
+                else values.get("consumptionRate")
+                if values.get("consumptionRate") is not None
+                else values.get("consumption_rate")
+                if values.get("consumption_rate") is not None
+                else 0.18
+            )
+            min_res = (
+                values.get("minimum_reserve_pct")
+                if values.get("minimum_reserve_pct") is not None
+                else values.get("minReservePct")
+                if values.get("minReservePct") is not None
+                else values.get("minReserve")
+                if values.get("minReserve") is not None
+                else values.get("minimum_reserve")
+                if values.get("minimum_reserve") is not None
+                else 15.0
+            )
+            is_emerg = (
+                values.get("is_emergency")
+                if values.get("is_emergency") is not None
+                else values.get("isEmergency", False)
+            )
+            target_soc = (
+                values.get("target_soc_pct")
+                if values.get("target_soc_pct") is not None
+                else values.get("targetSocPct")
+                if values.get("targetSocPct") is not None
+                else values.get("targetSoc")
+            )
+            
+            res = dict(values)
+            res["vehicle_id"] = str(v_id)
+            res["vehicle_type"] = str(v_type)
+            res["battery_percentage"] = float(bat_pct)
+            res["battery_capacity_kwh"] = float(cap_kwh)
+            res["consumption_kwh_per_km"] = float(cons_kwh)
+            res["minimum_reserve_pct"] = float(min_res)
+            res["is_emergency"] = bool(is_emerg)
+            if target_soc is not None:
+                res["target_soc_pct"] = float(target_soc)
+            return res
+        return values
 
     @field_validator("battery_percentage", "minimum_reserve_pct", "target_soc_pct")
     @classmethod
@@ -86,6 +199,9 @@ class EvaluatedRouteDetails(BaseModel):
     geometry: List[Any] = Field(default_factory=list)
     tolls: str = "₹0"
     elevation_gain: str = "+0m"
+    toll_cost_inr: Optional[str] = None
+    elevation_gain_m: Optional[str] = None
+    kwh_depletion: Optional[str] = None
 
 class RecommendedChargerDetails(BaseModel):
     station_id: str = Field(..., description="ID of the recommended charging station")

@@ -1,0 +1,129 @@
+{
+  "methods": [
+    {
+      "method_uuid": "",
+      "method_name": "Calculate travel times between multiple locations",
+      "canonical_id": "mapbox.mapbox.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Create a new dataset for a user",
+      "canonical_id": "mapbox.dataset.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Create an access token for a user",
+      "canonical_id": "mapbox.token.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Create or update a dataset feature",
+      "canonical_id": "mapbox.feature.update"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Delete a user's dataset by ID",
+      "canonical_id": "mapbox.dataset.delete"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Fetch a specific style for a user",
+      "canonical_id": "mapbox.style.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Find addresses and places from coordinates",
+      "canonical_id": "mapbox.geocoding.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Find geographic locations from a query",
+      "canonical_id": "mapbox.geocoding.get1"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Find geographic locations from addresses or place names",
+      "canonical_id": "mapbox.geocode.forward.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Find locations from coordinates",
+      "canonical_id": "mapbox.geocode.reverse.list"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Generate travel time or distance areas from a location",
+      "canonical_id": "mapbox.mapbox.get2"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Geocode multiple addresses in a single request",
+      "canonical_id": "mapbox.geocode.batch.create"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Get driving directions between specified coordinates",
+      "canonical_id": "mapbox.mapbox.get1"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "List access tokens for a given username",
+      "canonical_id": "mapbox.token.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "List features for a specific dataset",
+      "canonical_id": "mapbox.feature.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Match GPS traces to roads",
+      "canonical_id": "mapbox.mapbox.get3"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Optimize a route based on provided coordinates and profile",
+      "canonical_id": "mapbox.mapbox.get4"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Query features within a specific geographic tile",
+      "canonical_id": "mapbox.tilequery.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Remove a specific feature from a dataset",
+      "canonical_id": "mapbox.feature.delete"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Retrieve a specific dataset for a user",
+      "canonical_id": "mapbox.dataset.get"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Retrieve a specific feature from a dataset",
+      "canonical_id": "mapbox.feature.get1"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Retrieve an access token for a user and token ID",
+      "canonical_id": "mapbox.token.get1"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Revoke a user's access token",
+      "canonical_id": "mapbox.token.delete"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Update a user's style by ID",
+      "canonical_id": "mapbox.style.update"
+    },
+    {
+      "method_uuid": "",
+      "method_name": "Update an access token for a user",
+      "canonical_id": "mapbox.token.update"
+    }
+  ]
+}

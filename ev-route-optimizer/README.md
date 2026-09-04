@@ -125,3 +125,53 @@ pytest
     ]
   }
   ```
+
+---
+
+## Swytchcode Integration
+
+The EV Route Optimizer leverages **Swytchcode CLI** as a secure, local tool-call broker and integration layer connecting the application to external intelligence services:
+
+```
+┌────────────────────────────────────────────────────────┐
+│               EV Route Optimizer (FastAPI)             │
+└───────────────┬────────────────────────┬───────────────┘
+                │                        │
+       (Route Calculation)        (AI Triage & Weather)
+                │                        │
+                ▼                        ▼
+      ┌──────────────────┐     ┌──────────────────┐
+      │   OSRM Engine    │     │  Swytchcode CLI  │
+      │  (Road Network)  │     │  (Tool Broker)   │
+      └──────────────────┘     └─────────┬────────┘
+                                         │
+                        ┌────────────────┴────────────────┐
+                        ▼                                 ▼
+              ┌──────────────────┐              ┌──────────────────┐
+              │    Mistral AI    │              │   OpenWeather    │
+              │ (Classification) │              │    (Weather)     │
+              └──────────────────┘              └──────────────────┘
+```
+
+### Key Components
+
+1. **Swytchcode CLI (`swytchcode exec`)**:
+   - Acts as the intermediary between the FastAPI backend and third-party APIs.
+   - Manages credentials locally via Swytchcode's auth manager without exposing API keys in application code or `.env` files.
+   - Executes tools via non-blocking subprocesses with full exception handling and timeout guards.
+
+2. **Mistral AI Incident Intelligence (`mistral.classification.create`)**:
+   - Automatically analyzes incoming 112 emergency calls and incident descriptions.
+   - Evaluates emergency severity, flags high-risk events, and suggests priority level for dispatch.
+
+3. **OpenWeather Context (`openweather.2.5.weather.list`)**:
+   - Queries real-time meteorological conditions for the incident coordinates.
+   - Assesses road conditions (e.g., wet/slippery surface during precipitation) and temperature-dependent EV battery consumption adjustments.
+
+4. **OSRM Route Calculation**:
+   - OSRM remains the core routing and distance matrix engine for road calculations, turn-by-turn geometry, and duration.
+   - Mapbox is not used due to billing constraints.
+
+5. **Graceful Fallback**:
+   - In the event of network issues, quota exhaustion, or Swytchcode tool unavailability, the system seamlessly falls back to deterministic emergency priority assessment and standard road calculations, guaranteeing 100% dispatch availability.
+

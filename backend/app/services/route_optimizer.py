@@ -91,7 +91,10 @@ def optimize_ev_route(
             reason=reason,
             geometry=route.geometry,
             tolls=toll_str,
-            elevation_gain=elevation_str
+            elevation_gain=elevation_str,
+            toll_cost_inr=toll_str,
+            elevation_gain_m=elevation_str,
+            kwh_depletion=f"{round(energy_consumed, 2)} kWh"
         )
         
         evaluated_routes.append(details)

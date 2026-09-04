@@ -44,6 +44,35 @@ class BaseChargerProvider(ABC):
             logger.error(f"Failed to fetch all chargers from provider: {e}")
             return []
 
+class MockChargerProvider(BaseChargerProvider):
+    """
+    Returns pre-defined mock candidate chargers for offline testing and development.
+    """
+    def get_chargers_in_bbox(
+        self,
+        min_lat: float,
+        min_lng: float,
+        max_lat: float,
+        max_lng: float
+    ) -> List[ChargingStation]:
+        from app.data.mock_chargers import get_mock_chargers
+        return get_mock_chargers()
+
+    def get_all_chargers(self) -> List[Dict[str, Any]]:
+        from app.data.mock_chargers import get_mock_chargers
+        stations = get_mock_chargers()
+        return [
+            {
+                "station_id": s.station_id,
+                "name": s.name,
+                "latitude": s.latitude,
+                "longitude": s.longitude,
+                "power_kw": s.charging_power_kw or 50.0,
+                "status": s.status
+            }
+            for s in stations
+        ]
+
 def get_charger_provider() -> BaseChargerProvider:
     """
     Factory to return the configured charging station provider.
@@ -51,7 +80,9 @@ def get_charger_provider() -> BaseChargerProvider:
     """
     provider_name = os.getenv("CHARGER_PROVIDER", "ocm").lower()
     
-    if provider_name == "osm":
+    if provider_name == "mock":
+        return MockChargerProvider()
+    elif provider_name == "osm":
         from app.services.osm_charger_service import OSMChargerService
         logger.info("Initializing OSMChargerService as primary provider.")
         return OSMChargerService()

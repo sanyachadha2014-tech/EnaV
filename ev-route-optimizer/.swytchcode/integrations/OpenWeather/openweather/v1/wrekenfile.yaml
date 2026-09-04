@@ -1,0 +1,1163 @@
+VERSION: 2.0.2
+DEFAULTS:
+  query_appid: <APPID>
+  w_base_url: https://api.openweathermap.org
+METHODS:
+  openweather.4.0.current.list:
+    SUMMARY: Get current weather
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /data/4.0/onecall/current
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - ApiKey:
+          type: apiKey
+          in: query
+          name: appid
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - lat:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - lon:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - appid:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+      - units:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lang:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - start:
+          TYPE: INT
+          REQUIRED: false
+          LOCATION: query
+      - end:
+          TYPE: INT
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: openweather_4_0_current_list
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Invalid or missing API key (HTTP 401)
+      - TYPE: ANY
+        STATUS: 404
+        WHEN: Not found (HTTP 404)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limit exceeded (HTTP 429)
+      - TYPE: ANY
+        STATUS: 500
+        WHEN: Server error (HTTP 500)
+    CANONICAL_ID: openweather.4.0.current.list
+  openweather.4.0.1min.list:
+    SUMMARY: Get 1-minute weather timeline
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /data/4.0/onecall/timeline/1min
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - ApiKey:
+          type: apiKey
+          in: query
+          name: appid
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - lat:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - lon:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - appid:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+      - units:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lang:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - start:
+          TYPE: INT
+          REQUIRED: false
+          LOCATION: query
+      - end:
+          TYPE: INT
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: openweather_4_0_1min_list
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Invalid or missing API key (HTTP 401)
+      - TYPE: ANY
+        STATUS: 404
+        WHEN: Not found (HTTP 404)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limit exceeded (HTTP 429)
+      - TYPE: ANY
+        STATUS: 500
+        WHEN: Server error (HTTP 500)
+    CANONICAL_ID: openweather.4.0.1min.list
+  openweather.4.0.15min.list:
+    SUMMARY: Get 15-minute weather timeline
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /data/4.0/onecall/timeline/15min
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - ApiKey:
+          type: apiKey
+          in: query
+          name: appid
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - lat:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - lon:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - appid:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+      - units:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lang:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - start:
+          TYPE: INT
+          REQUIRED: false
+          LOCATION: query
+      - end:
+          TYPE: INT
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: openweather_4_0_15min_list
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Invalid or missing API key (HTTP 401)
+      - TYPE: ANY
+        STATUS: 404
+        WHEN: Not found (HTTP 404)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limit exceeded (HTTP 429)
+      - TYPE: ANY
+        STATUS: 500
+        WHEN: Server error (HTTP 500)
+    CANONICAL_ID: openweather.4.0.15min.list
+  openweather.4.0.1h.list:
+    SUMMARY: Get hourly weather timeline
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /data/4.0/onecall/timeline/1h
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - ApiKey:
+          type: apiKey
+          in: query
+          name: appid
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - lat:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - lon:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - appid:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+      - units:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lang:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - start:
+          TYPE: INT
+          REQUIRED: false
+          LOCATION: query
+      - end:
+          TYPE: INT
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: openweather_4_0_1h_list
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Invalid or missing API key (HTTP 401)
+      - TYPE: ANY
+        STATUS: 404
+        WHEN: Not found (HTTP 404)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limit exceeded (HTTP 429)
+      - TYPE: ANY
+        STATUS: 500
+        WHEN: Server error (HTTP 500)
+    CANONICAL_ID: openweather.4.0.1h.list
+  openweather.4.0.1day.list:
+    SUMMARY: Get daily weather timeline
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /data/4.0/onecall/timeline/1day
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - ApiKey:
+          type: apiKey
+          in: query
+          name: appid
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - lat:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - lon:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - appid:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+      - units:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lang:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - start:
+          TYPE: INT
+          REQUIRED: false
+          LOCATION: query
+      - end:
+          TYPE: INT
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: openweather_4_0_1day_list
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Invalid or missing API key (HTTP 401)
+      - TYPE: ANY
+        STATUS: 404
+        WHEN: Not found (HTTP 404)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limit exceeded (HTTP 429)
+      - TYPE: ANY
+        STATUS: 500
+        WHEN: Server error (HTTP 500)
+    CANONICAL_ID: openweather.4.0.1day.list
+  openweather.4.0.alerts.get:
+    SUMMARY: Get weather alert details
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /data/4.0/onecall/alerts/{alert_id}
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - ApiKey:
+          type: apiKey
+          in: query
+          name: appid
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - alert_id:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: path
+      - appid:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+      - units:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lang:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: openweather_4_0_alerts_get
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Invalid or missing API key (HTTP 401)
+      - TYPE: ANY
+        STATUS: 404
+        WHEN: Not found (HTTP 404)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limit exceeded (HTTP 429)
+      - TYPE: ANY
+        STATUS: 500
+        WHEN: Server error (HTTP 500)
+    CANONICAL_ID: openweather.4.0.alerts.get
+  openweather.3.0.onecall.list:
+    SUMMARY: Get current weather and forecasts
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /data/3.0/onecall
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - ApiKey:
+          type: apiKey
+          in: query
+          name: appid
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - lat:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - lon:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - appid:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+      - units:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lang:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - exclude:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: openweather_3_0_onecall_list
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Invalid or missing API key (HTTP 401)
+      - TYPE: ANY
+        STATUS: 404
+        WHEN: Not found (HTTP 404)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limit exceeded (HTTP 429)
+      - TYPE: ANY
+        STATUS: 500
+        WHEN: Server error (HTTP 500)
+    CANONICAL_ID: openweather.3.0.onecall.list
+  openweather.3.0.timemachine.list:
+    SUMMARY: Get weather for a historical timestamp
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /data/3.0/onecall/timemachine
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - ApiKey:
+          type: apiKey
+          in: query
+          name: appid
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - lat:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - lon:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - appid:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+      - units:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lang:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - dt:
+          TYPE: INT
+          REQUIRED: true
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: openweather_3_0_timemachine_list
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Invalid or missing API key (HTTP 401)
+      - TYPE: ANY
+        STATUS: 404
+        WHEN: Not found (HTTP 404)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limit exceeded (HTTP 429)
+      - TYPE: ANY
+        STATUS: 500
+        WHEN: Server error (HTTP 500)
+    CANONICAL_ID: openweather.3.0.timemachine.list
+  openweather.3.0.daySummary.list:
+    SUMMARY: Get daily weather summary
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /data/3.0/onecall/day_summary
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - ApiKey:
+          type: apiKey
+          in: query
+          name: appid
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - lat:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - lon:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - appid:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+      - units:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lang:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - date:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: openweather_3_0_daySummary_list
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Invalid or missing API key (HTTP 401)
+      - TYPE: ANY
+        STATUS: 404
+        WHEN: Not found (HTTP 404)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limit exceeded (HTTP 429)
+      - TYPE: ANY
+        STATUS: 500
+        WHEN: Server error (HTTP 500)
+    CANONICAL_ID: openweather.3.0.daySummary.list
+  openweather.3.0.overview.list:
+    SUMMARY: Get human-readable weather overview
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /data/3.0/onecall/overview
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - ApiKey:
+          type: apiKey
+          in: query
+          name: appid
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - lat:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - lon:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - appid:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+      - units:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lang:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - date:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: openweather_3_0_overview_list
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Invalid or missing API key (HTTP 401)
+      - TYPE: ANY
+        STATUS: 404
+        WHEN: Not found (HTTP 404)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limit exceeded (HTTP 429)
+      - TYPE: ANY
+        STATUS: 500
+        WHEN: Server error (HTTP 500)
+    CANONICAL_ID: openweather.3.0.overview.list
+  openweather.2.5.weather.list:
+    SUMMARY: Get current weather by coordinates or location
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /data/2.5/weather
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - ApiKey:
+          type: apiKey
+          in: query
+          name: appid
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - appid:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+      - units:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lang:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lat:
+          TYPE: FLOAT
+          REQUIRED: false
+          LOCATION: query
+      - lon:
+          TYPE: FLOAT
+          REQUIRED: false
+          LOCATION: query
+      - q:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - id:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - zip:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: openweather_2_5_weather_list
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Invalid or missing API key (HTTP 401)
+      - TYPE: ANY
+        STATUS: 404
+        WHEN: Not found (HTTP 404)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limit exceeded (HTTP 429)
+      - TYPE: ANY
+        STATUS: 500
+        WHEN: Server error (HTTP 500)
+    CANONICAL_ID: openweather.2.5.weather.list
+  openweather.2.5.forecast.list1:
+    SUMMARY: Get 5 day / 3 hour forecast
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /data/2.5/forecast
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - ApiKey:
+          type: apiKey
+          in: query
+          name: appid
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - appid:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+      - units:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lang:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lat:
+          TYPE: FLOAT
+          REQUIRED: false
+          LOCATION: query
+      - lon:
+          TYPE: FLOAT
+          REQUIRED: false
+          LOCATION: query
+      - q:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - id:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - cnt:
+          TYPE: INT
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: openweather_2_5_forecast_list1
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Invalid or missing API key (HTTP 401)
+      - TYPE: ANY
+        STATUS: 404
+        WHEN: Not found (HTTP 404)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limit exceeded (HTTP 429)
+      - TYPE: ANY
+        STATUS: 500
+        WHEN: Server error (HTTP 500)
+    CANONICAL_ID: openweather.2.5.forecast.list1
+  openweather.2.5.daily.list:
+    SUMMARY: Get daily forecast
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /data/2.5/forecast/daily
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - ApiKey:
+          type: apiKey
+          in: query
+          name: appid
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - appid:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+      - units:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lang:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lat:
+          TYPE: FLOAT
+          REQUIRED: false
+          LOCATION: query
+      - lon:
+          TYPE: FLOAT
+          REQUIRED: false
+          LOCATION: query
+      - q:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - cnt:
+          TYPE: INT
+          REQUIRED: false
+          LOCATION: query
+      - mode:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: openweather_2_5_daily_list
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Invalid or missing API key (HTTP 401)
+      - TYPE: ANY
+        STATUS: 404
+        WHEN: Not found (HTTP 404)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limit exceeded (HTTP 429)
+      - TYPE: ANY
+        STATUS: 500
+        WHEN: Server error (HTTP 500)
+    CANONICAL_ID: openweather.2.5.daily.list
+  openweather.1.0.direct.list:
+    SUMMARY: Direct geocoding
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /geo/1.0/direct
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - ApiKey:
+          type: apiKey
+          in: query
+          name: appid
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - q:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+      - appid:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+      - units:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lang:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - limit:
+          TYPE: INT
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: "[]STRUCT(GeoLocation)"
+        RETURNVAR: openweather_1_0_direct_list
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Invalid or missing API key (HTTP 401)
+      - TYPE: ANY
+        STATUS: 404
+        WHEN: Not found (HTTP 404)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limit exceeded (HTTP 429)
+      - TYPE: ANY
+        STATUS: 500
+        WHEN: Server error (HTTP 500)
+    CANONICAL_ID: openweather.1.0.direct.list
+  openweather.1.0.reverse.list:
+    SUMMARY: Reverse geocoding
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /geo/1.0/reverse
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - ApiKey:
+          type: apiKey
+          in: query
+          name: appid
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - lat:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - lon:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - appid:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+      - units:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lang:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - limit:
+          TYPE: INT
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: "[]STRUCT(GeoLocation)"
+        RETURNVAR: openweather_1_0_reverse_list
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Invalid or missing API key (HTTP 401)
+      - TYPE: ANY
+        STATUS: 404
+        WHEN: Not found (HTTP 404)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limit exceeded (HTTP 429)
+      - TYPE: ANY
+        STATUS: 500
+        WHEN: Server error (HTTP 500)
+    CANONICAL_ID: openweather.1.0.reverse.list
+  openweather.1.0.zip.list:
+    SUMMARY: Geocode ZIP or postal code
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /geo/1.0/zip
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - ApiKey:
+          type: apiKey
+          in: query
+          name: appid
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - zip:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+      - appid:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+      - units:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lang:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: STRUCT(GeoLocation)
+        RETURNVAR: openweather_1_0_zip_list
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Invalid or missing API key (HTTP 401)
+      - TYPE: ANY
+        STATUS: 404
+        WHEN: Not found (HTTP 404)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limit exceeded (HTTP 429)
+      - TYPE: ANY
+        STATUS: 500
+        WHEN: Server error (HTTP 500)
+    CANONICAL_ID: openweather.1.0.zip.list
+  openweather.2.5.airPollution.list:
+    SUMMARY: Get current air pollution
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /data/2.5/air_pollution
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - ApiKey:
+          type: apiKey
+          in: query
+          name: appid
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - lat:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - lon:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - appid:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+      - units:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lang:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: openweather_2_5_airPollution_list
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Invalid or missing API key (HTTP 401)
+      - TYPE: ANY
+        STATUS: 404
+        WHEN: Not found (HTTP 404)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limit exceeded (HTTP 429)
+      - TYPE: ANY
+        STATUS: 500
+        WHEN: Server error (HTTP 500)
+    CANONICAL_ID: openweather.2.5.airPollution.list
+  openweather.2.5.forecast.list:
+    SUMMARY: Get air pollution forecast
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /data/2.5/air_pollution/forecast
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - ApiKey:
+          type: apiKey
+          in: query
+          name: appid
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - lat:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - lon:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - appid:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+      - units:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lang:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: openweather_2_5_forecast_list
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Invalid or missing API key (HTTP 401)
+      - TYPE: ANY
+        STATUS: 404
+        WHEN: Not found (HTTP 404)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limit exceeded (HTTP 429)
+      - TYPE: ANY
+        STATUS: 500
+        WHEN: Server error (HTTP 500)
+    CANONICAL_ID: openweather.2.5.forecast.list
+  openweather.2.5.history.list:
+    SUMMARY: Get historical air pollution
+    HTTP:
+      METHOD: GET
+      ENDPOINT: /data/2.5/air_pollution/history
+      HEADERS: {}
+      CONTENT_TYPE: application/json
+      ACCEPT: application/json
+    SECURITY:
+      - ApiKey:
+          type: apiKey
+          in: query
+          name: appid
+    EXECUTION:
+      KIND: http
+      MODE: sync
+    INPUTS:
+      - lat:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - lon:
+          TYPE: FLOAT
+          REQUIRED: true
+          LOCATION: query
+      - appid:
+          TYPE: STRING
+          REQUIRED: true
+          LOCATION: query
+      - units:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - lang:
+          TYPE: STRING
+          REQUIRED: false
+          LOCATION: query
+      - start:
+          TYPE: INT
+          REQUIRED: true
+          LOCATION: query
+      - end:
+          TYPE: INT
+          REQUIRED: true
+          LOCATION: query
+    RETURNS:
+      - RETURNTYPE: map[STRING]ANY
+        RETURNVAR: openweather_2_5_history_list
+        STATUS: 200
+    ERRORS:
+      - TYPE: ANY
+        STATUS: 401
+        WHEN: Invalid or missing API key (HTTP 401)
+      - TYPE: ANY
+        STATUS: 404
+        WHEN: Not found (HTTP 404)
+      - TYPE: ANY
+        STATUS: 429
+        WHEN: Rate limit exceeded (HTTP 429)
+      - TYPE: ANY
+        STATUS: 500
+        WHEN: Server error (HTTP 500)
+    CANONICAL_ID: openweather.2.5.history.list
+STRUCTS:
+  GeoLocation:
+    - name: name
+      TYPE: STRING
+      REQUIRED: false
+    - name: lat
+      TYPE: FLOAT
+      REQUIRED: false
+    - name: lon
+      TYPE: FLOAT
+      REQUIRED: false
+    - name: country
+      TYPE: STRING
+      REQUIRED: false
+    - name: state
+      TYPE: STRING
+      REQUIRED: false

@@ -1,4 +1,4 @@
-from typing import List, Optional, Literal, Any
+from typing import List, Optional, Literal, Any, Dict
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 class Coordinate(BaseModel):
@@ -67,6 +67,82 @@ class VehicleInfo(BaseModel):
     target_soc_pct: Optional[float] = Field(80.0, description="Target battery percentage to charge to (e.g., 80.0)")
     max_charging_power_kw: float = Field(default=50.0, description="Max fast-charging acceptance rate in kW")
     plug_type: str = Field(default="CCS2", description="Compatible charging plug type (e.g., CCS2, Type 2, CHAdeMO)")
+
+    @model_validator(mode="before")
+    @classmethod
+    def parse_vehicle_aliases(cls, values: Any) -> Any:
+        if isinstance(values, dict):
+            v_id = values.get("vehicle_id") or values.get("vehicleId") or "CITIZEN-01"
+            v_type = values.get("vehicle_type") or values.get("vehicleType") or "citizen"
+            bat_pct = (
+                values.get("battery_percentage")
+                if values.get("battery_percentage") is not None
+                else values.get("currentSocPct")
+                if values.get("currentSocPct") is not None
+                else values.get("currentSoc")
+                if values.get("currentSoc") is not None
+                else values.get("batteryPercentage")
+                if values.get("batteryPercentage") is not None
+                else 80.0
+            )
+            cap_kwh = (
+                values.get("battery_capacity_kwh")
+                if values.get("battery_capacity_kwh") is not None
+                else values.get("batteryCapacityKwh")
+                if values.get("batteryCapacityKwh") is not None
+                else values.get("batteryCapacity")
+                if values.get("batteryCapacity") is not None
+                else values.get("battery_capacity")
+                if values.get("battery_capacity") is not None
+                else 60.0
+            )
+            cons_kwh = (
+                values.get("consumption_kwh_per_km")
+                if values.get("consumption_kwh_per_km") is not None
+                else values.get("consumptionRateKwhPerKm")
+                if values.get("consumptionRateKwhPerKm") is not None
+                else values.get("consumptionRate")
+                if values.get("consumptionRate") is not None
+                else values.get("consumption_rate")
+                if values.get("consumption_rate") is not None
+                else 0.18
+            )
+            min_res = (
+                values.get("minimum_reserve_pct")
+                if values.get("minimum_reserve_pct") is not None
+                else values.get("minReservePct")
+                if values.get("minReservePct") is not None
+                else values.get("minReserve")
+                if values.get("minReserve") is not None
+                else values.get("minimum_reserve")
+                if values.get("minimum_reserve") is not None
+                else 15.0
+            )
+            is_emerg = (
+                values.get("is_emergency")
+                if values.get("is_emergency") is not None
+                else values.get("isEmergency", False)
+            )
+            target_soc = (
+                values.get("target_soc_pct")
+                if values.get("target_soc_pct") is not None
+                else values.get("targetSocPct")
+                if values.get("targetSocPct") is not None
+                else values.get("targetSoc")
+            )
+            
+            res = dict(values)
+            res["vehicle_id"] = str(v_id)
+            res["vehicle_type"] = str(v_type)
+            res["battery_percentage"] = float(bat_pct)
+            res["battery_capacity_kwh"] = float(cap_kwh)
+            res["consumption_kwh_per_km"] = float(cons_kwh)
+            res["minimum_reserve_pct"] = float(min_res)
+            res["is_emergency"] = bool(is_emerg)
+            if target_soc is not None:
+                res["target_soc_pct"] = float(target_soc)
+            return res
+        return values
 
     @field_validator("battery_percentage", "minimum_reserve_pct", "target_soc_pct")
     @classmethod
@@ -162,6 +238,7 @@ class EmergencyIncident(BaseModel):
     severity: str = Field(..., description="Severity: low, medium, high, critical")
     location: Coordinate = Field(..., description="Location coordinate of the incident")
     required_vehicle_type: str = Field(..., description="Required emergency vehicle type (police, fire, ambulance)")
+    description: Optional[str] = Field(None, description="Optional incident narrative description for AI classification")
 
     @field_validator("required_vehicle_type")
     @classmethod
@@ -259,6 +336,8 @@ class EmergencyOptimizeResponse(BaseModel):
     route: Optional[EmergencyRouteDetails] = Field(None, description="Dispatch route summary")
     reason: str
     evaluated_vehicles: List[EvaluatedVehicleDetails]
+    recommended_charger: Optional[RecommendedChargerDetails] = None
+    swytchcode_intelligence: Optional[Dict[str, Any]] = Field(None, description="AI incident classification and weather context enriched via Swytchcode")
 
 class EmergencyDispatchEvent(BaseModel):
     incident_id: str = Field(..., description="Unique incident ID from 112")
@@ -291,3 +370,4 @@ class EmergencyDispatchResponse(BaseModel):
     selected_vehicle: Optional[SelectedVehicleDetails] = None
     route: Optional[EmergencyRouteDetails] = None
     reason: str
+    swytchcode_intelligence: Optional[Dict[str, Any]] = Field(None, description="AI incident classification and weather context enriched via Swytchcode")

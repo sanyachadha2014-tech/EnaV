@@ -34,15 +34,30 @@ interface EVMapProps {
     destination: Location | null;
     currentVehiclePos: [number, number] | null;
     travelledPath: [number, number][];
+    routeGeometry?: [number, number][];
+    isFeasible?: boolean;
 }
 
-function MapController({ center }: { center: [number, number] }) {
+function MapController({
+    center,
+    routeGeometry
+}: {
+    center: [number, number];
+    routeGeometry?: [number, number][];
+}) {
     const map = useMap();
     useEffect(() => {
-        if (center) {
+        if (routeGeometry && routeGeometry.length > 1) {
+            try {
+                const bounds = L.latLngBounds(routeGeometry.map(([lat, lng]) => [lat, lng]));
+                map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+            } catch (err) {
+                console.warn("Could not fit map bounds to route geometry:", err);
+            }
+        } else if (center) {
             map.setView(center, map.getZoom(), { animate: true });
         }
-    }, [center, map]);
+    }, [center, routeGeometry, map]);
     return null;
 }
 
@@ -51,7 +66,9 @@ export default function EVMap({
     start,
     destination,
     currentVehiclePos,
-    travelledPath
+    travelledPath,
+    routeGeometry,
+    isFeasible
 }: EVMapProps) {
     return (
         <MapContainer
@@ -64,7 +81,7 @@ export default function EVMap({
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <MapController center={center} />
+            <MapController center={center} routeGeometry={routeGeometry} />
 
             {start && (
                 <Marker position={[start.lat, start.lon]}>
@@ -88,18 +105,26 @@ export default function EVMap({
                 </Marker>
             )}
 
-            {start && destination && (
+            {/* Real OSRM Road Geometry Polyline */}
+            {routeGeometry && routeGeometry.length > 1 ? (
+                <Polyline
+                    positions={routeGeometry}
+                    color={isFeasible === false ? "#f43f5e" : "#06b6d4"}
+                    weight={5}
+                    opacity={0.85}
+                />
+            ) : start && destination ? (
                 <Polyline
                     positions={[
                         [start.lat, start.lon],
                         [destination.lat, destination.lon]
                     ]}
                     color="#06b6d4"
-                    weight={4}
-                    opacity={0.6}
-                    dashArray="8, 8"
+                    weight={3}
+                    opacity={0.4}
+                    dashArray="6, 6"
                 />
-            )}
+            ) : null}
 
             {travelledPath.length > 1 && (
                 <Polyline

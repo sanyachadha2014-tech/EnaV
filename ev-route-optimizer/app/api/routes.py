@@ -12,6 +12,7 @@ from app.services.emergency_router import optimize_emergency_dispatch
 from app.services.routing_provider import BaseRoutingProvider, get_routing_provider, RoutingAPIError
 from app.services.charger_provider import BaseChargerProvider, get_charger_provider
 from app.services.vehicle_repository import BaseEmergencyVehicleRepository, get_vehicle_repository
+from app.services.swytchcode_service import get_swytchcode_service
 
 router = APIRouter()
 
@@ -69,21 +70,40 @@ def optimize_route(
 def emergency_optimize(
     request: EmergencyOptimizeRequest,
     provider: BaseRoutingProvider = Depends(get_routing_provider),
-    vehicle_repository: BaseEmergencyVehicleRepository = Depends(get_vehicle_repository),
-    charger_provider: BaseChargerProvider = Depends(get_charger_provider)
+    vehicle_repository: BaseEmergencyVehicleRepository = Depends(get_vehicle_repository)
 ) -> EmergencyOptimizeResponse:
     """
     Evaluates available emergency vehicles against the incident's required type,
     calculates road route feasibilities, and selects the vehicle with the fastest ETA.
     """
     try:
-        available_chargers = charger_provider.get_all_chargers() if charger_provider else []
+        # Enriches incident intelligence via Swytchcode (Mistral AI classification & OpenWeather context)
+        swytchcode_intel = None
+        try:
+            swytchcode_service = get_swytchcode_service()
+            swytchcode_intel = swytchcode_service.get_emergency_intelligence(
+                incident_id=request.incident.incident_id,
+                incident_type=request.incident.incident_type,
+                severity=request.incident.severity,
+                lat=request.incident.location.lat,
+                lng=request.incident.location.lng,
+                details=getattr(request.incident, 'description', None)
+            )
+        except Exception as swy_err:
+            # Graceful fallback: never crash emergency routing on external service issues
+            swytchcode_intel = {
+                "integration": "Swytchcode Ecosystem (Fallback)",
+                "error": str(swy_err),
+                "incident_analysis": {"status": "fallback", "recommended_priority": request.incident.severity},
+                "weather_context": {"status": "fallback", "road_surface": "dry"}
+            }
+
         response = optimize_emergency_dispatch(
             incident=request.incident,
             routing_provider=provider,
-            vehicle_repository=vehicle_repository,
-            available_chargers=available_chargers
+            vehicle_repository=vehicle_repository
         )
+        response.swytchcode_intelligence = swytchcode_intel
         return response
     except Exception as err:
         raise HTTPException(
@@ -128,8 +148,7 @@ def gis_locate(request: GisLocateRequest) -> GisLocateResponse:
 def dispatch_112(
     request: EmergencyDispatchEvent,
     provider: BaseRoutingProvider = Depends(get_routing_provider),
-    vehicle_repository: BaseEmergencyVehicleRepository = Depends(get_vehicle_repository),
-    charger_provider: BaseChargerProvider = Depends(get_charger_provider)
+    vehicle_repository: BaseEmergencyVehicleRepository = Depends(get_vehicle_repository)
 ) -> EmergencyDispatchResponse:
     """
     HTTP POST endpoint that processes an emergency event from 112, resolves the district,
@@ -143,13 +162,31 @@ def dispatch_112(
             location=request.location,
             required_vehicle_type=request.required_vehicle_type
         )
+
+        # Enriches 112 dispatch event via Swytchcode
+        swytchcode_intel = None
+        try:
+            swytchcode_service = get_swytchcode_service()
+            swytchcode_intel = swytchcode_service.get_emergency_intelligence(
+                incident_id=request.incident_id,
+                incident_type=request.incident_type,
+                severity=request.severity,
+                lat=request.location.lat,
+                lng=request.location.lng,
+                details=f"112 Emergency Dispatch Event: {request.incident_type} (Severity: {request.severity})"
+            )
+        except Exception as swy_err:
+            swytchcode_intel = {
+                "integration": "Swytchcode Ecosystem (Fallback)",
+                "error": str(swy_err),
+                "incident_analysis": {"status": "fallback", "recommended_priority": request.severity},
+                "weather_context": {"status": "fallback", "road_surface": "dry"}
+            }
         
-        available_chargers = charger_provider.get_all_chargers() if charger_provider else []
         opt_res = optimize_emergency_dispatch(
             incident=incident,
             routing_provider=provider,
-            vehicle_repository=vehicle_repository,
-            available_chargers=available_chargers
+            vehicle_repository=vehicle_repository
         )
         
         dispatch_status = "recommended" if opt_res.selected_vehicle is not None else "no_feasible_vehicle"
@@ -160,7 +197,8 @@ def dispatch_112(
             district=opt_res.district,
             selected_vehicle=opt_res.selected_vehicle,
             route=opt_res.route,
-            reason=opt_res.reason
+            reason=opt_res.reason,
+            swytchcode_intelligence=swytchcode_intel
         )
     except Exception as err:
         raise HTTPException(

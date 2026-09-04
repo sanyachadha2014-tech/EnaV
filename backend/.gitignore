@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+*.db
+*.sqlite
+*.sqlite3
+.pytest_cache/
+.swytchcode/workspace.json
+.swytchcode/auth.json
+.swytchcode/credentials*
+.swytchcode/*.lock
