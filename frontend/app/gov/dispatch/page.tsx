@@ -610,10 +610,6 @@ export default function EmergencyPage() {
                             >
                               #{incident.id}
                             </span>
-
-                            <PriorityBadge
-                              priority={incident.priority}
-                            />
                           </div>
 
                           <p className="mt-1.5 text-[13px] font-semibold text-emerald-900">
@@ -982,26 +978,7 @@ export default function EmergencyPage() {
 /* PRIORITY BADGE                                                             */
 /* -------------------------------------------------------------------------- */
 
-function PriorityBadge({
-  priority,
-}: {
-  priority: string;
-}) {
-  const styles =
-    priority === "CRITICAL"
-      ? "border-red-200 bg-red-50 text-red-600"
-      : priority === "HIGH"
-        ? "border-amber-200 bg-amber-50 text-amber-700"
-        : "border-emerald-200 bg-emerald-50 text-emerald-700";
 
-  return (
-    <span
-      className={`rounded border px-1.5 py-0.5 text-[9px] font-bold ${styles}`}
-    >
-      {priority}
-    </span>
-  );
-}
 
 /* -------------------------------------------------------------------------- */
 /* STATUS BOX                                                                 */

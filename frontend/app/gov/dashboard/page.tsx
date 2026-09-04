@@ -18,7 +18,7 @@ export default function GovDashboard() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
-  
+
   const [metrics, setMetrics] = useState({
     registered_evs: 4820,
     ev_stations: 142,
@@ -32,29 +32,60 @@ export default function GovDashboard() {
 
   useEffect(() => {
     const fetchDashboardData = async () => {
+      // 1. Load dashboard metrics
       try {
-        const res = await api.get("/gov/dashboard-stats");
-        if (res.data) {
-          if (res.data.metrics) {
-            setMetrics(res.data.metrics);
-          }
-          if (res.data.incidents && res.data.incidents.length > 0) {
-            setAlerts(res.data.incidents);
-          }
+        const statsRes = await api.get("/gov/dashboard-stats");
+
+        console.log("DASHBOARD RESPONSE:", statsRes.data);
+
+        if (statsRes.data?.metrics) {
+          setMetrics(statsRes.data.metrics);
         }
       } catch (err) {
-        console.warn("Backend unavailable, using fallback preview data:", err);
+        console.error("Dashboard stats error:", err);
+      }
+
+      // 2. Load LIVE emergency incidents
+      try {
+        const alertsRes = await api.get("/emergency/alerts");
+
+        console.log("LIVE INCIDENTS RESPONSE:", alertsRes.data);
+
+        let incidents: any[] = [];
+
+        if (Array.isArray(alertsRes.data)) {
+          incidents = alertsRes.data;
+        } else if (Array.isArray(alertsRes.data?.incidents)) {
+          incidents = alertsRes.data.incidents;
+        } else if (Array.isArray(alertsRes.data?.alerts)) {
+          incidents = alertsRes.data.alerts;
+        } else if (Array.isArray(alertsRes.data?.data)) {
+          incidents = alertsRes.data.data;
+        }
+
+        console.log("INCIDENTS FOUND:", incidents);
+
+        setAlerts(incidents);
+
+        setMetrics((prev) => ({
+          ...prev,
+          emergencies_count: incidents.length,
+        }));
+      } catch (err) {
+        console.error("Emergency alerts error:", err);
       }
     };
 
     fetchDashboardData();
+
     const interval = setInterval(fetchDashboardData, 5000);
+
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col relative">
-      
+
       {/* Top Navbar */}
       <header className="h-16 border-b border-emerald-200/80 px-8 flex items-center justify-between bg-white sticky top-0 z-20">
         <div className="flex items-center gap-3">
@@ -71,9 +102,9 @@ export default function GovDashboard() {
         </div>
 
         <div className="flex items-center gap-4 relative">
-          <button 
+          <button
             onClick={() => setShowNotifications(!showNotifications)}
-            aria-label="Notifications" 
+            aria-label="Notifications"
             className="w-9 h-9 rounded-xl border border-emerald-200 flex items-center justify-center text-gray-600 hover:bg-emerald-50 transition relative"
           >
             🔔
@@ -99,7 +130,7 @@ export default function GovDashboard() {
           )}
 
           {/* Officer Profile Button */}
-          <button 
+          <button
             onClick={() => setShowProfileMenu(!showProfileMenu)}
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-200 hover:bg-emerald-50 transition text-xs font-semibold text-slate-700"
           >
@@ -140,7 +171,7 @@ export default function GovDashboard() {
               </div>
 
               <div className="pt-3 border-t border-emerald-100">
-                <button 
+                <button
                   onClick={() => router.push('/auth/login')}
                   className="w-full py-2 bg-red-50 text-red-600 rounded-xl font-semibold hover:bg-red-100 transition text-xs"
                 >
@@ -150,7 +181,7 @@ export default function GovDashboard() {
             </div>
           )}
 
-          <button 
+          <button
             onClick={() => router.push('/auth/login')}
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 transition text-xs font-semibold text-red-600"
           >
@@ -161,7 +192,7 @@ export default function GovDashboard() {
 
       {/* Main Content Area */}
       <main className="flex-1 p-8 space-y-6 overflow-y-auto">
-        
+
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-emerald-200">
           <div>
             <h1 className="text-sm font-bold tracking-wide text-slate-800 uppercase">CITY MOBILITY COMMAND</h1>
@@ -172,12 +203,12 @@ export default function GovDashboard() {
 
         {/* Top Metric Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          
+
           <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200 flex flex-col justify-between relative">
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs font-semibold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
                 Registered EVs
-                <button 
+                <button
                   onClick={() => setActiveTooltip(activeTooltip === 'evs' ? null : 'evs')}
                   className="w-4 h-4 rounded-full bg-emerald-200 text-emerald-900 text-[10px] font-bold flex items-center justify-center hover:bg-emerald-300 transition"
                 >
@@ -200,7 +231,7 @@ export default function GovDashboard() {
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs font-semibold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
                 EV Stations
-                <button 
+                <button
                   onClick={() => setActiveTooltip(activeTooltip === 'stations' ? null : 'stations')}
                   className="w-4 h-4 rounded-full bg-emerald-200 text-emerald-900 text-[10px] font-bold flex items-center justify-center hover:bg-emerald-300 transition"
                 >
@@ -223,7 +254,7 @@ export default function GovDashboard() {
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs font-semibold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
                 Emergencies
-                <button 
+                <button
                   onClick={() => setActiveTooltip(activeTooltip === 'emergencies' ? null : 'emergencies')}
                   className="w-4 h-4 rounded-full bg-emerald-200 text-emerald-900 text-[10px] font-bold flex items-center justify-center hover:bg-emerald-300 transition"
                 >
@@ -246,7 +277,7 @@ export default function GovDashboard() {
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs font-semibold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
                 Avg ETA
-                <button 
+                <button
                   onClick={() => setActiveTooltip(activeTooltip === 'eta' ? null : 'eta')}
                   className="w-4 h-4 rounded-full bg-emerald-200 text-emerald-900 text-[10px] font-bold flex items-center justify-center hover:bg-emerald-300 transition"
                 >
@@ -266,10 +297,10 @@ export default function GovDashboard() {
           </div>
 
         </div>
-        
+
         {/* Map & Alerts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
+
           <div className="lg:col-span-2 bg-slate-100 rounded-2xl border border-emerald-200 overflow-hidden flex flex-col h-[450px]">
             <div className="bg-white px-4 py-3 border-b border-emerald-200 flex justify-between items-center">
               <span className="text-xs font-bold text-slate-700">DELHI NCR LIVE INCIDENT MAP</span>
@@ -293,7 +324,7 @@ export default function GovDashboard() {
                   {metrics.emergencies_count} ACTIVE
                 </span>
               </div>
-              
+
               <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
                 {alerts.map((alt) => {
                   const isFire = (alt.incident_type || "").toLowerCase().includes("fire");
@@ -345,9 +376,9 @@ export default function GovDashboard() {
             <span className="text-lg">📊</span>
             <h3 className="text-base font-bold text-slate-900">CITY PERFORMANCE</h3>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            
+
             <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200 flex flex-col justify-between relative">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-xs font-bold text-emerald-900 uppercase tracking-wider">Emergency Response</span>

@@ -6,7 +6,7 @@ from app.database import get_db
 from app.models.user import User
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
-pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 class UserCreate(BaseModel):
     email: str

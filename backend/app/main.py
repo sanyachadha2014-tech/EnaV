@@ -8,6 +8,7 @@ from app.database import engine, Base, get_db
 from app.models import vehicle, ev_station
 from app.routers import telemetry, auth, ev_stations, routes, command_center, emergency_report
 from app.schemas.dashboard import DashboardSummaryResponse
+from app.routers import telemetry, auth, ev_stations, routes, command_center, emergency_report, infra_planner
 
 # Create database tables
 try:
@@ -33,6 +34,7 @@ app.include_router(ev_stations.router)
 app.include_router(routes.router)
 app.include_router(command_center.router)
 app.include_router(emergency_report.router)
+app.include_router(infra_planner.router)
 
 
 @app.get("/")
